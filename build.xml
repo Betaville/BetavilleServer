@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. 
+              
+              DO NOT GENERATE THIS FILE IN ECLIPSE
+              
+              -->
+<project basedir="." default="build" name="BetavilleServer">
+    <property environment="env"/>
+    <property name="BetavilleApp.location" value="../BetavilleApp"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="MySQL.userclasspath"/>
+    <path id="Persisted container [SWT_CONTAINER for project [BetavilleApp]].libraryclasspath"/>
+    <path id="BetavilleApp.classpath">
+        <pathelement location="${BetavilleApp.location}/bin"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-audio.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-awt.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-collada.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-editors.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-effects.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-font.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-gamestates.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-model.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-scene.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-terrain.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme-xml.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/jme.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/jogl/gluegen-rt.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/jogl/jogl.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/junit/junit-4.1.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/jorbis/jorbis-0.0.17.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/lwjgl/jinput.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/rss_utils_1/rssutils.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/BareBonesBrowserLaunch.jar"/>
+        <path refid="Persisted container [SWT_CONTAINER for project [BetavilleApp]].libraryclasspath"/>
+        <pathelement location="${BetavilleApp.location}/lib/SoundSystem/CodecWav.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/SoundSystem/LibraryJavaSound.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/SoundSystem/LibraryLWJGLOpenAL.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/SoundSystem/SoundSystem.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/SoundSystem/LibraryJOAL.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/SoundSystem/joal/joal.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/lwjgl-2.1.0/jinput.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/lwjgl-2.1.0/lwjgl_test.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/lwjgl-2.1.0/lwjgl_util_applet.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/lwjgl-2.1.0/lwjgl_util.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/jme/lib/lwjgl-2.1.0/lwjgl.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/FengGUI/FengGUI_alpha12a_fixed.jar"/>
+        <pathelement location="${BetavilleApp.location}/lib/FengGUI/FengGUI_alpha12a_optional_fixed.jar"/>
+    </path>
+    <path id="BetavilleServer.classpath">
+        <pathelement location="bin"/>
+        <path refid="MySQL.userclasspath"/>
+        <pathelement location="lib/MySQL/mysql-connector-java-5.1.7-bin.jar"/>
+        <path refid="BetavilleApp.classpath"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall">
+        <ant antfile="${BetavilleApp.location}/build.xml" dir="${BetavilleApp.location}" inheritAll="false" target="clean"/>
+    </target>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects">
+        <ant antfile="${BetavilleApp.location}/build.xml" dir="${BetavilleApp.location}" inheritAll="false" target="build-project"/>
+    </target>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="BetavilleServer.classpath"/>
+        </javac>
+    </target>
+	
+	
+	<target name="jar" depends="build">
+		 <delete file="BetavilleServer.jar"/>
+		     <delete file="MANIFEST.MF"/>
+		     <manifest file="MANIFEST.MF">
+		        <attribute name="Built-By" value="${user.name}"/>
+		        <attribute name="Main-Class" 
+		        	value="edu.poly.bxmc.betaville.server.ServerLauncher"/>
+		     	<attribute name="Class-Path"
+		     		value="BetavilleApp.jar jdom.jar log4j-1.2.9.jar mysql-connector-java-5.1.7-bin.jar"/>
+		    </manifest>
+
+		<jar destfile="BetavilleServer.jar"
+			basedir="bin/"
+			includes="edu/**/*.class"
+			manifest="MANIFEST.MF"
+		/>
+		 <delete file="MANIFEST.MF"/>
+	</target>
+	
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target name="ServerLauncher">
+        <java classname="edu.poly.bxmc.betaville.server.ServerLauncher" failonerror="true" fork="yes">
+            <classpath refid="BetavilleServer.classpath"/>
+        </java>
+    </target>
+</project>
