@@ -1898,7 +1898,7 @@ public class NewDatabaseManager {
 			return wormholes;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
-			return null;
+			return new ArrayList<Wormhole>();
 		}
 	}
 	
@@ -1932,7 +1932,7 @@ public class NewDatabaseManager {
 			return wormholes;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
-			return null;
+			return new ArrayList<Wormhole>();
 		}
 	}
 }
