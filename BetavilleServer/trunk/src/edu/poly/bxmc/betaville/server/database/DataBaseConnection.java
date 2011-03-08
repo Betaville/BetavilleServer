@@ -50,11 +50,18 @@ public class DataBaseConnection {
 	 * Constructor - Creates (opens) the SQL connection
 	 */
 	public DataBaseConnection(String user, String pass) {
+		this(user, pass, "betaville");
+	}
+	
+	/**
+	 * Constructor - Creates (opens) the SQL connection
+	 */
+	public DataBaseConnection(String user, String pass, String dbName) {
 		try {
 			try {
 				Class.forName("com.mysql.jdbc.Driver").newInstance();
 				con = DriverManager.getConnection(
-						"jdbc:mysql://localhost:3306/betaville",
+						"jdbc:mysql://localhost:3306/"+dbName,
 						user,
 						pass);
 				
