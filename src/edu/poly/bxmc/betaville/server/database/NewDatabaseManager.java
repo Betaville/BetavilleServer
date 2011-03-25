@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -142,6 +142,7 @@ public class NewDatabaseManager {
 	private PreparedStatement findDesignsByUser;
 	private PreparedStatement findDesignsByCity;
 	private PreparedStatement findTypeDesignsByCity;
+	private PreparedStatement findModelDesignsByCity;
 	private PreparedStatement findTerrainDesignsByCity;
 	private PreparedStatement addProposal;
 	
@@ -253,6 +254,13 @@ public class NewDatabaseManager {
 	public NewDatabaseManager() {
 		this("root");
 	}
+	
+	/**
+	 * Constructor - Create the manager of the DB
+	 */
+	public NewDatabaseManager(String password) {
+		this("root", password);
+	}
 
 	/**
 	 * Constructor - Create the manager of the DB
@@ -271,8 +279,8 @@ public class NewDatabaseManager {
 	/**
 	 * Constructor - Create the manager of the DB
 	 */
-	public NewDatabaseManager(String password) {
-		dbConnection = new DataBaseConnection("root", password);
+	public NewDatabaseManager(String user, String password) {
+		dbConnection = new DataBaseConnection(user, password);
 		try {
 			//mailer=new GMailer(Preferences.getSetting(Preferences.MAIL_USER),Preferences.getSetting(Preferences.MAIL_PASS));
 		} catch (Exception e1) {
@@ -402,6 +410,14 @@ public class NewDatabaseManager {
 				" WHERE " + DBConst.DESIGN_USER + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';;");
 		findDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
+		// select * from design join modeldesign on design.designid=modeldesign.designid join coordinate on design.coordinateid=coordinate.coordinateid left outer join proposal on design.designid=proposal.sourceid where design.isalive=1 and design.designtype='model' and design.cityid=2 and design.name not like '%$TERRAIN%';
+		findModelDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
+				" JOIN "+DBConst.MODEL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.MODEL_ID+
+				" JOIN "+DBConst.COORD_TABLE+" ON "+DBConst.DESIGN_COORDINATE+"="+DBConst.COORD_ID+
+				" JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.PROPOSAL_SOURCE+
+				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_TYPE+"='"+DBConst.DESIGN_TYPE_MODEL+
+				"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.PROPOSAL_SOURCE+"=NULL AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
+		
 		findTypeDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN' AND WHERE "+DBConst.DESIGN_TYPE+" = ?;");
 		findTerrainDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
@@ -468,7 +484,7 @@ public class NewDatabaseManager {
 	public void closeConnection(){
 		dbConnection.closeConnection();
 	}
-
+	
 	/**
 	 * Calls the authenticateUser method in the instance's authenticator.
 	 * @param user
@@ -1205,6 +1221,38 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
+	
+	//TODO complete
+	/*
+	public Vector<Design> findModelDesignsByCity(int cityID, boolean onlyBase){
+		try {
+			findModelDesignsByCity.setInt(1, cityID);
+			ResultSet drs = findDesignsByCity.executeQuery();
+			Vector<Design> designs = new Vector<Design>();
+			while(drs.next()){
+				// if we're only looking for base designs then we need to check
+				// that the sourceID is 0
+				if(onlyBase && drs.getInt(DBConst.des))
+				Design d = new ModeledDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, rotX, rotY, rotZ, designIsTextured);
+				if(d!=null){
+					if(onlyBase){
+						if(d.getSourceID()==0  && !d.getFilepath().endsWith(".")){
+							designs.add(d);
+						}
+					}
+					else{
+						designs.add(d);
+					}
+				}
+			}
+			drs.close();
+			return designs;
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return null;
+		}
+	}
+	*/
 	
 	public Vector<Design> findTerrainDesignsByCity(int cityID){
 		try {
