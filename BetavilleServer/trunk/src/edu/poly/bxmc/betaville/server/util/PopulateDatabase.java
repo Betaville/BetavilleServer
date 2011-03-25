@@ -50,9 +50,9 @@ public class PopulateDatabase {
 			System.out.println("| -adminuser newbvadmin            |");
 			System.out.println("| -adminpassbvadminpass            |");
 			System.out.println("| -adminmail bvadminemail          |");
-			System.out.println("| -city defaultcitytocreate        |");
-			System.out.println("| -state statecityisin             |");
-			System.out.println("| -country countrystateisin        |");
+			System.out.println("| -city newcitytocreate [quoted]   |");
+			System.out.println("| -state statecityisin [quoted]    |");
+			System.out.println("| -country countrycityisin [quoted]|");
 			System.out.println("+----------------------------------+");
 
 		}
@@ -62,9 +62,9 @@ public class PopulateDatabase {
 		String adminUser = null;
 		String adminPass = null;
 		String adminMail = null;
-		String city = null;
-		String state = null;
-		String country = null;
+		String city = "";
+		String state = "";
+		String country = "";
 
 		for(int i=0; i<args.length; i++){
 
@@ -98,27 +98,61 @@ public class PopulateDatabase {
 				continue;
 			}
 
+			
+			// city, state, and country should all be wrapped in quotes
+			
 			// city
 			if(args[i].startsWith("-city")){
-				city=args[i+1];
+				for(int j=i+1; j<args.length; j++){
+					if(args[j].endsWith("\"")){
+						city+=(" "+args[j].substring(0, args[j].length()-1));
+						if(city.startsWith(" \"")) city = city.substring(2);
+						else if(city.startsWith("\"")) city = city.substring(1);
+						break;
+					}
+					else{
+						if(args[j].startsWith("\"")) city+=(args[j].substring(1));
+						else city+=(" "+args[j]);
+					}
+				}
 				continue;
 			}
 
 			// state
 			if(args[i].startsWith("-state")){
-				state=args[i+1];
+				for(int j=i+1; j<args.length; j++){
+					if(args[j].endsWith("\"")){
+						state+=(" "+args[j].substring(0, args[j].length()-1));
+						if(state.startsWith(" \"")) state = state.substring(2);
+						else if(state.startsWith("\"")) state = state.substring(1);
+						break;
+					}
+					else{
+						if(args[j].startsWith("\"")) state+=(args[j].substring(1));
+						else state+=(" "+args[j]);
+					}
+				}
 				continue;
 			}
 
 			// country
 			if(args[i].startsWith("-country")){
-				country=args[i+1];
+				for(int j=i+1; j<args.length; j++){
+					if(args[j].endsWith("\"")){
+						country+=(" "+args[j].substring(0, args[j].length()-1));
+						if(country.startsWith(" \"")) country = country.substring(2);
+						else if(country.startsWith("\"")) country = country.substring(1);
+						break;
+					}
+					else{
+						if(args[j].startsWith("\"")) country+=(args[j].substring(1));
+						else country+=(" "+args[j]);
+					}
+				}
 				continue;
 			}
 		}
 
-		System.out.println("dbuser: "+dbUser);
-		System.out.println("dbpass: "+dbPass);
 		NewDatabaseManager db = new NewDatabaseManager(dbUser, dbPass);
 		if(db.addUser(adminUser, adminPass, adminMail, "", "")) System.out.println("User '"+adminUser+"' created");
 		else System.err.println("User could not be created");
