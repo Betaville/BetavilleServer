@@ -55,7 +55,7 @@
     <path id="BetavilleServer.classpath">
         <pathelement location="bin"/>
         <path refid="MySQL.userclasspath"/>
-        <pathelement location="lib/MySQL/mysql-connector-java-5.1.7-bin.jar"/>
+        <pathelement location="lib/"/>
         <path refid="BetavilleApp.classpath"/>
     </path>
     <target name="init">
