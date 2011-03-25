@@ -39,13 +39,13 @@ fi
 echo "\n"
 echo "Ok, we need a city to start in!  Please provide the country"
 read country
-country = "\"$country\""
+country="\"$country\""
 echo "And now the state or similar administrative district"
 read state
-country = "\"$state\""
+state="\"$state\""
 echo "And finally the city or similar locality"
 read city
-country = "\"$city\""
+city="\"$city\""
 
 command -v mysql >/dev/null && echo "mysql located" || echo "mysql not found, are you sure it is on your \$PATH?"
 command -v mysqladmin >/dev/null && echo "mysqladmin located" || echo "mysqladmin not found, are you sure it is on your \$PATH?"
@@ -62,7 +62,7 @@ mysql -u $dbUser -p$dbPass $dbName < ../sql/betaville.sql
 java -jar ../PopulateDatabase.jar edu.poly.bxmc.betaville.server.util.PopulateDatabase -cp ../ -u $dbUser -p$dbPass -adminuser $adminUser -adminpass$adminPass -adminmail $adminEmail -city $city -state $state -country $country
 
 # set the user to administrator (this will be built into the Java database functionality soon and should be migrated over)
-mysql --user=$dbUser --password=$dbPass --database=$sbName -e "UPDATE user SET type = 'admin' WHERE userName LIKE '$adminUser'"
+mysql --user=$dbUser --password=$dbPass --database=$dbName -e "UPDATE user SET type = 'admin' WHERE userName LIKE '$adminUser'"
 
 echo "Success!"
 echo "To run the Betaville server, run the command 'java -jar BetavilleServer.jar' in the BetavilleServer directory"
