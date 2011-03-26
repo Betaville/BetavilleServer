@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import org.apache.log4j.Logger;
@@ -104,6 +105,7 @@ public class NewClientConnection implements Runnable {
 		ConnectionTracker.deincrementConnectionCount();
 	}
 
+	@SuppressWarnings("unchecked")
 	private void receive(){
 		try {
 			Object[] inObject = null;
@@ -191,6 +193,9 @@ public class NewClientConnection implements Runnable {
 			
 			// DESIGN FUNCTIONALITY
 			else if(((String)inObject[0]).equals("design")){
+				if(((String)inObject[1]).equals("synchronizedata")){
+					output.writeObject(dbManager.synchronizeData((HashMap<Integer, Integer>)inObject[2]));
+				}
 				if(((String)inObject[1]).equals("addempty")){
 					output.writeObject(Integer.toString(dbManager.addDesign((EmptyDesign)inObject[2], (String)inObject[3], (String)inObject[4], "none")));
 				}
