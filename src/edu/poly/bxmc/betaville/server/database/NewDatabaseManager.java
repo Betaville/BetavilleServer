@@ -31,7 +31,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import javax.mail.MessagingException;
@@ -143,6 +145,7 @@ public class NewDatabaseManager {
 	private PreparedStatement findDesignsByCity;
 	private PreparedStatement findTypeDesignsByCity;
 	private PreparedStatement findModelDesignsByCity;
+	private PreparedStatement findBaseModelDesignByID;
 	private PreparedStatement findTerrainDesignsByCity;
 	private PreparedStatement addProposal;
 	
@@ -410,13 +413,22 @@ public class NewDatabaseManager {
 				" WHERE " + DBConst.DESIGN_USER + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';;");
 		findDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
-		// select * from design join modeldesign on design.designid=modeldesign.designid join coordinate on design.coordinateid=coordinate.coordinateid left outer join proposal on design.designid=proposal.sourceid where design.isalive=1 and design.designtype='model' and design.cityid=2 and design.name not like '%$TERRAIN%';
+		// select * from design
+		// join modeldesign on design.designid=modeldesign.designid
+		// join coordinate on design.coordinateid=coordinate.coordinateid
+		// left outer join proposal on design.designid=proposal.sourceid where design.isalive=1 and design.designtype='model' and design.cityid=2 and proposal.sourceid is null and design.name not like '%$TERRAIN%';
 		findModelDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" JOIN "+DBConst.MODEL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.MODEL_ID+
 				" JOIN "+DBConst.COORD_TABLE+" ON "+DBConst.DESIGN_COORDINATE+"="+DBConst.COORD_ID+
-				" JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.PROPOSAL_SOURCE+
+				" LEFT OUTER JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.PROPOSAL_SOURCE+
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_TYPE+"='"+DBConst.DESIGN_TYPE_MODEL+
-				"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.PROPOSAL_SOURCE+"=NULL AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
+				"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.PROPOSAL_SOURCE+" IS NULL AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
+		findBaseModelDesignByID = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
+				" JOIN "+DBConst.MODEL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.MODEL_ID+
+				" JOIN "+DBConst.COORD_TABLE+" ON "+DBConst.DESIGN_COORDINATE+"="+DBConst.COORD_ID+
+				" LEFT OUTER JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.PROPOSAL_SOURCE+
+				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_TYPE+"='"+DBConst.DESIGN_TYPE_MODEL+
+				"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.PROPOSAL_SOURCE+" IS NULL;");
 		
 		findTypeDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN' AND WHERE "+DBConst.DESIGN_TYPE+" = ?;");
@@ -967,6 +979,34 @@ public class NewDatabaseManager {
 			logger.error("SQL ERROR", e);
 		}
 		return null;
+	}
+	
+	
+	
+	private ModeledDesign modelDesignFromFull(ResultSet drs){
+		ModeledDesign d=null;
+		try {
+			d = new ModeledDesign(drs.getString(DBConst.DESIGN_NAME),
+					// --Create UTM coordinate here--
+					new UTMCoordinate(drs.getInt(DBConst.COORD_EASTING),
+							drs.getInt(DBConst.COORD_NORTHING),
+							drs.getInt(DBConst.COORD_LONZONE),
+							drs.getString(DBConst.COORD_LATZONE).charAt(0),
+							drs.getInt(DBConst.COORD_ALTITUDE)),
+					// --end of coordinate creation--
+					drs.getString(DBConst.DESIGN_ADDRESS), drs.getInt(DBConst.DESIGN_CITY), drs.getString(DBConst.DESIGN_USER),
+					drs.getString(DBConst.DESIGN_DESCRIPTION), drs.getString(DBConst.DESIGN_FILE), drs.getString(DBConst.DESIGN_URL),
+					drs.getBoolean(DBConst.DESIGN_PRIVACY), drs.getInt(DBConst.MODEL_ROTATION_X), drs.getInt(DBConst.MODEL_ROTATION_Y),
+					drs.getInt(DBConst.MODEL_ROTATION_Z), drs.getBoolean(DBConst.MODEL_TEX));
+			if(drs.getInt(DBConst.PROPOSAL_SOURCE)!=0){
+				
+			}
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return null;
+		}
+		
+		return d;
 	}
 
 	private Design designFromResultSet(ResultSet drs){
@@ -1982,5 +2022,19 @@ public class NewDatabaseManager {
 			logger.error("SQL ERROR", e);
 			return new ArrayList<Wormhole>();
 		}
+	}
+	
+	/**
+	 * Synchronizes client and server data 
+	 * @param hashMap
+	 * @return
+	 */
+	public List<Design> synchronizeData(HashMap<Integer, Integer> hashMap){
+		ArrayList<Design> designs = new ArrayList<Design>();
+		for(Entry<Integer, Integer> e : hashMap.entrySet()){
+			Design onServer = findDesignByID(e.getKey());
+			if(e.getValue()!=onServer.hashCode()) designs.add(onServer);
+		}
+		return designs;
 	}
 }
