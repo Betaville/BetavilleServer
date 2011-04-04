@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -25,10 +25,15 @@
 */
 package edu.poly.bxmc.betaville.server.network;
 
+import java.util.HashMap;
+import java.util.concurrent.Future;
+
 import org.apache.log4j.Logger;
 
+import edu.poly.bxmc.betaville.util.Crypto;
+
 /**
- * Keeps track of the number of clients currently connected.
+ * Keeps track of the clients currently connected.
  * @author Skye Book
  *
  */
@@ -40,20 +45,42 @@ public class ConnectionTracker {
 	
 	// tracks the total number of connections during the lifetime of this server instance
 	private static int totalConnectionCount = 0;
+	
+	@SuppressWarnings("rawtypes")
+	private static HashMap<String, Future> connections = new HashMap<String, Future>();
 
 	private ConnectionTracker(){}
 	
-	public static void incrementConnectionCount(){
+	/**
+	 * 
+	 * @param connection
+	 * @return The key referencing this object's future
+	 */
+	public synchronized static String addConnection(@SuppressWarnings("rawtypes") Future connection){
+		String keyAttempt = Crypto.doSHA1(""+((double)System.currentTimeMillis()*Math.random()));
+		while(connections.containsKey(keyAttempt)){
+			keyAttempt = Crypto.doSHA1(""+((double)System.currentTimeMillis()*Math.random()));
+		}
+		connections.put(keyAttempt, connection);
 		totalConnectionCount++;
-		connectionCount++;
+		
+		logger.debug("Added Future: " + keyAttempt);
+		
+		return keyAttempt;
 	}
 	
-	public static void deincrementConnectionCount(){
-		connectionCount--;
+	public synchronized static void removeConnection(String futureKey, boolean gracefulDeath){
+		if(!gracefulDeath){
+			logger.info("Future " + futureKey + " did not die gracefully, was killed by intervention");
+			connections.get(futureKey).cancel(true);
+		}
+		
+		logger.debug("Removing Future: " + futureKey);
+		connections.remove(futureKey);
 	}
 	
 	public static int getConnectionCount(){
-		return connectionCount;
+		return connections.size();
 	}
 	
 	public static int getTotalConnectionCount(){

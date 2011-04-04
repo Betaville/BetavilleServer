@@ -40,6 +40,7 @@ public class SessionTracker {
 		}
 		Session session = new Session(user, sessionID, tokenCandidate, pass);
 		sessions.add(session);
+		logger.info("New Session("+user+":"+session.getSessionID()+":"+session.getSessionToken()+")");
 		return session;
 	}
 	

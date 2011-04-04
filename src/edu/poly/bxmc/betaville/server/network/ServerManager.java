@@ -28,6 +28,7 @@ package edu.poly.bxmc.betaville.server.network;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Future;
 
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.ServerLauncher;
@@ -69,8 +70,10 @@ public class ServerManager {
 				Socket socketClient = server.accept();
 				if (socketClient.isConnected()) {
 					Client client = new Client(socketClient);
-					ServerLauncher.managerPool.submit(new NewClientConnection(client, pass));
-					ConnectionTracker.incrementConnectionCount();
+					NewClientConnection connection = new NewClientConnection(client, pass);
+					Future future = ServerLauncher.managerPool.submit(connection);
+					String futureKey = ConnectionTracker.addConnection(future);
+					connection.setFutureKey(futureKey);
 				}
 			}
 		} catch (IOException e) {
