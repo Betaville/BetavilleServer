@@ -35,6 +35,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.concurrent.Future;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -92,9 +93,10 @@ public class SecureServerManager {
 				// Waiting for a incoming client connection request
 				Socket socketClient = server.accept();
 				if (socketClient.isConnected()) {
-					Client client = new Client(socketClient);
-					ServerLauncher.managerPool.submit(new NewClientConnection(client, pass));
-					ConnectionTracker.incrementConnectionCount();
+					Client client = new Client(socketClient);NewClientConnection connection = new NewClientConnection(client, pass);
+					Future future = ServerLauncher.managerPool.submit(connection);
+					String futureKey = ConnectionTracker.addConnection(future);
+					connection.setFutureKey(futureKey);
 				}
 			}
 		} catch (IOException e) {

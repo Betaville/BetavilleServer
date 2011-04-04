@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 package edu.poly.bxmc.betaville.server.network;
 
 import java.io.File;
@@ -34,6 +34,8 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
@@ -74,9 +76,22 @@ public class NewClientConnection implements Runnable {
 	private Client client;
 
 	boolean clientIsSafe = true;
-	
+
 	private String modelBinLocation = "storage/";
-	
+
+	private long lastRequest = -1;
+
+	private Timer keepAliveTimer = new Timer();
+	private int keepAliveLimit = 4*60*1000;
+
+	private boolean sessionStarter = false;
+
+	private boolean sessionOpen = true;
+
+	private String sessionToken = null;
+
+	private String futureKey=null;
+
 	public NewClientConnection(Client client, String pass) {
 		this.client = client;
 		if(pass!=null){
@@ -85,6 +100,19 @@ public class NewClientConnection implements Runnable {
 		else{
 			dbManager = new NewDatabaseManager();
 		}
+
+		keepAliveTimer.scheduleAtFixedRate(new TimerTask() {
+
+			@Override
+			public void run() {
+				if((System.currentTimeMillis()-lastRequest)>(keepAliveLimit)){
+					// die
+					logger.info("Connection should die now");
+					ConnectionTracker.removeConnection(futureKey, false);
+					keepAliveTimer.cancel();
+				}
+			}
+		}, 60*1000, 60*1000);
 	}
 
 	public void run(){
@@ -99,50 +127,76 @@ public class NewClientConnection implements Runnable {
 		while (clientIsSafe) {
 			receive();
 		}
-		
+
 		// we now deincrement the counter since the network's update loop is broken
 		logger.info("Connection from " + client.getClientAdress() + " closing");
-		ConnectionTracker.deincrementConnectionCount();
+		ConnectionTracker.removeConnection(futureKey, true);
+		keepAliveTimer.cancel();
+	}
+
+	private void closeConnectionFromError() throws IOException{
+		if(sessionStarter){
+			if(sessionOpen){
+				/*
+				 * If this is a connection that started the session and the
+				 * client has disconnected, then it is safe to say the session
+				 * has ended.
+				 */
+				int sessionID = SessionTracker.killSession(sessionToken);
+				if(sessionID>0){
+					logger.info("Ending Session " + sessionID + " due to the initiating connection being lost");
+					dbManager.endSession(sessionID);
+					sessionOpen=false;
+				}
+				else{
+					logger.info("Session with token " + sessionToken + " needs to be ended but the sessionID could" +
+					"not be found in the SessionTracker");
+				}
+			}
+			else{
+				logger.warn("Session with token " + sessionToken + " is trying to be closed again although it no longer" +
+						"seems to be open!");
+			}
+		}
+		input.close();
+		client.getClientSocket().close();
+		clientIsSafe=false;
+		if(dbManager!=null) dbManager.closeConnection();
 	}
 
 	@SuppressWarnings("unchecked")
 	private void receive(){
 		try {
 			Object[] inObject = null;
-				try{
-					Object in = input.readObject();
-					if(in instanceof Object[]){
-						inObject = (Object[])in;
-					}
-					else if(in instanceof Integer){
-						// Process connection codes
-						if(((Integer)in)==ConnectionCodes.CLOSE){
-							logger.info("Socket from " + client.getClientAdress() + " close requested");
-							clientIsSafe=false;
-							output.close();
-							client.getClientSocket().close();
-							if(dbManager!=null) dbManager.closeConnection();
-							return;
-						}
-					}
-				} catch (IOException e){
-					logger.error("Exception Caught While Attempting Read From Client: " + e.getClass().getName(), e);
-					input.close();
-					client.getClientSocket().close();
-					clientIsSafe=false;
-					if(dbManager!=null) dbManager.closeConnection();
-					return;
-				} catch (ClassNotFoundException e) {
-					logger.error("Exception Caught While Attempting Read From Client: " + e.getClass().getName(), e);
-					input.close();
-					client.getClientSocket().close();
-					clientIsSafe=false;
-					if(dbManager!=null) dbManager.closeConnection();
-					return;
+			try{
+				Object in = input.readObject();
+				lastRequest=System.currentTimeMillis();
+				if(in instanceof Object[]){
+					inObject = (Object[])in;
 				}
+				else if(in instanceof Integer){
+					// Process connection codes
+					if(((Integer)in)==ConnectionCodes.CLOSE){
+						logger.info("Socket from " + client.getClientAdress() + " close requested");
+						clientIsSafe=false;
+						output.close();
+						client.getClientSocket().close();
+						if(dbManager!=null) dbManager.closeConnection();
+						return;
+					}
+				}
+			} catch (IOException e){
+				logger.error("Exception Caught While Attempting Read From Client: " + e.getClass().getName(), e);
+				closeConnectionFromError();
+				return;
+			} catch (ClassNotFoundException e) {
+				logger.error("Exception Caught While Attempting Read From Client: " + e.getClass().getName(), e);
+				closeConnectionFromError();
+				return;
+			}
 
-				
-				
+
+
 			// USER FUNCTIONALITY
 			if(((String)inObject[0]).equals("user")){
 				if(((String)inObject[1]).equals("auth")){
@@ -154,6 +208,9 @@ public class NewClientConnection implements Runnable {
 					// only create a session if the response was valid
 					String sessionToken = "";
 					if(response>0)sessionToken = SessionTracker.addSession(response, (String)inObject[2], (String)inObject[3]).getSessionToken();
+					sessionStarter=true;
+					this.sessionToken=sessionToken;
+					sessionOpen=true;
 					output.writeObject(new Object[]{Integer.toString(response),sessionToken});
 				}
 				if(((String)inObject[1]).equals("endsession")){
@@ -189,8 +246,8 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.getUserLevel((String)inObject[2]));
 				}
 			}
-			
-			
+
+
 			// DESIGN FUNCTIONALITY
 			else if(((String)inObject[0]).equals("design")){
 				if(((String)inObject[1]).equals("synchronizedata")){
@@ -210,7 +267,7 @@ public class NewClientConnection implements Runnable {
 						int emptyDesignID = dbManager.addDesign(ed, (String)inObject[3], (String)inObject[4], "");
 						design.setSourceID(emptyDesignID);
 					}
-					
+
 					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
 					dbManager.addProposal(design.getSourceID(), designID, (String)inObject[6], permission);
@@ -255,7 +312,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.findDesignsByUser((String)inObject[2]));
 				}
 				else if(((String)inObject[1]).equals("findbydate")){
-					output.writeObject(dbManager.findDesignsByDate((String)inObject[2]));
+					output.writeObject(dbManager.findDesignsByDate((Long)inObject[2]));
 				}
 				else if(((String)inObject[1]).equals("findbycity")){
 					output.writeObject(dbManager.findDesignsByCity((Integer)inObject[2], (Boolean)inObject[3]));
@@ -340,7 +397,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(returnable);
 				}
 			}
-			
+
 			// PROPOSAL FUNCTIONALITY
 			else if(((String)inObject[0]).equals("proposal")){
 				if(((String)inObject[1]).equals("findinradius")){
@@ -362,14 +419,14 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(Integer.toString(designID));
 				}
 			}
-			
+
 			// VERSION FUNCTIONALITY
 			else if(((String)inObject[0]).equals("version")){
 				if(((String)inObject[1]).equals("versionsofproposal")){
 					output.writeObject(dbManager.findVersionsOfProposal((Integer)inObject[2]));
 				}
 			}
-			
+
 			// FAVE FUNCTIONALITY
 			else if(((String)inObject[0]).equals("fave")){
 				if(((String)inObject[1]).equals("add")){
@@ -379,8 +436,8 @@ public class NewClientConnection implements Runnable {
 					// TODO implement this
 				}
 			}
-			
-			
+
+
 			// COMMENT FUNCTIONALITY
 			else if(((String)inObject[0]).equals("comment")){
 				if(((String)inObject[1]).equals("add")){
@@ -396,7 +453,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.getComments((Integer)inObject[2]));
 				}
 			}
-			
+
 			// CITY FUNCTIONALITY
 			else if(((String)inObject[0]).equals("city")){
 				if(((String)inObject[1]).equals("add")){
@@ -421,7 +478,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.findAllCities());
 				}
 			}
-			
+
 			// WORMHOLES
 			else if(((String)inObject[0]).equals("wormhole")){
 				if(((String)inObject[1]).equals("add")){
@@ -448,7 +505,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.getAllWormholesInCity((Integer)inObject[2]));
 				}
 			}
-			
+
 			// VERSION ENFORCEMENT
 			else if(((String)inObject[0]).equals("softwareversion")){
 				if(((String)inObject[1]).equals("getdesign")){
@@ -460,11 +517,19 @@ public class NewClientConnection implements Runnable {
 			e.printStackTrace();
 		}
 	}
-	
+
+	public void setFutureKey(String key){
+		futureKey=key;
+	}
+
+	public String getFutureKey(){
+		return futureKey;
+	}
+
 	private PhysicalFileTransporter wrapFile(Design design){
 		// empty designs don't have files associated with them
 		if(design instanceof EmptyDesign) return null;
-		
+
 		File designFile = new File(modelBinLocation+"designmedia/"+design.getFilepath());
 		FileInputStream fis;
 		try {
@@ -472,6 +537,7 @@ public class NewClientConnection implements Runnable {
 			byte[] b = new byte[fis.available()];
 			fis.read(b);
 			PhysicalFileTransporter transport = new PhysicalFileTransporter(b);
+			fis.close();
 			return transport;
 		} catch (FileNotFoundException e) {
 			logger.debug("Error getting file: " + design.getFilepath());
@@ -481,7 +547,7 @@ public class NewClientConnection implements Runnable {
 		}
 		return null;
 	}
-	
+
 	private PhysicalFileTransporter wrapThumbnail(int designID){
 		File designFile = new File(modelBinLocation+"designthumbs/"+designID+".png");
 		if(!designFile.exists()) return null;
@@ -491,6 +557,7 @@ public class NewClientConnection implements Runnable {
 			byte[] b = new byte[fis.available()];
 			fis.read(b);
 			PhysicalFileTransporter transport = new PhysicalFileTransporter(b);
+			fis.close();
 			return transport;
 		} catch (FileNotFoundException e) {
 			logger.debug("Thumbnail does not exist for " + designID +" but Java reports that the file exists", e);

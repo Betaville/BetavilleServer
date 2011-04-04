@@ -549,7 +549,7 @@ public class NewDatabaseManager {
 	 */
 	public int endSession(int sessionID){
 		try {
-			logger.info("Ending Session " + sessionID);
+			logger.debug("Ending Session " + sessionID);
 			endSession.setInt(1, sessionID);
 			endSession.executeUpdate();
 
@@ -1194,6 +1194,7 @@ public class NewDatabaseManager {
 
 	public Vector<Design> findDesignsByUser(String user){
 		try {
+			logger.debug("Finding designs from "+user);
 			findDesignsByUser.setString(1, user);
 			ResultSet drs = findDesignsByUser.executeQuery();
 			Vector<Design> designs = new Vector<Design>();
@@ -1201,6 +1202,9 @@ public class NewDatabaseManager {
 				designs.add(designFromResultSet(drs));
 			}
 			drs.close();
+			
+			logger.debug(designs.size() + " designs found for user " + user);
+			
 			return designs;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -1213,7 +1217,8 @@ public class NewDatabaseManager {
 	 * TODO: findDesignsByDate
 	 * @incomplete
 	 */
-	public Vector<Design> findDesignsByDate(String date){
+	public Vector<Design> findDesignsByDate(long date){
+		new java.sql.Date(date);
 		return null;
 	}
 	
