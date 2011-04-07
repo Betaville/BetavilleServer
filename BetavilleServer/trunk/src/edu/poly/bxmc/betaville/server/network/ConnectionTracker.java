@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 package edu.poly.bxmc.betaville.server.network;
 
 import java.util.HashMap;
@@ -39,18 +39,18 @@ import edu.poly.bxmc.betaville.util.Crypto;
  */
 public class ConnectionTracker {
 	private static final Logger logger = Logger.getLogger(ConnectionTracker.class);
-	
+
 	// tracks the current number of connections
 	private volatile static int connectionCount = 0;
-	
+
 	// tracks the total number of connections during the lifetime of this server instance
 	private volatile static int totalConnectionCount = 0;
-	
+
 	@SuppressWarnings("rawtypes")
 	private static HashMap<String, Future> connections = new HashMap<String, Future>();
 
 	private ConnectionTracker(){}
-	
+
 	/**
 	 * 
 	 * @param connection
@@ -64,31 +64,32 @@ public class ConnectionTracker {
 		connections.put(keyAttempt, connection);
 		connectionCount++;
 		totalConnectionCount++;
-		
+
 		logger.debug("Added Future: " + keyAttempt);
-		
+
 		return keyAttempt;
 	}
-	
+
 	public synchronized static void removeConnection(String futureKey, boolean gracefulDeath){
 		if(!gracefulDeath){
 			logger.info("Future " + futureKey + " did not die gracefully, was killed by intervention");
 			connections.get(futureKey).cancel(true);
 		}
-		
+
 		logger.debug("Removing Future: " + futureKey);
-		connections.remove(futureKey);
-		connectionCount--;
+		if(connections.remove(futureKey)!=null){
+			connectionCount--;
+		}
 	}
-	
+
 	public static int getConnectionCount(){
 		return connections.size();
 	}
-	
+
 	public static int getTotalConnectionCount(){
 		return totalConnectionCount;
 	}
-	
+
 	/**
 	 * Prints to the logger the current amount of connections as well as the connections since startup
 	 */
