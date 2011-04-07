@@ -41,10 +41,10 @@ public class ConnectionTracker {
 	private static final Logger logger = Logger.getLogger(ConnectionTracker.class);
 	
 	// tracks the current number of connections
-	private static int connectionCount = 0;
+	private volatile static int connectionCount = 0;
 	
 	// tracks the total number of connections during the lifetime of this server instance
-	private static int totalConnectionCount = 0;
+	private volatile static int totalConnectionCount = 0;
 	
 	@SuppressWarnings("rawtypes")
 	private static HashMap<String, Future> connections = new HashMap<String, Future>();
@@ -62,6 +62,7 @@ public class ConnectionTracker {
 			keyAttempt = Crypto.doSHA1(""+((double)System.currentTimeMillis()*Math.random()));
 		}
 		connections.put(keyAttempt, connection);
+		connectionCount++;
 		totalConnectionCount++;
 		
 		logger.debug("Added Future: " + keyAttempt);
@@ -77,6 +78,7 @@ public class ConnectionTracker {
 		
 		logger.debug("Removing Future: " + futureKey);
 		connections.remove(futureKey);
+		connectionCount--;
 	}
 	
 	public static int getConnectionCount(){
