@@ -80,19 +80,19 @@ public class PopulateDatabase {
 				continue;
 			}
 
-			// database password
+			// Admin user to be created
 			if(args[i].startsWith("-adminuser")){
 				adminUser=args[i+1];
 				continue;
 			}
 
-			// database password
+			// Password for admin user being created
 			if(args[i].startsWith("-adminpass")){
 				adminPass=args[i].substring(10);
 				continue;
 			}
 
-			// database password
+			// Email address for the new administrator account
 			if(args[i].startsWith("-adminmail")){
 				adminMail=args[i+1];
 				continue;
