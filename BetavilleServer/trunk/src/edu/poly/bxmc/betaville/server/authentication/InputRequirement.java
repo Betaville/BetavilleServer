@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 package edu.poly.bxmc.betaville.server.authentication;
 
 /**
@@ -32,27 +32,56 @@ package edu.poly.bxmc.betaville.server.authentication;
  *
  */
 public class InputRequirement{
-	
+
 	public enum MatchingMode{
 		WHOLE,
 		CONTAINS
 	}
-	
+
 	public enum TextMode{
 		PLAIN,
 		REGEX
 	}
-	
+
 	private String requirementString;
+	private int minLengthRequirement=-1;
 	private MatchingMode matchingMode;
 	private TextMode textMode;
-	
+
 	/**
 	 * 
 	 */
-	public InputRequirement(String requirementString, MatchingMode matchingMode, TextMode textMode){
+	public InputRequirement(String requirementString, int minLengthRequirement, MatchingMode matchingMode, TextMode textMode){
 		this.matchingMode=matchingMode;
+		this.minLengthRequirement=minLengthRequirement;
 		this.textMode=textMode;
 		this.requirementString=requirementString;
+	}
+
+	public boolean validate(String content){
+		switch (matchingMode) {
+		case WHOLE:
+			switch (textMode) {
+			case PLAIN:
+				return (!content.equals(requirementString) && lengthIsValid(content.length()));
+			case REGEX:
+				return (!content.matches(requirementString) && lengthIsValid(content.length()));
+			}
+			break;
+
+		case CONTAINS:
+			switch (textMode) {
+			case PLAIN:
+				return (!content.equals(requirementString) && lengthIsValid(content.length()));
+			case REGEX:
+				return (!content.matches(requirementString) && lengthIsValid(content.length()));
+			}
+			break;
+		}
+		return true;
+	}
+
+	private boolean lengthIsValid(int contentLength){
+		return (contentLength>minLengthRequirement || contentLength*minLengthRequirement<=0);
 	}
 }
