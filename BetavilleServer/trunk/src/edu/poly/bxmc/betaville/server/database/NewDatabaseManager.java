@@ -559,8 +559,8 @@ public class NewDatabaseManager {
 		}
 		return 0;
 	}
-
-	public boolean addUser(String user, String pass, String email, String twitter, String bio){
+	
+	public boolean addUser(String user, String pass, String email, String twitter, String bio, boolean bypassRequirements){
 		try {
 			String salt = Crypto.createSalt(12);
 			String hash = Crypto.doSaltedEncryption(pass, salt);
