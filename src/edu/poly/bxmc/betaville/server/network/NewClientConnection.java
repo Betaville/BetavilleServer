@@ -223,7 +223,9 @@ public class NewClientConnection implements Runnable {
 					else output.writeObject(Integer.toString(sessionID));
 				}
 				else if(((String)inObject[1]).equals("add")){
-					boolean response = dbManager.addUser((String)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5], (String)inObject[6]);
+					// Do not bypass the username requirements since this is a public registration process
+					// TODO: Perhaps we should put in a token-authenticated add user method that allows an administrator to bypass these restrictions..
+					boolean response = dbManager.addUser((String)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5], (String)inObject[6], false);
 					output.writeObject(Boolean.toString(response));
 				}
 				else if(((String)inObject[1]).equals("available")){

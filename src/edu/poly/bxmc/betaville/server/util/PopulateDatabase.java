@@ -154,7 +154,11 @@ public class PopulateDatabase {
 		}
 
 		NewDatabaseManager db = new NewDatabaseManager(dbUser, dbPass);
-		if(db.addUser(adminUser, adminPass, adminMail, "", "")) System.out.println("User '"+adminUser+"' created");
+		/*
+		 * It's OK to bypass the username requirements here since this is being done locally (by someone who
+		 * should know better.. and may, in fact, want to create a username like "admin")
+		 */
+		if(db.addUser(adminUser, adminPass, adminMail, "", "", true)) System.out.println("User '"+adminUser+"' created");
 		else System.err.println("User could not be created");
 
 		// user is set to admin in the script
