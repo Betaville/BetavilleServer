@@ -42,6 +42,11 @@ public class Preferences{
 	private static final Logger logger = Logger.getLogger(Preferences.class);
 	protected static final String SERVER_BASE = "betaville.server.";
 	
+	public static final String NETWORK_DEFAULT_PORT=SERVER_BASE+"network.default.port";
+	public static final String NETWORK_SSL_PORT=SERVER_BASE+"network.ssl.port";
+	public static final String NETWORK_USE_SSL=SERVER_BASE+"network.ssl.enabled";
+	
+	
 	public static final String LOG_REPORT_INTERVAL=SERVER_BASE+"logging.report.interval";
 	public static final String MYSQL_USER=SERVER_BASE+"mysql.user";
 	public static final String MYSQL_PASS=SERVER_BASE+"mysql.pass";

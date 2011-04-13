@@ -51,6 +51,9 @@ public class DefaultPreferenceWriter {
 	public static void writeDefaultPreferences() throws IOException {
 		logger.info("Writing default preferences");
 		if(System.getProperty(Preferences.LOG_REPORT_INTERVAL)==null) System.setProperty(Preferences.LOG_REPORT_INTERVAL, "600000");
+		if(System.getProperty(Preferences.NETWORK_DEFAULT_PORT)==null) System.setProperty(Preferences.NETWORK_DEFAULT_PORT, "14500");
+		if(System.getProperty(Preferences.NETWORK_SSL_PORT)==null) System.setProperty(Preferences.NETWORK_SSL_PORT, "14501");
+		if(System.getProperty(Preferences.NETWORK_USE_SSL)==null) System.setProperty(Preferences.NETWORK_USE_SSL, "false");
 		if(System.getProperty(Preferences.MYSQL_PORT)==null) System.setProperty(Preferences.MYSQL_PORT, "3306");
 		if(System.getProperty(Preferences.MYSQL_USER)==null) System.setProperty(Preferences.MYSQL_USER, "root");
 		if(System.getProperty(Preferences.MYSQL_PASS)==null) System.setProperty(Preferences.MYSQL_PASS, "root");
