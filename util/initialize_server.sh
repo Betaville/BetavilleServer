@@ -58,11 +58,23 @@ mysqladmin -u $dbUser -p$dbPass create $dbName
 # generate the database tables
 mysql -u $dbUser -p$dbPass $dbName < ../sql/betaville.sql
 
+
+# This is irritating, we need to move all of the jars
+mkdir ../deploy
+cp ../lib/jdom.jar ../deploy/jdom.jar
+cp ../lib/javamail-1.4.3/mail.jar ../deploy/mail.jar
+cp ../lib/javamail-1.4.3/lib/*.jar ../deploy
+cp ../lib/MySQL/*.jar ../deploy
+cp ../../BetavilleApp/Betaville*.jar ../deploy
+mv ../Betaville*.jar ../deploy
+mv ../PopulateDatabase.jar ../deploy
+
+
 # create the user using the java utility
-java -jar ../PopulateDatabase.jar edu.poly.bxmc.betaville.server.util.PopulateDatabase -cp ../ -u $dbUser -p$dbPass -adminuser $adminUser -adminpass$adminPass -adminmail $adminEmail -city $city -state $state -country $country
+java -jar ../deploy/PopulateDatabase.jar edu.poly.bxmc.betaville.server.util.PopulateDatabase -cp ../deploy -u $dbUser -p$dbPass -adminuser $adminUser -adminpass$adminPass -adminmail $adminEmail -city $city -state $state -country $country
 
 # set the user to administrator (this will be built into the Java database functionality soon and should be migrated over)
 mysql --user=$dbUser --password=$dbPass --database=$dbName -e "UPDATE user SET type = 'admin' WHERE userName LIKE '$adminUser'"
 
 echo "Success!"
-echo "To run the Betaville server, run the command 'java -jar BetavilleServer.jar' in the BetavilleServer directory"
+echo "To run the Betaville server, run the command 'java -jar BetavilleServer.jar' in the BetavilleServer/deploy directory"

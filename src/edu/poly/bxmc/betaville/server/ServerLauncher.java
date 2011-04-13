@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 package edu.poly.bxmc.betaville.server;
 
 import java.io.IOException;
@@ -51,8 +51,10 @@ import edu.poly.bxmc.betaville.server.util.Preferences;
  */
 public class ServerLauncher {
 	
-	private static long reportInterval = 600000;
+	private static Logger logger;
 	
+	private static long reportInterval = 600000;
+
 	public static final ExecutorService managerPool = Executors.newCachedThreadPool();
 
 	/**
@@ -66,6 +68,7 @@ public class ServerLauncher {
 			Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n"), DateFormat.getDateInstance().format(new Date())+".log"));
 			Logger.getRootLogger().addAppender(new ConsoleAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n")));
 			Logger.getRootLogger().setLevel(Level.INFO);
+			logger = Logger.getLogger(ServerLauncher.class);
 		} catch (IOException e) {
 			System.err.println("Log file coult not be opened for writing!  Please check your user permissions.");
 			e.printStackTrace();
@@ -73,25 +76,28 @@ public class ServerLauncher {
 		
 		// Set up preferences
 		Preferences.initialize();
-		
+
 		// Create insecure manager
 		managerPool.submit(new Runnable(){
 			@Override
 			public void run() {
 				new ServerManager(null, args);
 			}});
-		
-		// Create SSL manager
-		managerPool.submit(new Runnable(){
-			@Override
-			public void run() {
-				new SecureServerManager(args);
-			}});
-		
+
+		// Create SSL manager (only if SSL is enabled)
+		if(Preferences.getBooleanSetting(Preferences.NETWORK_USE_SSL)){
+			managerPool.submit(new Runnable(){
+				@Override
+				public void run() {
+					new SecureServerManager(args);
+					logger.info("SSL Connections Enabled");
+				}});
+		}
+
 		// Create report timer
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
-			
+
 			@Override
 			public void run() {
 				ConnectionTracker.generateLogReport();
