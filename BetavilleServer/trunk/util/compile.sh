@@ -9,10 +9,12 @@
 # by Skye Book <skye.book@gmail.com>
 # Released under GPL v3, which can be found at http://www.gnu.org/licenses/gpl-3.0.html
 
+# Build the application jars
+cd ../../BetavilleApp
+ant build jar
+mv BetavilleApp.jar ../BetavilleServer
+
 # Build the server jars
-cd ../
+cd ../BetavilleServer
 ant build build jar pop-db-jar
 
-# Build the application jars
-cd ../BetavilleApp
-ant build jar

@@ -65,7 +65,7 @@ cp ../lib/jdom.jar ../deploy/jdom.jar
 cp ../lib/javamail-1.4.3/mail.jar ../deploy/mail.jar
 cp ../lib/javamail-1.4.3/lib/*.jar ../deploy
 cp ../lib/MySQL/*.jar ../deploy
-cp ../../BetavilleApp/Betaville*.jar ../deploy
+#cp ../../BetavilleApp/Betaville*.jar ../deploy
 mv ../Betaville*.jar ../deploy
 mv ../PopulateDatabase.jar ../deploy
 
