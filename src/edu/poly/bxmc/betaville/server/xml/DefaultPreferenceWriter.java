@@ -43,12 +43,16 @@ import edu.poly.bxmc.betaville.xml.PreferenceWriter;
 public class DefaultPreferenceWriter {
 	private static Logger logger = Logger.getLogger(DefaultPreferenceWriter.class);
 	
+	public static void writeDefaultPreferences() throws IOException{
+		writeDefaultPreferences((new File("config.xml")));
+	}
+	
 
 	/**
 	 * @throws IOException 
 	 * 
 	 */
-	public static void writeDefaultPreferences() throws IOException {
+	public static void writeDefaultPreferences(File file) throws IOException {
 		logger.info("Writing default preferences");
 		if(System.getProperty(Preferences.LOG_REPORT_INTERVAL)==null) System.setProperty(Preferences.LOG_REPORT_INTERVAL, "600000");
 		if(System.getProperty(Preferences.NETWORK_DEFAULT_PORT)==null) System.setProperty(Preferences.NETWORK_DEFAULT_PORT, "14500");
@@ -84,7 +88,9 @@ public class DefaultPreferenceWriter {
 	
 	public static void main(String[] args) throws IOException{
 		// Generates preferences
-		DefaultPreferenceWriter.writeDefaultPreferences();
+		File file = new File("config.xml");
+		DefaultPreferenceWriter.writeDefaultPreferences(file);
+		System.out.println("Default preferences written to " + file.getAbsolutePath());
 	}
 
 }
