@@ -65,13 +65,13 @@ cp ../lib/jdom.jar ../deploy/jdom.jar
 cp ../lib/javamail-1.4.3/mail.jar ../deploy/mail.jar
 cp ../lib/javamail-1.4.3/lib/*.jar ../deploy
 cp ../lib/MySQL/*.jar ../deploy
-#cp ../../BetavilleApp/Betaville*.jar ../deploy
 mv ../Betaville*.jar ../deploy
 mv ../PopulateDatabase.jar ../deploy
 
 
-# create the user using the java utility
-java -jar ../deploy/PopulateDatabase.jar edu.poly.bxmc.betaville.server.util.PopulateDatabase -cp ../deploy -u $dbUser -p$dbPass -adminuser $adminUser -adminpass$adminPass -adminmail $adminEmail -city $city -state $state -country $country
+cd ../deploy
+echo "working from `pwd`"
+java -Djava.library.path=`pwd` -cp `pwd` -jar PopulateDatabase.jar edu.poly.bxmc.betaville.server.util.PopulateDatabase -u $dbUser -p$dbPass -adminuser $adminUser -adminpass$adminPass -adminmail $adminEmail -city $city -state $state -country $country
 
 # set the user to administrator (this will be built into the Java database functionality soon and should be migrated over)
 mysql --user=$dbUser --password=$dbPass --database=$dbName -e "UPDATE user SET type = 'admin' WHERE userName LIKE '$adminUser'"
