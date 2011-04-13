@@ -56,6 +56,9 @@
         <pathelement location="bin"/>
         <path refid="MySQL.userclasspath"/>
         <pathelement location="lib/"/>
+        <pathelement location="lib/MySQL/"/>
+        <pathelement location="lib/javamail-1.4.3/"/>
+        <pathelement location="lib/javamail-1.4.3/lib/"/>
         <path refid="BetavilleApp.classpath"/>
     </path>
     <target name="init">
