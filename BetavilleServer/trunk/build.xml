@@ -55,10 +55,15 @@
     <path id="BetavilleServer.classpath">
         <pathelement location="bin"/>
         <path refid="MySQL.userclasspath"/>
-        <pathelement location="lib/*.jar"/>
-        <pathelement location="lib/MySQL/*.jar"/>
-        <pathelement location="lib/javamail-1.4.3/*.jar"/>
-        <pathelement location="lib/javamail-1.4.3/lib/8*.jar"/>
+        <pathelement location="lib/jdom.jar"/>
+        <pathelement location="lib/MySQL/mysql-connector-java-5.1.7-bin.jar"/>
+        <pathelement location="lib/MySQL/log4j-1.2.9.jar"/>
+        <pathelement location="lib/javamail-1.4.3/mail.jar"/>
+        <pathelement location="lib/javamail-1.4.3/lib/dsn.jar"/>
+        <pathelement location="lib/javamail-1.4.3/lib/imap.jar"/>
+        <pathelement location="lib/javamail-1.4.3/lib/mailapi.jar"/>
+        <pathelement location="lib/javamail-1.4.3/lib/pop3.jar"/>
+        <pathelement location="lib/javamail-1.4.3/lib/smtp.jar"/>
         <path refid="BetavilleApp.classpath"/>
     </path>
     <target name="init">
