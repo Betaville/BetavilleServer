@@ -25,7 +25,10 @@
  */
 package edu.poly.bxmc.betaville.server.util;
 
+import java.io.IOException;
+
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
+import edu.poly.bxmc.betaville.server.xml.DefaultPreferenceWriter;
 
 /**
  * @author Skye Book
@@ -152,7 +155,7 @@ public class PopulateDatabase {
 				continue;
 			}
 		}
-
+		
 		NewDatabaseManager db = new NewDatabaseManager(dbUser, dbPass);
 		/*
 		 * It's OK to bypass the username requirements here since this is being done locally (by someone who
@@ -165,6 +168,21 @@ public class PopulateDatabase {
 
 		if(db.addCity(city, state, country)>-1) System.out.println("City '"+city+"' created");
 		else System.err.println("City could not be created");
+		
+		
+		// Now that we've created a server, let's setup some preferences:
+		System.setProperty(Preferences.MYSQL_DATABASE, "betaville");
+		System.setProperty(Preferences.MYSQL_USER, dbUser);
+		System.setProperty(Preferences.MYSQL_PASS, dbPass);
+		// The default port is 3306, so no need to set that (it will be written when we write the preferences)
+		
+		// now commit these preferences to a file
+		try {
+			DefaultPreferenceWriter.writeDefaultPreferences();
+		} catch (IOException e) {
+			System.out.println("ERROR: The preferences file could not be written.  Are you sure you have permission to " +
+					"write to this directory?");
+		}
 	}
 
 }

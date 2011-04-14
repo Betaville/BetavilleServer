@@ -59,6 +59,7 @@ public class ServerManager {
 		if(startupArgs.length==0){
 			pass=null;
 		}else{
+			// if we get an argument, its a password (this is the only command line argument we've ever had)
 			pass=startupArgs[0];
 		}
 		try {

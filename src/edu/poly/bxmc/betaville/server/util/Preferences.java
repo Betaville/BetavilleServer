@@ -40,6 +40,9 @@ import edu.poly.bxmc.betaville.xml.PreferenceReader;
  */
 public class Preferences{
 	private static final Logger logger = Logger.getLogger(Preferences.class);
+	
+	private static boolean preferencesLoadedOnInitialization=false;
+	
 	protected static final String SERVER_BASE = "betaville.server.";
 	
 	public static final String NETWORK_DEFAULT_PORT=SERVER_BASE+"network.default.port";
@@ -85,23 +88,27 @@ public class Preferences{
 		return Boolean.parseBoolean(System.getProperty(settingToGet));
 	}
 	
-	public static void initialize(){
+	/**
+	 * Check for whether the application preferences were generated on startup
+	 * or loaded from a file.
+	 * @return True if they were loaded from a file, false if they were generated.
+	 */
+	public static boolean arePreferencesLoadedFromFile(){
+		return preferencesLoadedOnInitialization;
+	}
+	
+	public static void initialize() throws IOException{
 		PreferenceReader pr;
 		try {
 			logger.info("Reading preference file");
 			pr = new PreferenceReader(new File("config.xml"));
 			pr.parse();
+			preferencesLoadedOnInitialization=true;
 		} catch (JDOMException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			logger.info("No preferences file could be found, creating one.");
-			try {
-				DefaultPreferenceWriter.writeDefaultPreferences();
-			} catch (IOException e1){
-				logger.error("A preferences file could not be created in the Betaville directory.  " +
-						"Please ensure that you're home directory has write-permissions " +
-						"enabled.  Betaville will run but your preferences will not be saved.", e1);
-			}
+			DefaultPreferenceWriter.writeDefaultPreferences();
 		}
 	}
 }

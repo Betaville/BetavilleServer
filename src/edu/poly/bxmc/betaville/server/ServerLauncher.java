@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,6 +63,22 @@ public class ServerLauncher {
 	 * @param args Arguments
 	 */
 	public static void main(final String[] args) {
+		
+		// Is this a query? (i.e: help, versions, etc)
+		if(args.length>0){
+			// now we know that we have a command, let's see which it is
+			if(isHelpArgument(args[0])){
+				System.out.println("++++-You have reached Betaville Server-++++");
+				System.out.println("--Don't you wish that we had put some information here?");
+				System.out.println("--Thanks for stopping by, but you really want to be at http://betaville.net");
+			}
+			else if(isVersionArgument(args[0])){
+				System.out.println("VERSION?!");
+			}
+		}
+		
+		
+		// Set up logging
 		try {
 			DateFormat.getDateInstance().format(new Date());
 			Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n"), DateFormat.getDateInstance().format(new Date())+".log"));
@@ -75,7 +91,13 @@ public class ServerLauncher {
 		}
 		
 		// Set up preferences
-		Preferences.initialize();
+		try {
+			Preferences.initialize();
+		} catch (IOException e) {
+			logger.error("A preferences file could not be created in the Betaville directory.  " +
+					"Please ensure that you're home directory has write-permissions " +
+					"enabled.  Betaville will run but your preferences will not be saved.", e);
+		}
 
 		// Create insecure manager
 		managerPool.submit(new Runnable(){
@@ -103,5 +125,13 @@ public class ServerLauncher {
 				ConnectionTracker.generateLogReport();
 			}
 		}, reportInterval, reportInterval);
+	}
+	
+	private static boolean isHelpArgument(String argument){
+		return argument.toLowerCase().equals("-h") || argument.toLowerCase().equals("--help");
+	}
+	
+	private static boolean isVersionArgument(String argument){
+		return argument.toLowerCase().equals("-v") || argument.toLowerCase().equals("--version");
 	}
 }
