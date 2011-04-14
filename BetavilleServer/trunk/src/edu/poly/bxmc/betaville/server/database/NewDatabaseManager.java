@@ -61,6 +61,7 @@ import edu.poly.bxmc.betaville.server.authentication.IAuthenticator;
 import edu.poly.bxmc.betaville.server.mail.AbstractMailer;
 import edu.poly.bxmc.betaville.server.mail.CommentNotificationMessage;
 import edu.poly.bxmc.betaville.server.session.SessionTracker;
+import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.server.util.UserArrayUtils;
 import edu.poly.bxmc.betaville.sound.PerformanceStyle;
 import edu.poly.bxmc.betaville.util.Crypto;
@@ -255,7 +256,7 @@ public class NewDatabaseManager {
 	 * Constructor - Create the manager of the DB
 	 */
 	public NewDatabaseManager() {
-		this("root");
+		this(Preferences.getSetting(Preferences.MYSQL_USER), Preferences.getSetting(Preferences.MYSQL_PASS));
 	}
 	
 	/**
@@ -269,7 +270,7 @@ public class NewDatabaseManager {
 	 * Constructor - Create the manager of the DB
 	 */
 	public NewDatabaseManager(IAuthenticator authenticator) {
-		dbConnection = new DataBaseConnection("root", "root");
+		dbConnection = new DataBaseConnection(Preferences.getSetting(Preferences.MYSQL_USER), Preferences.getSetting(Preferences.MYSQL_PASS));
 		this.authenticator=authenticator;
 		
 		try {
