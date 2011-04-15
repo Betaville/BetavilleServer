@@ -2,12 +2,15 @@ SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
 
+DROP SCHEMA IF EXISTS `betaville` ;
 CREATE SCHEMA IF NOT EXISTS `betaville` ;
 USE `betaville` ;
 
 -- -----------------------------------------------------
 -- Table `betaville`.`user`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`user` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`user` (
   `userName` VARCHAR(255) NOT NULL ,
   `userPass` CHAR(32) NULL ,
@@ -32,6 +35,8 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`videodesign`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`videodesign` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`videodesign` (
   `designid` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
   `length` INT(11) NULL DEFAULT NULL ,
@@ -49,6 +54,8 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`sketchdesign`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`sketchdesign` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`sketchdesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `rotY` SMALLINT NOT NULL ,
@@ -62,6 +69,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`city`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`city` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`city` (
   `cityID` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `cityName` VARCHAR(64) NOT NULL ,
@@ -71,13 +80,14 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`city` (
   INDEX `cityID` (`cityID` ASC) ,
   INDEX `cityID_2` (`cityID` ASC) ,
   INDEX `cityID_3` (`cityID` ASC) )
-ENGINE = InnoDB
-AUTO_INCREMENT = 2;
+ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
 -- Table `betaville`.`coordinate`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`coordinate` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`coordinate` (
   `coordinateID` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `northing` INT NOT NULL ,
@@ -92,6 +102,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`design`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`design` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`design` (
   `designID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
   `name` VARCHAR(128) NOT NULL ,
@@ -128,7 +140,6 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`design` (
     ON DELETE NO ACTION
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 212
 DEFAULT CHARACTER SET = latin1
 COLLATE = latin1_swedish_ci;
 
@@ -136,6 +147,8 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`proposal`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`proposal` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`proposal` (
   `proposalID` INT(11) NOT NULL AUTO_INCREMENT ,
   `sourceID` INT(10) UNSIGNED NOT NULL ,
@@ -166,6 +179,8 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`audiodesign`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`audiodesign` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`audiodesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `length` INT NULL ,
@@ -180,6 +195,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`modeldesign`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`modeldesign` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`modeldesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `rotY` SMALLINT NOT NULL ,
@@ -196,6 +213,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`comment`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`comment` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`comment` (
   `commentid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `designid` INT UNSIGNED NOT NULL ,
@@ -224,6 +243,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`country`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`country` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`country` (
   `name` CHAR(255) NOT NULL )
 ENGINE = MyISAM
@@ -234,6 +255,8 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`emptydesign`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`emptydesign` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`emptydesign` (
   `designid` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
   `length` DECIMAL(6,2) NULL DEFAULT NULL ,
@@ -247,6 +270,8 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`session`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`session` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`session` (
   `sessionID` INT NOT NULL AUTO_INCREMENT ,
   `userName` VARCHAR(255) NOT NULL ,
@@ -265,6 +290,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`wormhole`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `betaville`.`wormhole` ;
+
 CREATE  TABLE IF NOT EXISTS `betaville`.`wormhole` (
   `wormholeid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `coordinateid` INT UNSIGNED NOT NULL ,
