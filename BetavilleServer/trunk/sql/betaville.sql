@@ -157,6 +157,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`proposal` (
   `removables` TEXT NOT NULL ,
   `level` ENUM('closed','group','all') NULL ,
   `group` TEXT NULL ,
+  `featured` TINYINT UNSIGNED NULL ,
   PRIMARY KEY (`proposalID`) ,
   INDEX `sourceID` (`sourceID` ASC) ,
   INDEX `destinationID` (`destinationID` ASC) ,
