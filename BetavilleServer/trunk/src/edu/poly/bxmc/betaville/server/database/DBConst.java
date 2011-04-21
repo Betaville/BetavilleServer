@@ -147,6 +147,7 @@ public class DBConst {
 	public final static String PROPOSAL_SOURCE = "sourceID";
 	public final static String PROPOSAL_DEST = "destinationID";
 	public final static String PROPOSAL_TYPE = "type";
+	public final static String PROPOSAL_FEATURED = "featured";
 	public final static String PROPOSAL_TYPE_PROPOSAL = "proposal";
 	public final static String PROPOSAL_TYPE_VERSION = "version";
 	public final static String PROPOSAL_TYPE_REMOVABLE_LIST = "removables";
