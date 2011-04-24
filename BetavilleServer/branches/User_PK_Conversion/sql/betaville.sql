@@ -2,16 +2,14 @@ SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
 
-DROP SCHEMA IF EXISTS `betaville` ;
 CREATE SCHEMA IF NOT EXISTS `betaville` ;
 USE `betaville` ;
 
 -- -----------------------------------------------------
 -- Table `betaville`.`user`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`user` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`user` (
+  `userid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `userName` VARCHAR(255) NOT NULL ,
   `userPass` CHAR(32) NULL ,
   `twitterName` VARCHAR(16) NULL DEFAULT NULL ,
@@ -24,9 +22,11 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`user` (
   `displayName` VARCHAR(45) NULL ,
   `strongpass` CHAR(40) NOT NULL ,
   `strongsalt` CHAR(12) NOT NULL ,
-  PRIMARY KEY (`userName`) ,
+  PRIMARY KEY (`userid`) ,
   INDEX `userName` (`userName` ASC) ,
-  INDEX `userName_2` (`userName` ASC) )
+  INDEX `userName_2` (`userName` ASC) ,
+  UNIQUE INDEX `userName_UNIQUE` (`userName` ASC) ,
+  UNIQUE INDEX `userid_UNIQUE` (`userid` ASC) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1
 COLLATE = latin1_swedish_ci;
@@ -35,8 +35,6 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`videodesign`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`videodesign` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`videodesign` (
   `designid` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
   `length` INT(11) NULL DEFAULT NULL ,
@@ -54,8 +52,6 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`sketchdesign`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`sketchdesign` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`sketchdesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `rotY` SMALLINT NOT NULL ,
@@ -69,8 +65,6 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`city`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`city` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`city` (
   `cityID` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `cityName` VARCHAR(64) NOT NULL ,
@@ -86,8 +80,6 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`coordinate`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`coordinate` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`coordinate` (
   `coordinateID` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `northing` INT NOT NULL ,
@@ -102,14 +94,13 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`design`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`design` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`design` (
   `designID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
   `name` VARCHAR(128) NOT NULL ,
   `filepath` VARCHAR(196) NOT NULL ,
   `cityID` INT(10) UNSIGNED NOT NULL ,
   `user` VARCHAR(255) NOT NULL ,
+  `userid` INT UNSIGNED NOT NULL ,
   `coordinateID` INT(10) UNSIGNED NOT NULL ,
   `date` DATETIME NOT NULL ,
   `publicViewing` TINYINT(1) NOT NULL ,
@@ -124,6 +115,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`design` (
   INDEX `cityID_design` (`cityID` ASC) ,
   INDEX `userfk_design` (`user` ASC) ,
   INDEX `coordinateID_design` (`coordinateID` ASC) ,
+  INDEX `fk_design_1` (`userid` ASC) ,
   CONSTRAINT `cityID_design`
     FOREIGN KEY (`cityID` )
     REFERENCES `betaville`.`city` (`cityID` )
@@ -138,7 +130,12 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`design` (
     FOREIGN KEY (`user` )
     REFERENCES `betaville`.`user` (`userName` )
     ON DELETE NO ACTION
-    ON UPDATE CASCADE)
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_design_1`
+    FOREIGN KEY (`userid` )
+    REFERENCES `betaville`.`user` (`userid` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1
 COLLATE = latin1_swedish_ci;
@@ -147,8 +144,6 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`proposal`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`proposal` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`proposal` (
   `proposalID` INT(11) NOT NULL AUTO_INCREMENT ,
   `sourceID` INT(10) UNSIGNED NOT NULL ,
@@ -180,8 +175,6 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`audiodesign`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`audiodesign` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`audiodesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `length` INT NULL ,
@@ -196,8 +189,6 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`modeldesign`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`modeldesign` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`modeldesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `rotY` SMALLINT NOT NULL ,
@@ -214,12 +205,11 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `betaville`.`comment`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`comment` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`comment` (
   `commentid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `designid` INT UNSIGNED NOT NULL ,
   `user` VARCHAR(255) NOT NULL ,
+  `userid` INT UNSIGNED NOT NULL ,
   `comment` TEXT NOT NULL ,
   `date` DATETIME NOT NULL ,
   `spamFlag` TINYINT(1)  NOT NULL DEFAULT 0 ,
@@ -228,6 +218,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`comment` (
   PRIMARY KEY (`commentid`) ,
   INDEX `designidfk_comment` (`designid` ASC) ,
   INDEX `userfk_comment` (`user` ASC) ,
+  INDEX `fk_comment_user` (`userid` ASC) ,
   CONSTRAINT `designidfk_comment`
     FOREIGN KEY (`designid` )
     REFERENCES `betaville`.`design` (`designID` )
@@ -237,15 +228,18 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`comment` (
     FOREIGN KEY (`user` )
     REFERENCES `betaville`.`user` (`userName` )
     ON DELETE NO ACTION
-    ON UPDATE CASCADE)
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_comment_user`
+    FOREIGN KEY (`userid` )
+    REFERENCES `betaville`.`user` (`userid` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
 -- Table `betaville`.`country`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`country` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`country` (
   `name` CHAR(255) NOT NULL )
 ENGINE = MyISAM
@@ -256,8 +250,6 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`emptydesign`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`emptydesign` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`emptydesign` (
   `designid` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
   `length` DECIMAL(6,2) NULL DEFAULT NULL ,
@@ -271,28 +263,31 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 -- Table `betaville`.`session`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`session` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`session` (
   `sessionID` INT NOT NULL AUTO_INCREMENT ,
   `userName` VARCHAR(255) NOT NULL ,
+  `userid` INT UNSIGNED NOT NULL ,
   `timeEntered` DATETIME NULL ,
   `timeLeft` DATETIME NULL ,
   PRIMARY KEY (`sessionID`) ,
   INDEX `session_user_fk` (`userName` ASC) ,
+  INDEX `fk_session_userid_fk` (`userid` ASC) ,
   CONSTRAINT `session_user_fk`
     FOREIGN KEY (`userName` )
     REFERENCES `betaville`.`user` (`userName` )
     ON DELETE NO ACTION
-    ON UPDATE CASCADE)
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_session_userid_fk`
+    FOREIGN KEY (`userid` )
+    REFERENCES `betaville`.`user` (`userid` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
 -- Table `betaville`.`wormhole`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `betaville`.`wormhole` ;
-
 CREATE  TABLE IF NOT EXISTS `betaville`.`wormhole` (
   `wormholeid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `coordinateid` INT UNSIGNED NOT NULL ,
