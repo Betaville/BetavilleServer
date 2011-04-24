@@ -61,7 +61,7 @@ mysql -u $dbUser -p$dbPass $dbName < ../sql/betaville.sql
 
 # This is irritating, we need to move all of the jars
 mkdir ../deploy
-cp ../lib/jdom.jar ../deploy/jdom.jar
+cp ../lib/*.jar ../deploy/
 cp ../lib/javamail-1.4.3/mail.jar ../deploy/mail.jar
 cp ../lib/javamail-1.4.3/lib/*.jar ../deploy
 cp ../lib/MySQL/*.jar ../deploy
