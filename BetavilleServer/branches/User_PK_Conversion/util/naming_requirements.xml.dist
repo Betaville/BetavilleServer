@@ -1,0 +1,7 @@
+<!-- Use regex or plain text -->
+<namereqs>
+	<disallowed type="regex" matching="contains">[Aa][Dd][Mm][Ii][Nn]</disallowed>
+	<disallowed type="plain" matching="contains">.</disallowed>
+	<disallowed type="plain" matching="whole">bxmc</disallowed>
+	<required></required>
+</namereqs>
