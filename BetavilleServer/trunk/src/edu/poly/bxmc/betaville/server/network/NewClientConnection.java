@@ -34,10 +34,12 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
+import org.jdom.output.XMLOutputter;
 
 import edu.poly.bxmc.betaville.jme.map.UTMCoordinate;
 import edu.poly.bxmc.betaville.model.Comment;
@@ -51,6 +53,7 @@ import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
 import edu.poly.bxmc.betaville.server.session.SessionTracker;
+import edu.poly.bxmc.betaville.xml.DataExporter;
 
 /**
  * @author Skye Book (Re-Write and Completion)
@@ -91,6 +94,8 @@ public class NewClientConnection implements Runnable {
 	private String sessionToken = null;
 
 	private String futureKey=null;
+	
+	private XMLOutputter xo = new XMLOutputter();
 
 	public NewClientConnection(Client client, String pass) {
 		this.client = client;
@@ -399,6 +404,11 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(returnable);
 				}
 			}
+			
+			// DESIGN FUNCTIONALITY
+			else if(((String)inObject[0]).equals("design-android")){
+				androidDesign(inObject);
+			}
 
 			// PROPOSAL FUNCTIONALITY
 			else if(((String)inObject[0]).equals("proposal")){
@@ -454,6 +464,11 @@ public class NewClientConnection implements Runnable {
 				if(((String)inObject[1]).equals("getforid")){
 					output.writeObject(dbManager.getComments((Integer)inObject[2]));
 				}
+			}
+			
+			// ANDROID COMMENT FUNCTIONALITY
+			else if(((String)inObject[0]).equals("comment-android")){
+				androidComment(inObject);
 			}
 
 			// CITY FUNCTIONALITY
@@ -519,7 +534,90 @@ public class NewClientConnection implements Runnable {
 			e.printStackTrace();
 		}
 	}
+	
+	private void androidDesign(Object[] inObject) throws IOException{
+		logger.info("Inside Android Design: " + (String)inObject[1]);
+		if(((String)inObject[1]).equals("changename")){
+			output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+		}
+		else if(((String)inObject[1]).equals("changedescription")){
+			output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+		}
+		else if(((String)inObject[1]).equals("changeaddress")){
+			output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+		}
+		else if(((String)inObject[1]).equals("changeurl")){
+			output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+		}
+		else if(((String)inObject[1]).equals("changemodellocation")){
+			output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Integer)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
+		}
+		else if(((String)inObject[1]).equals("findbyid")){
+			logger.info("finding "+(Integer)inObject[2]);
+			Design design = dbManager.findDesignByID((Integer)inObject[2]);
+			logger.info("design " + design.getName());
+			logger.info("\n"+xo.outputString(DataExporter.export(design)));
+			output.writeObject(xo.outputString(DataExporter.export(design)));
+		}
+		else if(((String)inObject[1]).equals("findbyname")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByName((String)inObject[2]))));
+		}
+		else if(((String)inObject[1]).equals("findbyuser")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByUser((String)inObject[2]))));
+		}
+		else if(((String)inObject[1]).equals("findbydate")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByDate((Long)inObject[2]))));
+		}
+		else if(((String)inObject[1]).equals("findbycity")){
+			List<Design> designs = dbManager.findDesignsByCity((Integer)inObject[2], (Boolean)inObject[3]);
+			logger.info(designs.size()+" designs retrieved");
+			String xmlResponse = xo.outputString(DataExporter.exportDesigns(designs));
+			logger.info("Responding with: " + xmlResponse);
+			output.writeObject(xmlResponse);
+		}
+		else if(((String)inObject[1]).equals("terrainbycity")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTerrainDesignsByCity((Integer)inObject[2]))));
+		}
+		else if(((String)inObject[1]).equals("findmodeledbycity")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_MODEL))));
+		}
+		else if(((String)inObject[1]).equals("findaudiobycity")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_AUDIO))));
+		}
+		else if(((String)inObject[1]).equals("findimagebycity")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_SKETCH))));
+		}
+		else if(((String)inObject[1]).equals("findvideobycity")){
+			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_VIDEO))));
+		}
+		else if(((String)inObject[1]).equals("allproposals")){
+			output.writeObject(dbManager.findAllProposals((Integer)inObject[2]));
+		}
+		else if(((String)inObject[1]).equals("requestthumb")){
+			output.writeObject(wrapThumbnail((Integer)inObject[2]));
+		}
+		else if(((String)inObject[1]).equals("remove")){
+			int designID = (Integer)inObject[2];
+			String user = (String)inObject[3];
+			String pass = (String)inObject[4];
+			output.writeObject(Integer.toString(dbManager.removeDesign(designID, user, pass)));
+		}
+	}
 
+	private void androidComment(Object[] inObject) throws IOException{
+		if(((String)inObject[1]).equals("add")){// TODO: NOT ANDROID SAFE YET
+			output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2], (String)inObject[3])));
+		}
+		if(((String)inObject[1]).equals("delete")){// TODO: NOT ANDROID SAFE YET
+			output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], (String)inObject[3], (String)inObject[4])));
+		}
+		if(((String)inObject[1]).equals("reportspam")){// TODO: NOT ANDROID SAFE YET
+			dbManager.reportSpamComment((Integer)inObject[2]);
+		}
+		if(((String)inObject[1]).equals("getforid")){
+			output.writeObject(xo.outputString(DataExporter.exportComments(dbManager.getComments((Integer)inObject[2]))));
+		}
+	}
 	public void setFutureKey(String key){
 		futureKey=key;
 	}
