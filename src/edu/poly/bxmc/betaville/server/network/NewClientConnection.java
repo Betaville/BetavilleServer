@@ -53,6 +53,7 @@ import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
 import edu.poly.bxmc.betaville.server.session.SessionTracker;
+import edu.poly.bxmc.betaville.util.StringZipper;
 import edu.poly.bxmc.betaville.xml.DataExporter;
 
 /**
@@ -574,6 +575,14 @@ public class NewClientConnection implements Runnable {
 			String xmlResponse = xo.outputString(DataExporter.exportDesigns(designs));
 			logger.info("Responding with: " + xmlResponse);
 			output.writeObject(xmlResponse);
+		}
+		else if(((String)inObject[1]).equals("findbycitysetstartend")){
+			List<Design> designs = dbManager.findDesignsByCitySetStartEnd((Integer)inObject[2], (Boolean)inObject[3],
+					(Integer)inObject[4], (Integer)inObject[5]);
+			logger.info(designs.size()+" designs retrieved");
+			String xmlResponse = xo.outputString(DataExporter.exportDesigns(designs));
+			logger.info("Responding with: " + xmlResponse);
+			output.writeObject(StringZipper.compress(xmlResponse));
 		}
 		else if(((String)inObject[1]).equals("terrainbycity")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTerrainDesignsByCity((Integer)inObject[2]))));

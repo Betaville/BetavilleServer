@@ -1268,6 +1268,41 @@ public class NewDatabaseManager {
 		}
 	}
 	
+	public Vector<Design> findDesignsByCitySetStartEnd(int cityID, boolean onlyBase, int start, int nextAmount){
+		try {
+			findDesignsByCity.setInt(1, cityID);
+			ResultSet drs = findDesignsByCity.executeQuery();
+			Vector<Design> designs = new Vector<Design>();
+			int count = 0;
+			while(drs.next() && count<(start+nextAmount)){
+				if(count<start){
+					count++;
+					continue;
+				}
+				// if we're only looking for base designs then we need to check
+				// that the sourceID is 0
+				Design d = designFromResultSet(drs);
+				if(d!=null){
+					if(onlyBase){
+						if(d.getSourceID()==0  && !d.getFilepath().endsWith(".")){
+							designs.add(d);
+						}
+					}
+					else{
+						designs.add(d);
+					}
+				}
+				
+				count++;
+			}
+			drs.close();
+			return designs;
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return null;
+		}
+	}
+	
 	//TODO complete
 	/*
 	public Vector<Design> findModelDesignsByCity(int cityID, boolean onlyBase){
