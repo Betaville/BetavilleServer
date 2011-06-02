@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -128,6 +128,8 @@ public class DBConst {
 	public final static String COORD_ID = "coordinateID";
 	public final static String COORD_NORTHING = "northing";
 	public final static String COORD_EASTING = "easting";
+	public final static String COORD_NORTHING_CM = "northingCM";
+	public final static String COORD_EASTING_CM = "eastingCM";
 	public final static String COORD_LATZONE = "latZone";
 	public final static String COORD_LONZONE = "lonZone";
 	public final static String COORD_ALTITUDE = "altitude";
