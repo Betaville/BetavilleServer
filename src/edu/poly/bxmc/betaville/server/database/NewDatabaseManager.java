@@ -470,10 +470,10 @@ public class NewDatabaseManager {
 				" = ?;");
 		addCoordinate = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.COORD_TABLE+
 				" (`"+DBConst.COORD_NORTHING+"`, `"+DBConst.COORD_EASTING+"`, `"+DBConst.COORD_LATZONE+"`, `"+
-				DBConst.COORD_LONZONE+"`, `"+DBConst.COORD_ALTITUDE+"`) VALUES (?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
+				DBConst.COORD_LONZONE+"`, `"+DBConst.COORD_ALTITUDE+"`, `"+DBConst.COORD_EASTING_CM+"`, `"+DBConst.COORD_NORTHING_CM+"`) VALUES (?,?,?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
 		changeCoordinate = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.COORD_TABLE+" SET "+
 				DBConst.COORD_EASTING+" = ?, "+DBConst.COORD_NORTHING+" = ?, "+DBConst.COORD_LATZONE+" = ?, "+
-				DBConst.COORD_LONZONE+" = ?, "+DBConst.COORD_ALTITUDE+" = ? WHERE "+DBConst.COORD_ID+" = ?;");
+				DBConst.COORD_LONZONE+" = ?, "+DBConst.COORD_ALTITUDE+" = ?, "+DBConst.COORD_EASTING_CM+" = ?, "+DBConst.COORD_NORTHING_CM+" = ? WHERE "+DBConst.COORD_ID+" = ?;");
 		retrieveCoordinate = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.COORD_TABLE+
 				" WHERE "+DBConst.COORD_ID+" = ?;");
 		faveDesign = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.DESIGN_TABLE+" SET " +DBConst.DESIGN_FAVE_LIST + " = ? WHERE " + DBConst.DESIGN_ID + " = ?;");
@@ -1703,7 +1703,7 @@ public class NewDatabaseManager {
 	 * @see #addCoordinate(int, int, int, char, int)
 	 */
 	public int addCoordinate(UTMCoordinate utm){
-		return addCoordinate(utm.getEasting(), utm.getNorthing(), utm.getLonZone(), utm.getLatZone(), utm.getAltitude());
+		return addCoordinate(utm.getEasting(), utm.getEastingCentimeters(), utm.getNorthing(), utm.getNorthingCentimeters(), utm.getLonZone(), utm.getLatZone(), utm.getAltitude());
 	}
 
 	/**
@@ -1715,13 +1715,15 @@ public class NewDatabaseManager {
 	 * @param altitude
 	 * @return
 	 */
-	public int addCoordinate(int easting, int northing, int lonZone, char latZone, int altitude){
+	public int addCoordinate(int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, int altitude){
 		try {
 			addCoordinate.setInt(1, northing);
 			addCoordinate.setInt(2, easting);
 			addCoordinate.setString(3, ""+latZone);
 			addCoordinate.setInt(4, lonZone);
 			addCoordinate.setInt(5, altitude);
+			addCoordinate.setInt(6, eastingCM);
+			addCoordinate.setInt(6, northingCM);
 			
 			addCoordinate.executeUpdate();
 			
@@ -1739,10 +1741,10 @@ public class NewDatabaseManager {
 	}
 
 	public void changeCoordinate(int coordinateID, UTMCoordinate utm){
-		changeCoordinate(coordinateID, utm.getEasting(), utm.getNorthing(), utm.getLonZone(), utm.getLatZone(), utm.getAltitude());
+		changeCoordinate(coordinateID, utm.getEasting(), utm.getEastingCentimeters(), utm.getNorthing(), utm.getNorthingCentimeters(), utm.getLonZone(), utm.getLatZone(), utm.getAltitude());
 	}
 
-	public void changeCoordinate(int coordinateID, int easting, int northing, int lonZone, char latZone, int altitude){
+	public void changeCoordinate(int coordinateID, int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, int altitude){
 		try {
 			changeCoordinate.setInt(1, easting);
 			changeCoordinate.setInt(2, northing);
@@ -1750,6 +1752,8 @@ public class NewDatabaseManager {
 			changeCoordinate.setInt(4, lonZone);
 			changeCoordinate.setInt(5, altitude);
 			changeCoordinate.setInt(6, coordinateID);
+			changeCoordinate.setInt(7, eastingCM);
+			changeCoordinate.setInt(8, northingCM);
 			changeCoordinate.executeUpdate();
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
