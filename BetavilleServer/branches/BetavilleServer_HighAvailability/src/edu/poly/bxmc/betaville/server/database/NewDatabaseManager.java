@@ -60,7 +60,7 @@ import edu.poly.bxmc.betaville.model.Wormhole;
 import edu.poly.bxmc.betaville.server.authentication.IAuthenticator;
 import edu.poly.bxmc.betaville.server.mail.AbstractMailer;
 import edu.poly.bxmc.betaville.server.mail.CommentNotificationMessage;
-import edu.poly.bxmc.betaville.server.session.availability.InMemorySessionTracker;
+import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.server.util.UserArrayUtils;
 import edu.poly.bxmc.betaville.sound.PerformanceStyle;
@@ -1900,7 +1900,7 @@ public class NewDatabaseManager {
 		// we're good to go if this is not -1
 		// TODO: Work on standardized fail values
 		logger.info("off to look for userType!");
-		UserType userType = getUserLevel(InMemorySessionTracker.get().getSession(sessionToken).getUser());
+		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
 		logger.info("Usertype is " + userType.name());
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			int createdCoordinate = addCoordinate(coordinate);
@@ -1935,7 +1935,7 @@ public class NewDatabaseManager {
 	 * @return 0 for success, -1 for SQL error, -3 for failed authentication
 	 */
 	public int deleteWormhole(int wormholeToDelete, String sessionToken){
-		UserType userType = getUserLevel(InMemorySessionTracker.get().getSession(sessionToken).getUser());
+		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			try {
 				deleteWormhole.setInt(1, wormholeToDelete);
@@ -1957,7 +1957,7 @@ public class NewDatabaseManager {
 	 * @return 0 for success, -1 for SQL error, -3 for failed authentication
 	 */
 	public int changeWormholeLocation(UTMCoordinate newLocation, int wormholeID, String sessionToken){
-		UserType userType = getUserLevel(InMemorySessionTracker.get().getSession(sessionToken).getUser());
+		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			try {
 				changeWormholeLocation.setInt(1, newLocation.getEasting());
@@ -1984,7 +1984,7 @@ public class NewDatabaseManager {
 	 * @return 0 for success, -1 for SQL error, -3 for failed authentication
 	 */
 	public int changeWormholeName(String name, int wormholeID, String sessionToken){
-		UserType userType = getUserLevel(InMemorySessionTracker.get().getSession(sessionToken).getUser());
+		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			try {
 				changeWormholeName.setString(1, name);

@@ -54,6 +54,7 @@ public class Preferences{
 	public static final String MYSQL_USER=SERVER_BASE+"mysql.user";
 	public static final String MYSQL_PASS=SERVER_BASE+"mysql.pass";
 	public static final String MYSQL_PORT=SERVER_BASE+"mysql.port";
+	public static final String MYSQL_HOST=SERVER_BASE+"mysql.host";
 	public static final String MYSQL_DATABASE=SERVER_BASE+"mysql.database";
 	
 	public static final String MAIL_ENABLED=SERVER_BASE+"mailer.enabled";

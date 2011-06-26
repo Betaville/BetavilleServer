@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,44 @@
 package edu.poly.bxmc.betaville.server.session.availability;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
 
 import edu.poly.bxmc.betaville.server.session.Session;
+import edu.poly.bxmc.betaville.server.session.SessionSerializer;
+import edu.poly.bxmc.betaville.util.Crypto;
 
 /**
  * @author Skye Book
  *
  */
-public class FlatFileSessionTracker implements SessionProvider {
-	
-	private File sessionDirectory;
+public class FlatFileSessionTracker extends SessionTracker{
+	private static final Logger logger = Logger.getLogger(FlatFileSessionTracker.class);
+
+	private File sessionDirectory = new File("sessions/");
 
 	/**
 	 * 
 	 */
 	public FlatFileSessionTracker() {
-		// TODO Auto-generated constructor stub
+		// if the directory doesn't exist, create a new one
+		if(!sessionDirectory.exists()) sessionDirectory.mkdirs();
+		else{
+			// if the directory does exist, delete any session files
+			File[] files = sessionDirectory.listFiles();
+			if(files!=null){
+				for(File sessionFile : files){
+					sessionFile.delete();
+				}
+			}
+		}
+		
+		String tokenCandidate = Crypto.createSessionToken();
+		while(sessionTokenExists(tokenCandidate)){
+			tokenCandidate = Crypto.createSessionToken();
+		}
 	}
 
 	/*
@@ -49,9 +71,24 @@ public class FlatFileSessionTracker implements SessionProvider {
 	 * @see edu.poly.bxmc.betaville.server.session.availability.SessionProvider#addSession(int, java.lang.String)
 	 */
 	@Override
-	public Session addSession(int sessionID, String user) {
-		// TODO Auto-generated method stub
-		return null;
+	public synchronized Session addSession(int sessionID, String user) {
+		String tokenCandidate = Crypto.createSessionToken();
+		while(sessionTokenExists(tokenCandidate)){
+			tokenCandidate = Crypto.createSessionToken();
+		}
+		Session session = new Session(user, sessionID, tokenCandidate);
+		try {
+			SessionSerializer.writeSession(session, sessionDirectory);
+		} catch (IOException e) {
+			logger.fatal("Session file could not be written, ensure that "
+					+ sessionDirectory.toString() + " is writable");
+		}
+		logger.info("New Session("+user+":"+session.getSessionID()+":"+session.getSessionToken()+")");
+		return session;
+	}
+
+	private boolean sessionTokenExists(String tokenCandidate){
+		return SessionSerializer.createSessionFile(tokenCandidate, sessionDirectory).exists();
 	}
 
 	/* (non-Javadoc)
@@ -59,8 +96,19 @@ public class FlatFileSessionTracker implements SessionProvider {
 	 */
 	@Override
 	public Session getSession(String sessionToken) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			return SessionSerializer.readSession(sessionToken, sessionDirectory);
+		} catch (IOException e) {
+			if(e instanceof FileNotFoundException){
+				logger.info("Requested session not found, this could be an attack");
+			}
+			else{
+				logger.fatal("Session file could not be read, ensure that "
+						+ sessionDirectory.toString() + " is readable");
+			}
+
+			return null;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -68,8 +116,27 @@ public class FlatFileSessionTracker implements SessionProvider {
 	 */
 	@Override
 	public int killSession(String sessionToken) {
-		// TODO Auto-generated method stub
-		return 0;
+		try {
+			Session session = SessionSerializer.readSession(sessionToken, sessionDirectory);
+			if(SessionSerializer.createSessionFile(sessionToken, sessionDirectory).delete()){
+				if(SessionSerializer.createSessionFile(sessionToken, sessionDirectory).exists()){
+					logger.info("Session file exists!");
+				}
+				logger.info("Session file deleted");
+			}
+			else logger.error("Session file was not deleted");
+			return session.getSessionID();
+		} catch (IOException e) {
+			if(e instanceof FileNotFoundException){
+				logger.info("Requested session not found, this could be an attack");
+			}
+			else{
+				logger.fatal("Session file could not be read, ensure that "
+						+ sessionDirectory.toString() + " is readable");
+			}
+
+		}
+		return -2;
 	}
 
 }

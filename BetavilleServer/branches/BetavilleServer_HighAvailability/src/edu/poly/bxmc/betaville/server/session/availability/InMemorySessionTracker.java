@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,31 +36,15 @@ import edu.poly.bxmc.betaville.util.Crypto;
  * @author Skye Book
  *
  */
-public class InMemorySessionTracker implements SessionProvider {
+public class InMemorySessionTracker extends SessionTracker{
 	public static final Logger logger = Logger.getLogger(InMemorySessionTracker.class);
-	public static ArrayList<Session> sessions = new ArrayList<Session>();
+	public ArrayList<Session> sessions = new ArrayList<Session>();
 	
-	private static final InMemorySessionTracker sessionTracker = new InMemorySessionTracker();
+	public InMemorySessionTracker(){}
 	
-	private InMemorySessionTracker(){}
-	
-	public static synchronized InMemorySessionTracker get(){
-		return sessionTracker;
-	}
-	
-	public boolean sessionTokenExists(String tokenCandidate){
-		for(Session session : sessions){
-			if(session.getSessionToken()==tokenCandidate) return true;
-		}
-		return false;
-	}
-	
-	/**
-	 * Creates a session and adds it to the session tracker.
-	 * @param sessionID The sessionID
-	 * @param user Username
-	 * @param pass This user's password - <em>TEMPORARY</em>
-	 * @return The created session
+	/*
+	 * (non-Javadoc)
+	 * @see edu.poly.bxmc.betaville.server.session.availability.SessionProvider#addSession(int, java.lang.String)
 	 */
 	public synchronized Session addSession(int sessionID, String user){
 		String tokenCandidate = Crypto.createSessionToken();
@@ -73,10 +57,16 @@ public class InMemorySessionTracker implements SessionProvider {
 		return session;
 	}
 	
-	/**
-	 * Removes a session from the tracker, thus disallowing any more actions with it.
-	 * @param sessionToken The token of the session to destroy
-	 * @return The sessionID or -2 if the session could not be found
+	private boolean sessionTokenExists(String tokenCandidate){
+		for(Session session : sessions){
+			if(session.getSessionToken()==tokenCandidate) return true;
+		}
+		return false;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see edu.poly.bxmc.betaville.server.session.availability.SessionProvider#killSession(java.lang.String)
 	 */
 	public synchronized int killSession(String sessionToken){
 		logger.info("Ending session with token: " + sessionToken);
@@ -93,6 +83,10 @@ public class InMemorySessionTracker implements SessionProvider {
 		return -2;
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see edu.poly.bxmc.betaville.server.session.availability.SessionProvider#getSession(java.lang.String)
+	 */
 	public Session getSession(String sessionToken){
 		for(Session session : sessions){
 			if(session.getSessionToken().equals(sessionToken)) return session;

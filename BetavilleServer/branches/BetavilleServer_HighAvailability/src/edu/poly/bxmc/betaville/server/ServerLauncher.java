@@ -42,6 +42,8 @@ import org.apache.log4j.PatternLayout;
 import edu.poly.bxmc.betaville.server.network.ConnectionTracker;
 import edu.poly.bxmc.betaville.server.network.SecureServerManager;
 import edu.poly.bxmc.betaville.server.network.ServerManager;
+import edu.poly.bxmc.betaville.server.session.availability.FlatFileSessionTracker;
+import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 
 /**
@@ -98,6 +100,9 @@ public class ServerLauncher {
 					"Please ensure that you're home directory has write-permissions " +
 					"enabled.  Betaville will run but your preferences will not be saved.", e);
 		}
+		
+		// setup session tracker
+		SessionTracker.registerTracker(new FlatFileSessionTracker());
 
 		// Create insecure manager
 		managerPool.submit(new Runnable(){

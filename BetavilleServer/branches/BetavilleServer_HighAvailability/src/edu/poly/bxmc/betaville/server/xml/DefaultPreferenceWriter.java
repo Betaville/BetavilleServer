@@ -58,6 +58,7 @@ public class DefaultPreferenceWriter {
 		if(System.getProperty(Preferences.NETWORK_DEFAULT_PORT)==null) System.setProperty(Preferences.NETWORK_DEFAULT_PORT, "14500");
 		if(System.getProperty(Preferences.NETWORK_SSL_PORT)==null) System.setProperty(Preferences.NETWORK_SSL_PORT, "14501");
 		if(System.getProperty(Preferences.NETWORK_USE_SSL)==null) System.setProperty(Preferences.NETWORK_USE_SSL, "false");
+		if(System.getProperty(Preferences.MYSQL_HOST)==null) System.setProperty(Preferences.MYSQL_HOST, "localhost");
 		if(System.getProperty(Preferences.MYSQL_PORT)==null) System.setProperty(Preferences.MYSQL_PORT, "3306");
 		if(System.getProperty(Preferences.MYSQL_USER)==null) System.setProperty(Preferences.MYSQL_USER, "root");
 		if(System.getProperty(Preferences.MYSQL_PASS)==null) System.setProperty(Preferences.MYSQL_PASS, "root");
