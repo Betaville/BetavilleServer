@@ -58,17 +58,6 @@ mysqladmin -u $dbUser -p$dbPass create $dbName
 # generate the database tables
 mysql -u $dbUser -p$dbPass $dbName < ../sql/betaville.sql
 
-
-# This is irritating, we need to move all of the jars
-mkdir ../deploy
-cp ../lib/*.jar ../deploy/
-cp ../lib/javamail-1.4.3/mail.jar ../deploy/mail.jar
-cp ../lib/javamail-1.4.3/lib/*.jar ../deploy
-cp ../lib/MySQL/*.jar ../deploy
-mv ../Betaville*.jar ../deploy
-mv ../PopulateDatabase.jar ../deploy
-
-
 cd ../deploy
 echo "working from `pwd`"
 java -Djava.library.path=`pwd` -cp `pwd` -jar PopulateDatabase.jar edu.poly.bxmc.betaville.server.util.PopulateDatabase -u $dbUser -p$dbPass -adminuser $adminUser -adminpass$adminPass -adminmail $adminEmail -city $city -state $state -country $country
