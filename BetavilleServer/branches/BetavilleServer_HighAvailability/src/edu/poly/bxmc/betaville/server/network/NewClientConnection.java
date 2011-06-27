@@ -98,14 +98,9 @@ public class NewClientConnection implements Runnable {
 	
 	private XMLOutputter xo = new XMLOutputter();
 
-	public NewClientConnection(Client client, String pass) {
+	public NewClientConnection(Client client) {
 		this.client = client;
-		if(pass!=null){
-			dbManager = new NewDatabaseManager(pass);
-		}
-		else{
-			dbManager = new NewDatabaseManager();
-		}
+		dbManager = new NewDatabaseManager();
 
 		keepAliveTimer.scheduleAtFixedRate(new TimerTask() {
 

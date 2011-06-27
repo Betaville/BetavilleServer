@@ -256,16 +256,13 @@ public class NewDatabaseManager {
 	 * Constructor - Create the manager of the DB
 	 */
 	public NewDatabaseManager() {
-		this(Preferences.getSetting(Preferences.MYSQL_USER), Preferences.getSetting(Preferences.MYSQL_PASS));
+		this(Preferences.getSetting(Preferences.MYSQL_USER),
+				Preferences.getSetting(Preferences.MYSQL_PASS),
+				Preferences.getSetting(Preferences.MYSQL_DATABASE),
+				Preferences.getSetting(Preferences.MYSQL_HOST),
+				Integer.parseInt(Preferences.getSetting(Preferences.MYSQL_PORT)));
 	}
 	
-	/**
-	 * Constructor - Create the manager of the DB
-	 */
-	public NewDatabaseManager(String password) {
-		this("root", password);
-	}
-
 	/**
 	 * Constructor - Create the manager of the DB
 	 */
@@ -283,8 +280,8 @@ public class NewDatabaseManager {
 	/**
 	 * Constructor - Create the manager of the DB
 	 */
-	public NewDatabaseManager(String user, String password) {
-		dbConnection = new DataBaseConnection(user, password);
+	public NewDatabaseManager(String user, String password, String database, String host, int port) {
+		dbConnection = new DataBaseConnection(user, password, database, host, port);
 		try {
 			//mailer=new GMailer(Preferences.getSetting(Preferences.MAIL_USER),Preferences.getSetting(Preferences.MAIL_PASS));
 		} catch (Exception e1) {

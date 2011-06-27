@@ -53,7 +53,6 @@ import edu.poly.bxmc.betaville.server.ServerLauncher;
 public class SecureServerManager {
 	private final int serverPort = 14501;
 	
-	private String pass=null;
 	private char[] keyStorePass;
 	private char[] trustStorePass;
 
@@ -61,11 +60,6 @@ public class SecureServerManager {
 	 * 
 	 */
 	public SecureServerManager(String[] startupArgs) {
-		if(startupArgs.length==0){
-			pass=null;
-		}else{
-			pass=startupArgs[0];
-		}
 		try {
 			
 			keyStorePass = "123456".toCharArray();
@@ -93,7 +87,7 @@ public class SecureServerManager {
 				// Waiting for a incoming client connection request
 				Socket socketClient = server.accept();
 				if (socketClient.isConnected()) {
-					Client client = new Client(socketClient);NewClientConnection connection = new NewClientConnection(client, pass);
+					Client client = new Client(socketClient);NewClientConnection connection = new NewClientConnection(client);
 					Future future = ServerLauncher.managerPool.submit(connection);
 					String futureKey = ConnectionTracker.addConnection(future);
 					connection.setFutureKey(futureKey);
