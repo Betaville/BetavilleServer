@@ -53,6 +53,7 @@ import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
+import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.util.StringZipper;
 import edu.poly.bxmc.betaville.xml.DataExporter;
 
@@ -81,7 +82,7 @@ public class NewClientConnection implements Runnable {
 
 	boolean clientIsSafe = true;
 
-	private String modelBinLocation = "storage/";
+	private String modelBinLocation = Preferences.getSetting(Preferences.STORAGE_MEDIA);
 
 	private long lastRequest = -1;
 

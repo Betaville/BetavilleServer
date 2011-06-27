@@ -64,6 +64,9 @@ public class Preferences{
 	public static final String MAIL_PORT=SERVER_BASE+"mailer.port";
 	public static final String MAIL_COMMENT_NOTIFICATION=SERVER_BASE+"mailer.message.commentnotification";
 	
+	public static final String STORAGE_MEDIA=SERVER_BASE+"storage.media";
+	public static final String STORAGE_SESSIONS=SERVER_BASE+"storage.sessions";
+	
 	public static final String MINIMUM_BASE_CREATE=SERVER_BASE+"permissions.base.create";
 	public static final String MINIMUM_BASE_MODIFY=SERVER_BASE+"permissions.base.modify";
 	public static final String MINIMUM_BASE_DELETE=SERVER_BASE+"permissions.base.delete";

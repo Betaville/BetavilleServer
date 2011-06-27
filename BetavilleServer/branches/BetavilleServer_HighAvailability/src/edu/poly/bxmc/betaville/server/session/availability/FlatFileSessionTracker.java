@@ -33,6 +33,7 @@ import org.apache.log4j.Logger;
 
 import edu.poly.bxmc.betaville.server.session.Session;
 import edu.poly.bxmc.betaville.server.session.SessionSerializer;
+import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.util.Crypto;
 
 /**
@@ -42,7 +43,7 @@ import edu.poly.bxmc.betaville.util.Crypto;
 public class FlatFileSessionTracker extends SessionTracker{
 	private static final Logger logger = Logger.getLogger(FlatFileSessionTracker.class);
 
-	private File sessionDirectory = new File("sessions/");
+	private File sessionDirectory = new File(Preferences.getSetting(Preferences.STORAGE_SESSIONS));
 
 	/**
 	 * 
