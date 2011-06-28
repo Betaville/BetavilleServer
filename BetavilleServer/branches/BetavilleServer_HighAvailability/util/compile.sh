@@ -24,5 +24,6 @@ cp lib/*.jar deploy/
 cp lib/javamail-1.4.3/mail.jar deploy/mail.jar
 cp lib/javamail-1.4.3/lib/*.jar deploy
 cp lib/MySQL/*.jar deploy
+cp util/run.sh deploy/run.sh
 mv Betaville*.jar deploy
 mv PopulateDatabase.jar deploy
