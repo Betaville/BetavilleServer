@@ -454,6 +454,7 @@ public class NewClientConnection implements Runnable {
 			
 			//SHARE FUNCTIONALITY
 			else if(((String)inObject[0]).equals("share")){
+				logger.info("Share requested");
 				// This is an example on how to use the mailer!
 				GMailer mailer;
 				try {
