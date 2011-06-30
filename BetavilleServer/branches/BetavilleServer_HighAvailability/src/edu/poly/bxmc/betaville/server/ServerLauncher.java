@@ -43,6 +43,7 @@ import edu.poly.bxmc.betaville.server.network.ConnectionTracker;
 import edu.poly.bxmc.betaville.server.network.SecureServerManager;
 import edu.poly.bxmc.betaville.server.network.ServerManager;
 import edu.poly.bxmc.betaville.server.session.availability.FlatFileSessionTracker;
+import edu.poly.bxmc.betaville.server.session.availability.InMemorySessionTracker;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 
@@ -102,7 +103,7 @@ public class ServerLauncher {
 		}
 		
 		// setup session tracker
-		SessionTracker.registerTracker(new FlatFileSessionTracker());
+		SessionTracker.registerTracker(new InMemorySessionTracker());
 
 		// Create insecure manager
 		managerPool.submit(new Runnable(){
