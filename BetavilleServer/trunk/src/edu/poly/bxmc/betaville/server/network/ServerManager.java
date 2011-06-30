@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.ServerLauncher;
 import edu.poly.bxmc.betaville.server.gui.ServerGUI;
+import edu.poly.bxmc.betaville.server.util.Preferences;
 
 /**
  * Class <ServerManager> - Manage the connection to the server. For each client
@@ -45,7 +46,7 @@ public class ServerManager {
 	/**
 	 * Constant <serverPort> - Port of the server used
 	 */
-	private final int serverPort = 14500;
+	private final int serverPort = Integer.parseInt(Preferences.getSetting(Preferences.NETWORK_DEFAULT_PORT));
 	
 
 	/**

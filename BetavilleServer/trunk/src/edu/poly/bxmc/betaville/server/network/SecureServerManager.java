@@ -45,13 +45,14 @@ import javax.net.ssl.TrustManagerFactory;
 
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.ServerLauncher;
+import edu.poly.bxmc.betaville.server.util.Preferences;
 
 /**
  * @author Skye Book
  *
  */
 public class SecureServerManager {
-	private final int serverPort = 14501;
+	private final int serverPort = Integer.parseInt(Preferences.getSetting(Preferences.NETWORK_SSL_PORT));
 	
 	private char[] keyStorePass;
 	private char[] trustStorePass;
