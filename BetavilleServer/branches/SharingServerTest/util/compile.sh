@@ -18,3 +18,12 @@ mv BetavilleApp.jar ../BetavilleServer
 cd ../BetavilleServer
 ant build build jar pop-db-jar
 
+# This is irritating, we need to move all of the jars
+mkdir deploy
+cp lib/*.jar deploy/
+cp lib/javamail-1.4.3/mail.jar deploy/mail.jar
+cp lib/javamail-1.4.3/lib/*.jar deploy
+cp lib/MySQL/*.jar deploy
+cp util/run.sh deploy/run.sh
+mv Betaville*.jar deploy
+mv PopulateDatabase.jar deploy
