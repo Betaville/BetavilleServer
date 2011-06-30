@@ -52,7 +52,8 @@ import edu.poly.bxmc.betaville.net.PhysicalFileTransporter;
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
-import edu.poly.bxmc.betaville.server.session.SessionTracker;
+import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
+import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.util.StringZipper;
 import edu.poly.bxmc.betaville.xml.DataExporter;
 
@@ -81,7 +82,7 @@ public class NewClientConnection implements Runnable {
 
 	boolean clientIsSafe = true;
 
-	private String modelBinLocation = "storage/";
+	private String modelBinLocation = Preferences.getSetting(Preferences.STORAGE_MEDIA);
 
 	private long lastRequest = -1;
 
@@ -98,14 +99,9 @@ public class NewClientConnection implements Runnable {
 	
 	private XMLOutputter xo = new XMLOutputter();
 
-	public NewClientConnection(Client client, String pass) {
+	public NewClientConnection(Client client) {
 		this.client = client;
-		if(pass!=null){
-			dbManager = new NewDatabaseManager(pass);
-		}
-		else{
-			dbManager = new NewDatabaseManager();
-		}
+		dbManager = new NewDatabaseManager();
 
 		keepAliveTimer.scheduleAtFixedRate(new TimerTask() {
 
@@ -148,7 +144,7 @@ public class NewClientConnection implements Runnable {
 				 * client has disconnected, then it is safe to say the session
 				 * has ended.
 				 */
-				int sessionID = SessionTracker.killSession(sessionToken);
+				int sessionID = SessionTracker.get().killSession(sessionToken);
 				if(sessionID>0){
 					logger.info("Ending Session " + sessionID + " due to the initiating connection being lost");
 					dbManager.endSession(sessionID);
@@ -213,7 +209,7 @@ public class NewClientConnection implements Runnable {
 					int response = dbManager.startSession((String)inObject[2], (String)inObject[3]);
 					// only create a session if the response was valid
 					String sessionToken = "";
-					if(response>0)sessionToken = SessionTracker.addSession(response, (String)inObject[2], (String)inObject[3]).getSessionToken();
+					if(response>0)sessionToken = SessionTracker.get().addSession(response, (String)inObject[2]).getSessionToken();
 					sessionStarter=true;
 					this.sessionToken=sessionToken;
 					sessionOpen=true;
@@ -221,7 +217,7 @@ public class NewClientConnection implements Runnable {
 				}
 				if(((String)inObject[1]).equals("endsession")){
 					logger.info("Attempting end session");
-					int sessionID = SessionTracker.killSession((String)inObject[2]);
+					int sessionID = SessionTracker.get().killSession((String)inObject[2]);
 					if(sessionID>0){
 						int response = dbManager.endSession(sessionID);
 						output.writeObject(Integer.toString(response));

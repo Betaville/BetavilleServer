@@ -58,6 +58,7 @@ public class DefaultPreferenceWriter {
 		if(System.getProperty(Preferences.NETWORK_DEFAULT_PORT)==null) System.setProperty(Preferences.NETWORK_DEFAULT_PORT, "14500");
 		if(System.getProperty(Preferences.NETWORK_SSL_PORT)==null) System.setProperty(Preferences.NETWORK_SSL_PORT, "14501");
 		if(System.getProperty(Preferences.NETWORK_USE_SSL)==null) System.setProperty(Preferences.NETWORK_USE_SSL, "false");
+		if(System.getProperty(Preferences.MYSQL_HOST)==null) System.setProperty(Preferences.MYSQL_HOST, "localhost");
 		if(System.getProperty(Preferences.MYSQL_PORT)==null) System.setProperty(Preferences.MYSQL_PORT, "3306");
 		if(System.getProperty(Preferences.MYSQL_USER)==null) System.setProperty(Preferences.MYSQL_USER, "root");
 		if(System.getProperty(Preferences.MYSQL_PASS)==null) System.setProperty(Preferences.MYSQL_PASS, "root");
@@ -68,6 +69,8 @@ public class DefaultPreferenceWriter {
 		if(System.getProperty(Preferences.MAIL_PASS)==null) System.setProperty(Preferences.MAIL_PASS, "smtppass");
 		if(System.getProperty(Preferences.MAIL_PORT)==null) System.setProperty(Preferences.MAIL_PORT, "smtpport");
 		if(System.getProperty(Preferences.MAIL_COMMENT_NOTIFICATION)==null) System.setProperty(Preferences.MAIL_COMMENT_NOTIFICATION, "MailAssets/comment_notification.html");
+		if(System.getProperty(Preferences.STORAGE_MEDIA)==null) System.setProperty(Preferences.STORAGE_MEDIA, "storage/");
+		if(System.getProperty(Preferences.STORAGE_SESSIONS)==null) System.setProperty(Preferences.STORAGE_SESSIONS, "sessions/");
 		if(System.getProperty(Preferences.MINIMUM_BASE_CREATE)==null) System.setProperty(Preferences.MINIMUM_BASE_CREATE, UserType.BASE_COMMITTER.name().toUpperCase());
 		if(System.getProperty(Preferences.MINIMUM_BASE_MODIFY)==null) System.setProperty(Preferences.MINIMUM_BASE_MODIFY, UserType.BASE_COMMITTER.name().toUpperCase());
 		if(System.getProperty(Preferences.MINIMUM_BASE_DELETE)==null) System.setProperty(Preferences.MINIMUM_BASE_DELETE, UserType.BASE_COMMITTER.name().toUpperCase());
