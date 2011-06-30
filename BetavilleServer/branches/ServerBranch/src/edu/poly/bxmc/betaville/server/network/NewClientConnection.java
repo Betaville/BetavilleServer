@@ -462,9 +462,10 @@ public class NewClientConnection implements Runnable {
 					MimeMessage message = new ShareBetavilleMessage(mailer.getSession(), ((String)inObject[1]), ((String)inObject[2]), ((String)inObject[3]), ((String)inObject[4]));
 					message.setFrom(new InternetAddress("notifications@betaville.net"));
 					mailer.sendMailNow(message);
-					output.writeObject(new Object[]{1});
+					output.writeObject(new Object[]{Integer.toString(1)});
 				} catch (Exception e) {
-					output.writeObject(new Object[]{-1});
+					output.writeObject(new Object[]{Integer.toString(-1)});
+					logger.error("Share Failed", e);
 				}
 			}
 
