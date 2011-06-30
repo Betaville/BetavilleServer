@@ -156,7 +156,7 @@ public class PopulateDatabase {
 			}
 		}
 		
-		NewDatabaseManager db = new NewDatabaseManager(dbUser, dbPass);
+		NewDatabaseManager db = new NewDatabaseManager(dbUser, dbPass, "betaville", "localhost", 3306);
 		/*
 		 * It's OK to bypass the username requirements here since this is being done locally (by someone who
 		 * should know better.. and may, in fact, want to create a username like "admin")

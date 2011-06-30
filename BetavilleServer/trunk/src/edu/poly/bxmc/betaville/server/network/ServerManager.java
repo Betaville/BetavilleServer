@@ -47,7 +47,6 @@ public class ServerManager {
 	 */
 	private final int serverPort = 14500;
 	
-	private String pass=null;
 
 	/**
 	 * Constructor - Create the server socket and connect to clients
@@ -56,12 +55,6 @@ public class ServerManager {
 	 * @param gui
 	 */
 	public ServerManager(ServerGUI gui, String[] startupArgs) {
-		if(startupArgs.length==0){
-			pass=null;
-		}else{
-			// if we get an argument, its a password (this is the only command line argument we've ever had)
-			pass=startupArgs[0];
-		}
 		try {
 			// Creation of the server socket
 			ServerSocket server = new ServerSocket(serverPort);
@@ -71,7 +64,7 @@ public class ServerManager {
 				Socket socketClient = server.accept();
 				if (socketClient.isConnected()) {
 					Client client = new Client(socketClient);
-					NewClientConnection connection = new NewClientConnection(client, pass);
+					NewClientConnection connection = new NewClientConnection(client);
 					Future future = ServerLauncher.managerPool.submit(connection);
 					String futureKey = ConnectionTracker.addConnection(future);
 					connection.setFutureKey(futureKey);

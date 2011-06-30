@@ -54,6 +54,7 @@ public class Preferences{
 	public static final String MYSQL_USER=SERVER_BASE+"mysql.user";
 	public static final String MYSQL_PASS=SERVER_BASE+"mysql.pass";
 	public static final String MYSQL_PORT=SERVER_BASE+"mysql.port";
+	public static final String MYSQL_HOST=SERVER_BASE+"mysql.host";
 	public static final String MYSQL_DATABASE=SERVER_BASE+"mysql.database";
 	
 	public static final String MAIL_ENABLED=SERVER_BASE+"mailer.enabled";
@@ -62,6 +63,9 @@ public class Preferences{
 	public static final String MAIL_PASS=SERVER_BASE+"mailer.pass";
 	public static final String MAIL_PORT=SERVER_BASE+"mailer.port";
 	public static final String MAIL_COMMENT_NOTIFICATION=SERVER_BASE+"mailer.message.commentnotification";
+	
+	public static final String STORAGE_MEDIA=SERVER_BASE+"storage.media";
+	public static final String STORAGE_SESSIONS=SERVER_BASE+"storage.sessions";
 	
 	public static final String MINIMUM_BASE_CREATE=SERVER_BASE+"permissions.base.create";
 	public static final String MINIMUM_BASE_MODIFY=SERVER_BASE+"permissions.base.modify";

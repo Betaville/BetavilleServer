@@ -50,18 +50,26 @@ public class DataBaseConnection {
 	 * Constructor - Creates (opens) the SQL connection
 	 */
 	public DataBaseConnection(String user, String pass) {
-		this(user, pass, "betaville");
+		this(user, pass, "betaville", "localhost", 3306);
+	}
+	
+	
+	/**
+	 * Constructor - Creates (opens) the SQL connection
+	 */
+	public DataBaseConnection(String user, String pass, String host) {
+		this(user, pass, "betaville", host, 3306);
 	}
 	
 	/**
 	 * Constructor - Creates (opens) the SQL connection
 	 */
-	public DataBaseConnection(String user, String pass, String dbName) {
+	public DataBaseConnection(String user, String pass, String dbName, String host, int port) {
 		try {
 			try {
 				Class.forName("com.mysql.jdbc.Driver").newInstance();
 				con = DriverManager.getConnection(
-						"jdbc:mysql://localhost:3306/"+dbName,
+						"jdbc:mysql://"+host+":"+port+"/"+dbName,
 						user,
 						pass);
 				
