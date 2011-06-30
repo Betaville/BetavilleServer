@@ -31,7 +31,7 @@ public class ShareBetavilleMessage extends BetavilleNotification{
 		variables.put(MailVariables.DESIGN_ID, designID);
 		
 		// Load the content specified by the configfile
-		loadContent("MailAssets/comment_notification.html");
+		loadContent("MailAssets/share_notification.html");
 		// If the message supplied doesn't have the correct variables then use one that we know does.
 		if(!verifyMessageValidity()) loadFallbackContent();
 		
