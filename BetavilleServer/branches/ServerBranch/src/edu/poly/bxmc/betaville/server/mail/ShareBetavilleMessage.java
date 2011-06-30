@@ -10,11 +10,14 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.log4j.Logger;
+
 /**
  * @author Jarred Humphrey
  *
  */
 public class ShareBetavilleMessage extends BetavilleNotification{
+	private static final Logger logger = Logger.getLogger(ShareBetavilleMessage.class);
 	
 	/**
 	 * @param session
@@ -38,6 +41,7 @@ public class ShareBetavilleMessage extends BetavilleNotification{
 		// Fill the message
 		setContent(createContent(userName, shareEmail, designID, comment), "text/html");
 		setSubject(userName + " wants to share Betaville with you!");
+		logger.info("Sending email to: " + shareEmail);
 		setRecipient(RecipientType.TO, new InternetAddress(shareEmail));
 		setFrom(new InternetAddress("notifications@betaville.net"));
 	}
