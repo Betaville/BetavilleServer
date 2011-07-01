@@ -15,10 +15,10 @@ chdir ../BetavilleServer
 ant build jar pop-db-jar
 
 md deploy
-xcopy lib/*.jar deploy/
-xcopy lib/javamail-1.4.3/mail.jar deploy/mail.jar
-xcopy lib/javamail-1.4.3/lib/*.jar deploy
-xcopy lib/MySQL/*.jar deploy
-xcopy util/run.sh deploy/run.sh
+copy lib/*.jar deploy/
+copy lib/javamail-1.4.3/mail.jar deploy/mail.jar
+copy lib/javamail-1.4.3/lib/*.jar deploy
+copy lib/MySQL/*.jar deploy
+copy util/run.sh deploy/run.sh
 move Betaville*.jar deploy
 move PopulateDatabase.jar deploy
