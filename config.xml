@@ -26,6 +26,7 @@
     </permissions>
     <storage>
       <sessions>sessions/</sessions>
+      <logging>logs/</logging>
       <media>storage/</media>
     </storage>
     <logging>
@@ -59,6 +60,9 @@
       <user>root</user>
       <pass>root</pass>
     </mysql>
+    <session>
+      <tracker>edu.poly.bxmc.betaville.server.session.availability.InMemorySessionTracker</tracker>
+    </session>
   </server>
 </betaville>
 

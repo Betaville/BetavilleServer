@@ -31,6 +31,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import edu.poly.bxmc.betaville.model.IUser.UserType;
+import edu.poly.bxmc.betaville.server.session.availability.InMemorySessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.xml.PreferenceWriter;
 
@@ -53,7 +54,7 @@ public class DefaultPreferenceWriter {
 	 * 
 	 */
 	public static void writeDefaultPreferences(File file) throws IOException {
-		logger.info("Writing default preferences");
+		System.out.println("Writing default preferences");
 		if(System.getProperty(Preferences.LOG_REPORT_INTERVAL)==null) System.setProperty(Preferences.LOG_REPORT_INTERVAL, "600000");
 		if(System.getProperty(Preferences.NETWORK_DEFAULT_PORT)==null) System.setProperty(Preferences.NETWORK_DEFAULT_PORT, "14500");
 		if(System.getProperty(Preferences.NETWORK_SSL_PORT)==null) System.setProperty(Preferences.NETWORK_SSL_PORT, "14501");
@@ -71,6 +72,8 @@ public class DefaultPreferenceWriter {
 		if(System.getProperty(Preferences.MAIL_COMMENT_NOTIFICATION)==null) System.setProperty(Preferences.MAIL_COMMENT_NOTIFICATION, "MailAssets/comment_notification.html");
 		if(System.getProperty(Preferences.STORAGE_MEDIA)==null) System.setProperty(Preferences.STORAGE_MEDIA, "storage/");
 		if(System.getProperty(Preferences.STORAGE_SESSIONS)==null) System.setProperty(Preferences.STORAGE_SESSIONS, "sessions/");
+		if(System.getProperty(Preferences.STORAGE_LOGGING)==null) System.setProperty(Preferences.STORAGE_LOGGING, "logs/");
+		if(System.getProperty(Preferences.SESSION_TRACKER)==null) System.setProperty(Preferences.SESSION_TRACKER, InMemorySessionTracker.class.getName());
 		if(System.getProperty(Preferences.MINIMUM_BASE_CREATE)==null) System.setProperty(Preferences.MINIMUM_BASE_CREATE, UserType.BASE_COMMITTER.name().toUpperCase());
 		if(System.getProperty(Preferences.MINIMUM_BASE_MODIFY)==null) System.setProperty(Preferences.MINIMUM_BASE_MODIFY, UserType.BASE_COMMITTER.name().toUpperCase());
 		if(System.getProperty(Preferences.MINIMUM_BASE_DELETE)==null) System.setProperty(Preferences.MINIMUM_BASE_DELETE, UserType.BASE_COMMITTER.name().toUpperCase());

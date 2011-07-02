@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -66,6 +66,9 @@ public class Preferences{
 	
 	public static final String STORAGE_MEDIA=SERVER_BASE+"storage.media";
 	public static final String STORAGE_SESSIONS=SERVER_BASE+"storage.sessions";
+	public static final String STORAGE_LOGGING=SERVER_BASE+"storage.logging";
+	
+	public static final String SESSION_TRACKER=SERVER_BASE+"session.tracker";
 	
 	public static final String MINIMUM_BASE_CREATE=SERVER_BASE+"permissions.base.create";
 	public static final String MINIMUM_BASE_MODIFY=SERVER_BASE+"permissions.base.modify";
@@ -102,16 +105,15 @@ public class Preferences{
 	}
 	
 	public static void initialize() throws IOException{
-		PreferenceReader pr;
 		try {
-			logger.info("Reading preference file");
-			pr = new PreferenceReader(new File("config.xml"));
+			System.out.println("Reading preference file");
+			PreferenceReader pr = new PreferenceReader(new File("config.xml"));
 			pr.parse();
 			preferencesLoadedOnInitialization=true;
 		} catch (JDOMException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
-			logger.info("No preferences file could be found, creating one.");
+			System.out.println("No preferences file could be found, creating one.");
 			DefaultPreferenceWriter.writeDefaultPreferences();
 		}
 	}

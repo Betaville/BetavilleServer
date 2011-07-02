@@ -42,7 +42,6 @@ import org.apache.log4j.PatternLayout;
 import edu.poly.bxmc.betaville.server.network.ConnectionTracker;
 import edu.poly.bxmc.betaville.server.network.SecureServerManager;
 import edu.poly.bxmc.betaville.server.network.ServerManager;
-import edu.poly.bxmc.betaville.server.session.availability.FlatFileSessionTracker;
 import edu.poly.bxmc.betaville.server.session.availability.InMemorySessionTracker;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
@@ -81,10 +80,20 @@ public class ServerLauncher {
 		}
 		
 		
+		// Set up preferences
+		try {
+			Preferences.initialize();
+		} catch (IOException e) {
+			System.err.println("A preferences file could not be created in the Betaville directory.  " +
+					"Please ensure that you're home directory has write-permissions " +
+					"enabled.  Betaville will run but your preferences will not be saved.");
+		}
+		
 		// Set up logging
 		try {
 			DateFormat.getDateInstance().format(new Date());
-			Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n"), DateFormat.getDateInstance().format(new Date())+".log"));
+			Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n"),
+					Preferences.getSetting(Preferences.STORAGE_LOGGING)+DateFormat.getDateInstance().format(new Date())+".log"));
 			Logger.getRootLogger().addAppender(new ConsoleAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n")));
 			Logger.getRootLogger().setLevel(Level.INFO);
 			logger = Logger.getLogger(ServerLauncher.class);
@@ -93,17 +102,27 @@ public class ServerLauncher {
 			e.printStackTrace();
 		}
 		
-		// Set up preferences
+		// Set up session tracker
 		try {
-			Preferences.initialize();
-		} catch (IOException e) {
-			logger.error("A preferences file could not be created in the Betaville directory.  " +
-					"Please ensure that you're home directory has write-permissions " +
-					"enabled.  Betaville will run but your preferences will not be saved.", e);
+			Class<? extends SessionTracker> sessionTrackerType = (Class<? extends SessionTracker>) Class.forName(Preferences.getSetting(Preferences.SESSION_TRACKER));
+			SessionTracker.registerTracker(sessionTrackerType.newInstance());
+		} catch (ClassNotFoundException e) {
+			logger.error("The "+SessionTracker.class.getSimpleName() + ", \""+Preferences.getSetting(Preferences.SESSION_TRACKER)+
+					"\", specified in config.xml is not valid.  This may stem from a type or a classpath issue.  Defaulting to " +
+					InMemorySessionTracker.class.getSimpleName());
+			SessionTracker.registerTracker(new InMemorySessionTracker());
+		} catch (ClassCastException e) {
+			logger.error("The "+SessionTracker.class.getSimpleName() + ", \""+Preferences.getSetting(Preferences.SESSION_TRACKER)+
+					"\", specified in config.xml is not of the type "+SessionTracker.class.getName()+".  Defaulting to " +
+					InMemorySessionTracker.class.getSimpleName());
+			SessionTracker.registerTracker(new InMemorySessionTracker());
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		// setup session tracker
-		SessionTracker.registerTracker(new InMemorySessionTracker());
 
 		// Create insecure manager
 		managerPool.submit(new Runnable(){
