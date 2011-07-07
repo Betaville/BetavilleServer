@@ -38,7 +38,7 @@ public class GMailer extends AbstractMailer {
 	 * @param host
 	 * @param user
 	 * @param pass
-	 * @param port
+	 * @param port`
 	 * @throws Exception
 	 */
 	public GMailer(String user, String pass)
