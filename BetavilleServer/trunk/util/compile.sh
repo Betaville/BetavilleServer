@@ -18,6 +18,9 @@ mv BetavilleApp.jar ../BetavilleServer
 cd ../BetavilleServer
 ant build build jar pop-db-jar
 
+# Make run.sh executable
+chmod +x util/run.sh
+
 # This is irritating, we need to move all of the jars
 mkdir deploy
 cp lib/*.jar deploy/
