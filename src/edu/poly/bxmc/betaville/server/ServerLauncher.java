@@ -25,6 +25,7 @@
  */
 package edu.poly.bxmc.betaville.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
@@ -52,9 +53,9 @@ import edu.poly.bxmc.betaville.server.util.Preferences;
  * @author Caroline Bouchat
  */
 public class ServerLauncher {
-	
+
 	private static Logger logger;
-	
+
 	private static long reportInterval = 600000;
 
 	public static final ExecutorService managerPool = Executors.newCachedThreadPool();
@@ -65,7 +66,7 @@ public class ServerLauncher {
 	 * @param args Arguments
 	 */
 	public static void main(final String[] args) {
-		
+
 		// Is this a query? (i.e: help, versions, etc)
 		if(args.length>0){
 			// now we know that we have a command, let's see which it is
@@ -78,30 +79,44 @@ public class ServerLauncher {
 				System.out.println("VERSION?!");
 			}
 		}
-		
-		
+
+
 		// Set up preferences
 		try {
 			Preferences.initialize();
 		} catch (IOException e) {
 			System.err.println("A preferences file could not be created in the Betaville directory.  " +
 					"Please ensure that you're home directory has write-permissions " +
-					"enabled.  Betaville will run but your preferences will not be saved.");
+			"enabled.  Betaville will run but your preferences will not be saved.");
 		}
-		
+
 		// Set up logging
 		try {
-			DateFormat.getDateInstance().format(new Date());
-			Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n"),
-					Preferences.getSetting(Preferences.STORAGE_LOGGING)+DateFormat.getDateInstance().format(new Date())+".log"));
 			Logger.getRootLogger().addAppender(new ConsoleAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n")));
 			Logger.getRootLogger().setLevel(Level.INFO);
+			
 			logger = Logger.getLogger(ServerLauncher.class);
+			
+			DateFormat.getDateInstance().format(new Date());
+			// check if the folder for the logs to go into exists;  Create it if it doesn't
+			File loggingDir = new File(Preferences.getSetting(Preferences.STORAGE_LOGGING));
+			if(!loggingDir.exists()){
+				if(loggingDir.mkdirs()){
+					logger.info("Logging directory created");
+				}
+				else logger.error("The logging directory could not be created, logs will not be written to the file system");
+			}
+			
+			
+			if(loggingDir.exists()){
+				Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n"),
+						Preferences.getSetting(Preferences.STORAGE_LOGGING)+DateFormat.getDateInstance().format(new Date())+".log"));
+			}
 		} catch (IOException e) {
 			System.err.println("Log file coult not be opened for writing!  Please check your user permissions.");
 			e.printStackTrace();
 		}
-		
+
 		// Set up session tracker
 		try {
 			Class<? extends SessionTracker> sessionTrackerType = (Class<? extends SessionTracker>) Class.forName(Preferences.getSetting(Preferences.SESSION_TRACKER));
@@ -151,11 +166,11 @@ public class ServerLauncher {
 			}
 		}, reportInterval, reportInterval);
 	}
-	
+
 	private static boolean isHelpArgument(String argument){
 		return argument.toLowerCase().equals("-h") || argument.toLowerCase().equals("--help");
 	}
-	
+
 	private static boolean isVersionArgument(String argument){
 		return argument.toLowerCase().equals("-v") || argument.toLowerCase().equals("--version");
 	}
