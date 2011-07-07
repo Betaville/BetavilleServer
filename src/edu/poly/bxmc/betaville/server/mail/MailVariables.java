@@ -54,4 +54,8 @@ public class MailVariables {
 	 * A design's name.
 	 */
 	public static final String DESIGN_NAME = "$designName";
+	/**
+	 * A User's Full Name.
+	 */
+	public static final String USER_NAME = "$userName";
 }

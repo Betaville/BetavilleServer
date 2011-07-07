@@ -38,6 +38,9 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.log4j.Logger;
 import org.jdom.output.XMLOutputter;
 
@@ -52,6 +55,8 @@ import edu.poly.bxmc.betaville.net.PhysicalFileTransporter;
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
+import edu.poly.bxmc.betaville.server.mail.GMailer;
+import edu.poly.bxmc.betaville.server.mail.ShareBetavilleMessage;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.util.StringZipper;
@@ -443,6 +448,24 @@ public class NewClientConnection implements Runnable {
 				}
 				else if(((String)inObject[1]).equals("remove")){
 					// TODO implement this
+				}
+			}
+			
+			
+			//SHARE FUNCTIONALITY
+			else if(((String)inObject[0]).equals("share")){
+				logger.info("Share requested");
+				// This is an example on how to use the mailer!
+				GMailer mailer;
+				try {
+					mailer = new GMailer("notifications@betaville.net", "bvnotific@tions");
+					MimeMessage message = new ShareBetavilleMessage(mailer.getSession(), ((String)inObject[1]), ((String)inObject[2]), ((String)inObject[3]), ((String)inObject[4]));
+					message.setFrom(new InternetAddress("notifications@betaville.net"));
+					mailer.sendMailNow(message);
+					output.writeObject(new Object[]{Integer.toString(1)});
+				} catch (Exception e) {
+					output.writeObject(new Object[]{Integer.toString(-1)});
+					logger.error("Share Failed", e);
 				}
 			}
 
