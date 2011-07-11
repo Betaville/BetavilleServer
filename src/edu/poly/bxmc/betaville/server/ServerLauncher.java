@@ -124,7 +124,7 @@ public class ServerLauncher {
 		// Set up the mailer if it is enabled
 		if(Preferences.getBooleanSetting(Preferences.MAIL_ENABLED)){
 			try {
-				Mailer mailer = new FullDetailMailer(Preferences.getSetting(Preferences.MAIL_HOST),
+				AbstractMailer mailer = new FullDetailMailer(Preferences.getSetting(Preferences.MAIL_HOST),
 						Preferences.getSetting(Preferences.MAIL_USER),
 						Preferences.getSetting(Preferences.MAIL_PASS),
 						Preferences.getIntegerSetting(Preferences.MAIL_PORT),
