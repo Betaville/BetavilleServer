@@ -40,6 +40,10 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import edu.poly.bxmc.betaville.server.mail.AbstractMailer;
+import edu.poly.bxmc.betaville.server.mail.FullDetailMailer;
+import edu.poly.bxmc.betaville.server.mail.MailSystem;
+import edu.poly.bxmc.betaville.server.mail.Mailer;
 import edu.poly.bxmc.betaville.server.network.ConnectionTracker;
 import edu.poly.bxmc.betaville.server.network.SecureServerManager;
 import edu.poly.bxmc.betaville.server.network.ServerManager;
@@ -94,9 +98,9 @@ public class ServerLauncher {
 		try {
 			Logger.getRootLogger().addAppender(new ConsoleAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n")));
 			Logger.getRootLogger().setLevel(Level.INFO);
-			
+
 			logger = Logger.getLogger(ServerLauncher.class);
-			
+
 			DateFormat.getDateInstance().format(new Date());
 			// check if the folder for the logs to go into exists;  Create it if it doesn't
 			File loggingDir = new File(Preferences.getSetting(Preferences.STORAGE_LOGGING));
@@ -106,8 +110,8 @@ public class ServerLauncher {
 				}
 				else logger.error("The logging directory could not be created, logs will not be written to the file system");
 			}
-			
-			
+
+
 			if(loggingDir.exists()){
 				Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout("%d [%t] %-5p %c %x - %m%n"),
 						Preferences.getSetting(Preferences.STORAGE_LOGGING)+DateFormat.getDateInstance().format(new Date())+".log"));
@@ -115,6 +119,22 @@ public class ServerLauncher {
 		} catch (IOException e) {
 			System.err.println("Log file coult not be opened for writing!  Please check your user permissions.");
 			e.printStackTrace();
+		}
+
+		// Set up the mailer if it is enabled
+		if(Preferences.getBooleanSetting(Preferences.MAIL_ENABLED)){
+			try {
+				Mailer mailer = new FullDetailMailer(Preferences.getSetting(Preferences.MAIL_HOST),
+						Preferences.getSetting(Preferences.MAIL_USER),
+						Preferences.getSetting(Preferences.MAIL_PASS),
+						Preferences.getIntegerSetting(Preferences.MAIL_PORT),
+						Preferences.getBooleanSetting(Preferences.MAIL_STARTTLS),
+						Preferences.getBooleanSetting(Preferences.MAIL_REQUIRES_AUTH));
+				MailSystem.registerMailer(mailer);
+			} catch (Exception e) {
+				logger.error("The mailer could not be setup, disabling it for this session", e);
+				Preferences.setBooleanSetting(Preferences.MAIL_ENABLED, false);
+			}
 		}
 
 		// Set up session tracker

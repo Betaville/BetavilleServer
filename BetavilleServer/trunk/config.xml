@@ -29,6 +29,18 @@
       <logging>logs/</logging>
       <media>storage/</media>
     </storage>
+    <mailer>
+      <starttls>true</starttls>
+      <port>smtpport</port>
+      <user>smtpuser</user>
+      <enabled>false</enabled>
+      <pass>smtppass</pass>
+      <message>
+        <commentnotification>MailAssets/comment_notification.html</commentnotification>
+      </message>
+      <requiresauth>true</requiresauth>
+      <host>smtpserver</host>
+    </mailer>
     <logging>
       <report>
         <interval>600000</interval>
@@ -43,16 +55,6 @@
         <enabled>false</enabled>
       </ssl>
     </network>
-    <mailer>
-      <port>smtpport</port>
-      <user>smtpuser</user>
-      <enabled>false</enabled>
-      <pass>smtppass</pass>
-      <message>
-        <commentnotification>MailAssets/comment_notification.html</commentnotification>
-      </message>
-      <host>smtpserver</host>
-    </mailer>
     <mysql>
       <host>localhost</host>
       <database>betaville</database>

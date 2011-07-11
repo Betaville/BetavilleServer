@@ -69,6 +69,8 @@ public class DefaultPreferenceWriter {
 		if(System.getProperty(Preferences.MAIL_USER)==null) System.setProperty(Preferences.MAIL_USER, "smtpuser");
 		if(System.getProperty(Preferences.MAIL_PASS)==null) System.setProperty(Preferences.MAIL_PASS, "smtppass");
 		if(System.getProperty(Preferences.MAIL_PORT)==null) System.setProperty(Preferences.MAIL_PORT, "smtpport");
+		if(System.getProperty(Preferences.MAIL_STARTTLS)==null) System.setProperty(Preferences.MAIL_STARTTLS, "true");
+		if(System.getProperty(Preferences.MAIL_REQUIRES_AUTH)==null) System.setProperty(Preferences.MAIL_REQUIRES_AUTH, "true");
 		if(System.getProperty(Preferences.MAIL_COMMENT_NOTIFICATION)==null) System.setProperty(Preferences.MAIL_COMMENT_NOTIFICATION, "MailAssets/comment_notification.html");
 		if(System.getProperty(Preferences.STORAGE_MEDIA)==null) System.setProperty(Preferences.STORAGE_MEDIA, "storage/");
 		if(System.getProperty(Preferences.STORAGE_SESSIONS)==null) System.setProperty(Preferences.STORAGE_SESSIONS, "sessions/");

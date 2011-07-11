@@ -22,20 +22,22 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 package edu.poly.bxmc.betaville.server.mail;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
 
 /**
  * @author Skye Book
  *
  */
-public interface Mailer {
-	public void sendMailNow(Message message) throws MessagingException;
+public class MailSystem {
 	
-	public void addToMailQueue(Message message);
+	private static Mailer mailer;
 	
-	public void flushMailQueue() throws MessagingException;
+	public static void registerMailer(Mailer mailer){
+		MailSystem.mailer = mailer;
+	}
+	
+	public static Mailer getMailer(){
+		return mailer;
+	}
 }

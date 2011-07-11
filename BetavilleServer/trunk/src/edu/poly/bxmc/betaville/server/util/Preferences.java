@@ -62,6 +62,8 @@ public class Preferences{
 	public static final String MAIL_USER=SERVER_BASE+"mailer.user";
 	public static final String MAIL_PASS=SERVER_BASE+"mailer.pass";
 	public static final String MAIL_PORT=SERVER_BASE+"mailer.port";
+	public static final String MAIL_STARTTLS=SERVER_BASE+"mailer.starttls";
+	public static final String MAIL_REQUIRES_AUTH=SERVER_BASE+"mailer.requiresauth";
 	public static final String MAIL_COMMENT_NOTIFICATION=SERVER_BASE+"mailer.message.commentnotification";
 	
 	public static final String STORAGE_MEDIA=SERVER_BASE+"storage.media";
@@ -93,6 +95,22 @@ public class Preferences{
 	
 	public static boolean getBooleanSetting(String settingToGet){
 		return Boolean.parseBoolean(System.getProperty(settingToGet));
+	}
+	
+	public static int getIntegerSetting(String settingToGet){
+		return Integer.parseInt(System.getProperty(settingToGet));
+	}
+	
+	public static void setBooleanSetting(String preferenceToSet, boolean setting){
+		System.setProperty(preferenceToSet, Boolean.toString(setting));
+	}
+	
+	public static void setIntegerSetting(String preferenceToSet, int setting){
+		System.setProperty(preferenceToSet, Integer.toString(setting));
+	}
+	
+	public static void setSetting(String preferenceToSet, String setting){
+		System.setProperty(preferenceToSet, setting);
 	}
 	
 	/**
