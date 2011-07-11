@@ -31,9 +31,9 @@ package edu.poly.bxmc.betaville.server.mail;
  */
 public class MailSystem {
 	
-	private static Mailer mailer;
+	private static AbstractMailer mailer;
 	
-	public static void registerMailer(Mailer mailer){
+	public static void registerMailer(AbstractMailer mailer){
 		MailSystem.mailer = mailer;
 	}
 	
