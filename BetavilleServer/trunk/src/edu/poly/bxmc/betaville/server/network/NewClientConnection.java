@@ -56,6 +56,7 @@ import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
 import edu.poly.bxmc.betaville.server.mail.GMailer;
+import edu.poly.bxmc.betaville.server.mail.MailSystem;
 import edu.poly.bxmc.betaville.server.mail.ShareBetavilleMessage;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
@@ -101,7 +102,7 @@ public class NewClientConnection implements Runnable {
 	private String sessionToken = null;
 
 	private String futureKey=null;
-	
+
 	private XMLOutputter xo = new XMLOutputter();
 
 	public NewClientConnection(Client client) {
@@ -162,7 +163,7 @@ public class NewClientConnection implements Runnable {
 			}
 			else{
 				logger.warn("Session with token " + sessionToken + " is trying to be closed again although it no longer" +
-						"seems to be open!");
+				"seems to be open!");
 			}
 		}
 		input.close();
@@ -406,7 +407,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(returnable);
 				}
 			}
-			
+
 			// DESIGN FUNCTIONALITY
 			else if(((String)inObject[0]).equals("design-android")){
 				androidDesign(inObject);
@@ -450,22 +451,25 @@ public class NewClientConnection implements Runnable {
 					// TODO implement this
 				}
 			}
-			
-			
+
+
 			//SHARE FUNCTIONALITY
 			else if(((String)inObject[0]).equals("share")){
-				logger.info("Share requested");
-				// This is an example on how to use the mailer!
-				GMailer mailer;
-				try {
-					mailer = new GMailer("notifications@betaville.net", "bvnotific@tions");
-					MimeMessage message = new ShareBetavilleMessage(mailer.getSession(), ((String)inObject[1]), ((String)inObject[2]), ((String)inObject[3]), ((String)inObject[4]));
-					message.setFrom(new InternetAddress("notifications@betaville.net"));
-					mailer.sendMailNow(message);
-					output.writeObject(new Object[]{Integer.toString(1)});
-				} catch (Exception e) {
-					output.writeObject(new Object[]{Integer.toString(-1)});
-					logger.error("Share Failed", e);
+				if (Preferences.getBooleanSetting(Preferences.MAIL_ENABLED)){
+					logger.info("Share requested");
+					// This is an example on how to use the mailer!
+					try {
+						MimeMessage message = new ShareBetavilleMessage(MailSystem.getMailer().getSession(), ((String)inObject[1]), ((String)inObject[2]), ((String)inObject[3]), ((String)inObject[4]));
+						message.setFrom(new InternetAddress("notifications@betaville.net"));
+						MailSystem.getMailer().sendMailNow(message);
+						output.writeObject(new Object[]{Integer.toString(1)});
+					} catch (Exception e) {
+						output.writeObject(new Object[]{Integer.toString(-1)});
+						logger.error("Share Failed", e);
+					}
+				} else{
+					logger.error("Mail is not enabled");
+					output.writeObject(new Object[]{Integer.toString(-4)});
 				}
 			}
 
@@ -485,7 +489,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.getComments((Integer)inObject[2]));
 				}
 			}
-			
+
 			// ANDROID COMMENT FUNCTIONALITY
 			else if(((String)inObject[0]).equals("comment-android")){
 				androidComment(inObject);
@@ -554,7 +558,7 @@ public class NewClientConnection implements Runnable {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void androidDesign(Object[] inObject) throws IOException{
 		logger.info("Inside Android Design: " + (String)inObject[1]);
 		if(((String)inObject[1]).equals("changename")){
