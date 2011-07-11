@@ -1720,7 +1720,7 @@ public class NewDatabaseManager {
 			addCoordinate.setInt(4, lonZone);
 			addCoordinate.setInt(5, altitude);
 			addCoordinate.setInt(6, eastingCM);
-			addCoordinate.setInt(6, northingCM);
+			addCoordinate.setInt(7, northingCM);
 			
 			addCoordinate.executeUpdate();
 			
