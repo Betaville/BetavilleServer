@@ -20,5 +20,6 @@ copy lib/javamail-1.4.3/mail.jar deploy/mail.jar
 copy lib/javamail-1.4.3/lib/*.jar deploy
 copy lib/MySQL/*.jar deploy
 copy util/run.sh deploy/run.sh
+copy MailAssets/ deploy/
 move Betaville*.jar deploy
 move PopulateDatabase.jar deploy
