@@ -27,6 +27,9 @@ cp lib/*.jar deploy/
 cp lib/javamail-1.4.3/mail.jar deploy/mail.jar
 cp lib/javamail-1.4.3/lib/*.jar deploy
 cp lib/MySQL/*.jar deploy
-cp util/run.sh deploy/run.sh
 mv Betaville*.jar deploy
 mv PopulateDatabase.jar deploy
+
+# Move the built-in mail messages and the run script
+cp -R MailAssets deploy/MailAssets/
+cp util/run.sh deploy/run.sh
