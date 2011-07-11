@@ -37,7 +37,7 @@ public class MailSystem {
 		MailSystem.mailer = mailer;
 	}
 	
-	public static Mailer getMailer(){
+	public static AbstractMailer getMailer(){
 		return mailer;
 	}
 }
