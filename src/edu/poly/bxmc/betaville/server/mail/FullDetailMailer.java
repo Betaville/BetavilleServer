@@ -25,17 +25,31 @@
 */
 package edu.poly.bxmc.betaville.server.mail;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-
 /**
  * @author Skye Book
  *
  */
-public interface Mailer {
-	public void sendMailNow(Message message) throws MessagingException;
-	
-	public void addToMailQueue(Message message);
-	
-	public void flushMailQueue() throws MessagingException;
+public class FullDetailMailer extends AbstractMailer {
+
+	/**
+	 * 
+	 * @param host
+	 * @param user
+	 * @param pass
+	 * @param port
+	 * @param starttls
+	 * @param requiresAuthentication
+	 * @throws Exception
+	 */
+	public FullDetailMailer(String host, String user, String pass, int port, boolean starttls, boolean requiresAuthentication)
+	throws Exception {
+		super(host, user, pass, port, starttls, requiresAuthentication);
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.poly.bxmc.betaville.server.mail.AbstractMailer#validateAddress(java.lang.String)
+	 */
+	protected boolean validateAddress(String address) {
+		return address.contains("@");
+	}
 }

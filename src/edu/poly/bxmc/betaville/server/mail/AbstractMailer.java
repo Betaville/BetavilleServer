@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,17 @@ public abstract class AbstractMailer implements Mailer{
 	@Override
 	public void addToMailQueue(Message message) {
 		messageQueue.add(message);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see edu.poly.bxmc.betaville.server.mail.Mailer#flushMailQueue()
+	 */
+	@Override
+	public void flushMailQueue() throws MessagingException{
+		for(Message message : messageQueue){
+			sendMail(message);
+		}
 	}
 	
 	private void sendMail(Message message) throws MessagingException{
