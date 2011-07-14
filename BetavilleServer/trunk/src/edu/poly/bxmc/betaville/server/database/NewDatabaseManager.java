@@ -466,8 +466,8 @@ public class NewDatabaseManager {
 				" WHERE "+DBConst.CITY_NAME+" = ? AND "+DBConst.CITY_STATE+" = ? AND "+DBConst.CITY_COUNTRY+
 				" = ?;");
 		addCoordinate = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.COORD_TABLE+
-				" (`"+DBConst.COORD_NORTHING+"`, `"+DBConst.COORD_EASTING+"`, `"+DBConst.COORD_LATZONE+"`, `"+
-				DBConst.COORD_LONZONE+"`, `"+DBConst.COORD_ALTITUDE+"`, `"+DBConst.COORD_EASTING_CM+"`, `"+DBConst.COORD_NORTHING_CM+"`) VALUES (?,?,?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
+				" ("+DBConst.COORD_TABLE+"."+DBConst.COORD_NORTHING+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_EASTING+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_LATZONE+", "+
+				DBConst.COORD_TABLE+"."+DBConst.COORD_LONZONE+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_ALTITUDE+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_EASTING_CM+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_NORTHING_CM+") VALUES (?,?,?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
 		changeCoordinate = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.COORD_TABLE+" SET "+
 				DBConst.COORD_EASTING+" = ?, "+DBConst.COORD_NORTHING+" = ?, "+DBConst.COORD_LATZONE+" = ?, "+
 				DBConst.COORD_LONZONE+" = ?, "+DBConst.COORD_ALTITUDE+" = ?, "+DBConst.COORD_EASTING_CM+" = ?, "+DBConst.COORD_NORTHING_CM+" = ? WHERE "+DBConst.COORD_ID+" = ?;");
