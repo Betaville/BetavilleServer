@@ -1,1 +1,0 @@
-UPDATE user SET type = 'admin' WHERE userName LIKE '@user';
