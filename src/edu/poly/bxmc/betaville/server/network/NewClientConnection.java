@@ -451,6 +451,20 @@ public class NewClientConnection implements Runnable {
 					// TODO implement this
 				}
 			}
+			
+			// ACTIVITY FUNCTIONALITY
+			else if(((String)inObject[0]).equals("activity")){
+				if(((String)inObject[1]).equals("comments")){
+					output.writeObject(dbManager.retrieveRecentComments());
+				}
+				else if(((String)inObject[1]).equals("designs")){
+					output.writeObject(dbManager.retrieveRecentDesignIDs());
+				}
+				else if(((String)inObject[1]).equals("myactivity")){
+					output.writeObject(dbManager.retrieveCommentsOnMyActivity(SessionTracker.get().getSession((String)inObject[2])));
+					
+				}
+			}
 
 
 			//SHARE FUNCTIONALITY
