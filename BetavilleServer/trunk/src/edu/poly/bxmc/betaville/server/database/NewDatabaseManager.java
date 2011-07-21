@@ -250,6 +250,8 @@ public class NewDatabaseManager {
 	
 	private PreparedStatement getAllWormholes;
 	private PreparedStatement getAllWormholesInCity;
+	private PreparedStatement getRecentCommentsFromNow;
+	private PreparedStatement getRecentDesignsFromNow;
 	
 
 	/**
@@ -489,6 +491,8 @@ public class NewDatabaseManager {
 		getWormholesAtLocation = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.COORD_LATZONE+">=? AND "+DBConst.COORD_LATZONE+"<=? AND "+DBConst.COORD_LONZONE+">=? AND "+DBConst.COORD_LONZONE+"<=? AND "+DBConst.COORD_NORTHING+">=? AND "+DBConst.COORD_NORTHING+"<=? AND "+DBConst.COORD_EASTING+">=? AND "+DBConst.COORD_EASTING+"<=?");
 		getAllWormholes = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE);
 		getAllWormholesInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.WORMHOLE_CITY+"=?");
+		getRecentCommentsFromNow = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.COMMENT_TABLE + " WHERE "+DBConst.COMMENT_SPAMVERIFIED+" = 0 ORDER BY "+DBConst.COMMENT_ID +" DESC LIMIT ?");
+		getRecentDesignsFromNow = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_ID+" FROM " + DBConst.DESIGN_TABLE + " WHERE "+DBConst.DESIGN_IS_ALIVE+" = 1 ORDER BY "+DBConst.DESIGN_ID +" DESC LIMIT ?");
 	}
 
 	public void closeConnection(){
@@ -1175,6 +1179,12 @@ public class NewDatabaseManager {
 		return null;
 	}
 
+	/**
+	 * Finds designs with a name
+	 * @param name The name to search for
+	 * @return A {@link List} of designs
+	 * @see Design
+	 */
 	public Vector<Design> findDesignsByName(String name){
 		try {
 			findDesignsByName.setString(1, name);
@@ -1190,6 +1200,12 @@ public class NewDatabaseManager {
 		}
 	}
 
+	/**
+	 * Finds designs created by a user
+	 * @param user The user to search against
+	 * @return A {@link List} of designs
+	 * @see Design
+	 */
 	public Vector<Design> findDesignsByUser(String user){
 		try {
 			logger.debug("Finding designs from "+user);
@@ -1220,6 +1236,13 @@ public class NewDatabaseManager {
 		return null;
 	}
 	
+	/**
+	 * 
+	 * @param cityID
+	 * @param type
+	 * @return
+	 * @see Design
+	 */
 	public Vector<Design> findTypeDesiginsByCity(int cityID, String type){
 		try{
 			findTypeDesignsByCity.setInt(1, cityID);
@@ -1237,6 +1260,13 @@ public class NewDatabaseManager {
 		}
 	}
 
+	/**
+	 * 
+	 * @param cityID
+	 * @param onlyBase
+	 * @return
+	 * @see Design
+	 */
 	public Vector<Design> findDesignsByCity(int cityID, boolean onlyBase){
 		try {
 			findDesignsByCity.setInt(1, cityID);
@@ -1265,6 +1295,15 @@ public class NewDatabaseManager {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param cityID
+	 * @param onlyBase
+	 * @param start
+	 * @param nextAmount
+	 * @return
+	 * @see Design
+	 */
 	public Vector<Design> findDesignsByCitySetStartEnd(int cityID, boolean onlyBase, int start, int nextAmount){
 		try {
 			findDesignsByCity.setInt(1, cityID);
@@ -1332,6 +1371,12 @@ public class NewDatabaseManager {
 	}
 	*/
 	
+
+	/**
+	 * @param cityID
+	 * @return
+	 * @see Design
+	 */
 	public Vector<Design> findTerrainDesignsByCity(int cityID){
 		try {
 			findTerrainDesignsByCity.setInt(1, cityID);
@@ -1440,6 +1485,7 @@ public class NewDatabaseManager {
 	 * @param coordinate
 	 * @param meterRadius
 	 * @return
+	 * @see Design
 	 */
 	public ArrayList<Design> findAllProposalsInArea(UTMCoordinate coordinate, int meterRadius){
 		ArrayList<Design> designs = new ArrayList<Design>();
@@ -1469,6 +1515,12 @@ public class NewDatabaseManager {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param designID
+	 * @return
+	 * @see ProposalPermission
+	 */
 	public ProposalPermission getProposalPermissions(int designID){
 		try {
 			getProposalPermissions.setInt(1, designID);
@@ -1757,6 +1809,12 @@ public class NewDatabaseManager {
 		}
 	}
 
+	/**
+	 * 
+	 * @param coordinateID
+	 * @return
+	 * @see UTMCoordinate
+	 */
 	public UTMCoordinate retrieveCoordinate(int coordinateID){
 		try {
 			retrieveCoordinate.setInt(1, coordinateID);
@@ -1826,6 +1884,12 @@ public class NewDatabaseManager {
 		}
 	}
 
+	/**
+	 * 
+	 * @param designID
+	 * @return
+	 * @see Comment
+	 */
 	public Vector<Comment> getComments(int designID){
 		Vector<Comment> comments = new Vector<Comment>();
 		try {
@@ -2013,6 +2077,12 @@ public class NewDatabaseManager {
 		}
 	}
 	
+	/**
+	 * Gets the wormholes located in a city
+	 * @param cityID The city to search for wormholes in
+	 * @return a {@link List} of all located wormholes, will be empty if there were none found
+	 * @see Wormhole
+	 */
 	public ArrayList<Wormhole> getAllWormholesInCity(int cityID){
 		logger.info("Getting all wormholes in city: " + cityID);
 		try {
@@ -2038,6 +2108,7 @@ public class NewDatabaseManager {
 	 * @param extentNorth
 	 * @param extentEast
 	 * @return The found wormholes or null if there was an SQL error.
+	 * @see Wormhole
 	 */
 	public ArrayList<Wormhole> getWormholesWithin(UTMCoordinate location, int extentNorth, int extentEast){
 		// order of returned coordinate array: nw, ne, sw, se
@@ -2064,6 +2135,55 @@ public class NewDatabaseManager {
 			logger.error("SQL ERROR", e);
 			return new ArrayList<Wormhole>();
 		}
+	}
+	
+	/**
+	 * Retrieves the 50 most recent comments
+	 * @return A {@link List} of Comments
+	 * @see Comment
+	 */
+	public ArrayList<Comment> retrieveRecentComments(){
+		
+		try {
+			getRecentCommentsFromNow.setInt(1, 50);
+			ResultSet rs = getRecentCommentsFromNow.executeQuery();
+			
+			ArrayList<Comment> comments = new ArrayList<Comment>();
+			
+			while(rs.next()){
+				comments.add(new Comment(rs.getInt(DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_DATE).toString()));
+			}
+			rs.close();
+			return comments;
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return new ArrayList<Comment>();
+		}
+		
+	}
+	
+	/**
+	 * Retrieves the 50 most recent design ID's
+	 * @return a {@link List} of design ID's
+	 */
+	public ArrayList<Integer> retrieveRecentDesignIDs(){
+		
+		try {
+			getRecentDesignsFromNow.setInt(1, 50);
+			ResultSet rs = getRecentDesignsFromNow.executeQuery();
+			
+			ArrayList<Integer> designs = new ArrayList<Integer>();
+			
+			while(rs.next()){
+				designs.add(rs.getInt(DBConst.DESIGN_ID));
+			}
+			rs.close();
+			return designs;
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return new ArrayList<Integer>();
+		}
+		
 	}
 	
 	/**
