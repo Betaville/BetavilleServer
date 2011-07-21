@@ -60,6 +60,7 @@ import edu.poly.bxmc.betaville.model.Wormhole;
 import edu.poly.bxmc.betaville.server.authentication.IAuthenticator;
 import edu.poly.bxmc.betaville.server.mail.AbstractMailer;
 import edu.poly.bxmc.betaville.server.mail.CommentNotificationMessage;
+import edu.poly.bxmc.betaville.server.session.Session;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.server.util.UserArrayUtils;
@@ -82,10 +83,10 @@ public class NewDatabaseManager {
 	 * Authentication module setup for this server
 	 */
 	private IAuthenticator authenticator;
-	
+
 	private AbstractMailer mailer;
-	
-	
+
+
 	// USER
 	private PreparedStatement addUser;
 	private PreparedStatement checkNameAvailability;
@@ -100,7 +101,7 @@ public class NewDatabaseManager {
 	 */
 	private PreparedStatement updateUserToHardenedEncryption;
 	private PreparedStatement checkUserLevel;
-	
+
 	// DESIGN
 	/**
 	 * 1)	name		-	String<br>
@@ -120,19 +121,19 @@ public class NewDatabaseManager {
 	private PreparedStatement verifyProposalMembership;
 	private PreparedStatement changeDesignName;
 	private PreparedStatement changeDesignFile;
-	
+
 	/**
 	 * 1) newDescription	-	String<br>
 	 * 2) designID			-	int<br>
 	 */
 	private PreparedStatement changeDesignDescription;
-	
+
 	/**
 	 * 1) newAddress	-	String<br>
 	 * 2) designID		-	int<br>
 	 */
 	private PreparedStatement changeDesignAddress;
-	
+
 	/**
 	 * 1) newURL	-	String<br>
 	 * 2) designID	-	int<br>
@@ -149,8 +150,8 @@ public class NewDatabaseManager {
 	private PreparedStatement findBaseModelDesignByID;
 	private PreparedStatement findTerrainDesignsByCity;
 	private PreparedStatement addProposal;
-	
-	
+
+
 	//Added by Ram
 	private PreparedStatement startSession;
 	private PreparedStatement endSession;
@@ -172,7 +173,7 @@ public class NewDatabaseManager {
 	private PreparedStatement findCityByID;
 	private PreparedStatement findCityByAll;
 	private PreparedStatement addCoordinate;
-	
+
 	/**
 	 * 1) easting	-	int<br>
 	 * 2) northing	-	int<br>
@@ -185,18 +186,18 @@ public class NewDatabaseManager {
 	private PreparedStatement retrieveCoordinate;
 	private PreparedStatement reportSpamContent;
 	private PreparedStatement getComments;
-	
+
 	/**
 	 * 1) new favelist array "size:value;value;value;"	-	String<br>
 	 * 2) designID										-	int<br>
 	 */
 	private PreparedStatement faveDesign;
-	
+
 	/**
 	 * 1) designID	-	int<br>
 	 */
 	private PreparedStatement retrieveFaves;
-	
+
 	// COMMENT
 	/**
 	 * 1) designID	-	int<br>
@@ -205,9 +206,9 @@ public class NewDatabaseManager {
 	 * 4) repliesTo	-	int<br>
 	 */
 	private PreparedStatement addComment;
-	
+
 	private PreparedStatement deleteComment;
-	
+
 	// WORMHOLES
 	/**
 	 * 1) coordinateID	-	int<br>
@@ -235,7 +236,7 @@ public class NewDatabaseManager {
 	 * 6) wormholeID	-	int<br>
 	 */
 	private PreparedStatement changeWormholeLocation;
-	
+
 	/**
 	 * 1) minLat		-	char<br>
 	 * 2) maxLat		-	char<br>
@@ -247,12 +248,13 @@ public class NewDatabaseManager {
 	 * 8) maxEasting	-	int<br>
 	 */
 	private PreparedStatement getWormholesAtLocation;
-	
+
 	private PreparedStatement getAllWormholes;
 	private PreparedStatement getAllWormholesInCity;
 	private PreparedStatement getRecentCommentsFromNow;
 	private PreparedStatement getRecentDesignsFromNow;
-	
+	private PreparedStatement getRecentCommentsOnMyActivity;
+
 
 	/**
 	 * Constructor - Create the manager of the DB
@@ -264,21 +266,21 @@ public class NewDatabaseManager {
 				Preferences.getSetting(Preferences.MYSQL_HOST),
 				Integer.parseInt(Preferences.getSetting(Preferences.MYSQL_PORT)));
 	}
-	
+
 	/**
 	 * Constructor - Create the manager of the DB
 	 */
 	public NewDatabaseManager(IAuthenticator authenticator) {
 		dbConnection = new DataBaseConnection(Preferences.getSetting(Preferences.MYSQL_USER), Preferences.getSetting(Preferences.MYSQL_PASS));
 		this.authenticator=authenticator;
-		
+
 		try {
 			prepareStatements();
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 		}
 	}
-	
+
 	/**
 	 * Constructor - Create the manager of the DB
 	 */
@@ -290,10 +292,10 @@ public class NewDatabaseManager {
 			logger.error("Exception caught while initializing "+mailer.getClass().getName(), e1);
 		}
 		authenticator = new IAuthenticator(){
-			
+
 			// user result set
 			private ResultSet rs;
-			
+
 			/*
 			 * (non-Javadoc)
 			 * @see edu.poly.bxmc.betaville.server.authentication.IAuthenticator#authenticateUser(java.lang.String, java.lang.String)
@@ -318,13 +320,13 @@ public class NewDatabaseManager {
 					}
 					else
 						logger.debug("user '"+user+"' not found");
-						return false;
+					return false;
 				} catch (SQLException e) {
 					logger.error("SQL ERROR", e);
 				}
 				return false;
 			}
-			
+
 			private boolean authMD5(String user, String pass) throws SQLException{
 				// if its not available, do the regular authentication, *and* setup hardened encryption
 				logger.debug("authenticating with legacy hash");
@@ -354,7 +356,7 @@ public class NewDatabaseManager {
 		addUser = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.USER_TABLE+"` (`"+
 				DBConst.USER_NAME+"`, `"+DBConst.USER_STRONG_PASS+"`, `"+DBConst.USER_STRONG_SALT+"`, `"+
 				DBConst.USER_EMAIL+"`) VALUES" +
-				"(?,?,?,?);");
+		"(?,?,?,?);");
 		//Added by Ram
 		startSession = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.SESSION_TABLE+"` " +
 				"(`"+DBConst.SESSION_USER+"`, `"+DBConst.SESSION_START+"`) VALUES (?, NOW());", PreparedStatement.RETURN_GENERATED_KEYS);
@@ -429,7 +431,7 @@ public class NewDatabaseManager {
 				" LEFT OUTER JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.PROPOSAL_SOURCE+
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_TYPE+"='"+DBConst.DESIGN_TYPE_MODEL+
 				"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.PROPOSAL_SOURCE+" IS NULL;");
-		
+
 		findTypeDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN' AND WHERE "+DBConst.DESIGN_TYPE+" = ?;");
 		findTerrainDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
@@ -466,7 +468,7 @@ public class NewDatabaseManager {
 				DBConst.CITY_ID+" = ?;");
 		findCityByAll = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.CITY_TABLE+
 				" WHERE "+DBConst.CITY_NAME+" = ? AND "+DBConst.CITY_STATE+" = ? AND "+DBConst.CITY_COUNTRY+
-				" = ?;");
+		" = ?;");
 		addCoordinate = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.COORD_TABLE+
 				" ("+DBConst.COORD_TABLE+"."+DBConst.COORD_NORTHING+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_EASTING+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_LATZONE+", "+
 				DBConst.COORD_TABLE+"."+DBConst.COORD_LONZONE+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_ALTITUDE+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_EASTING_CM+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_NORTHING_CM+") VALUES (?,?,?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
@@ -487,18 +489,25 @@ public class NewDatabaseManager {
 		addWormhole = dbConnection.getConnection().prepareStatement("INSERT INTO " + DBConst.WORMHOLE_TABLE + " (`"+DBConst.WORMHOLE_COORDINATE+"`, `"+DBConst.WORMHOLE_NAME+"`, `"+DBConst.WORMHOLE_CITY+"`, `"+DBConst.WORMHOLE_IS_ALIVE+"`) VALUES (?, ?, ?, 1);", PreparedStatement.RETURN_GENERATED_KEYS);
 		deleteWormhole = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.WORMHOLE_TABLE + " SET " + DBConst.WORMHOLE_IS_ALIVE + " = 0 WHERE " + DBConst.WORMHOLE_ID + " = ?");
 		changeWormholeName = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.WORMHOLE_TABLE + " SET " + DBConst.WORMHOLE_NAME + " = ? WHERE " + DBConst.WORMHOLE_ID + " = ?");
-		changeWormholeLocation = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.COORD_TABLE + " JOIN "+DBConst.WORMHOLE_TABLE+" ON "+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" = "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"   SET " + DBConst.COORD_EASTING + " = ?, " + DBConst.COORD_NORTHING + " = ?, " + DBConst.COORD_LATZONE + " = ?, " + DBConst.COORD_LONZONE + " = ?, " + DBConst.COORD_ALTITUDE + " = ?, WHERE " + DBConst.WORMHOLE_ID + " = ?");
-		getWormholesAtLocation = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.COORD_LATZONE+">=? AND "+DBConst.COORD_LATZONE+"<=? AND "+DBConst.COORD_LONZONE+">=? AND "+DBConst.COORD_LONZONE+"<=? AND "+DBConst.COORD_NORTHING+">=? AND "+DBConst.COORD_NORTHING+"<=? AND "+DBConst.COORD_EASTING+">=? AND "+DBConst.COORD_EASTING+"<=?");
+		changeWormholeLocation = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.COORD_TABLE + " JOIN "+DBConst.WORMHOLE_TABLE+" ON "+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" = "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"   SET " + DBConst.COORD_EASTING + " = ?, " + DBConst.COORD_NORTHING + " = ?, " + DBConst.COORD_LATZONE + " = ?, " +
+				DBConst.COORD_LONZONE + " = ?, " + DBConst.COORD_ALTITUDE + " = ?, WHERE " + DBConst.WORMHOLE_ID + " = ?");
+		getWormholesAtLocation = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.COORD_LATZONE+">=? AND "+DBConst.COORD_LATZONE+"<=? AND "+DBConst.COORD_LONZONE+">=? AND "+
+				DBConst.COORD_LONZONE+"<=? AND "+DBConst.COORD_NORTHING+">=? AND "+DBConst.COORD_NORTHING+"<=? AND "+DBConst.COORD_EASTING+">=? AND "+DBConst.COORD_EASTING+"<=?");
 		getAllWormholes = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE);
 		getAllWormholesInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.WORMHOLE_CITY+"=?");
 		getRecentCommentsFromNow = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.COMMENT_TABLE + " WHERE "+DBConst.COMMENT_SPAMVERIFIED+" = 0 ORDER BY "+DBConst.COMMENT_ID +" DESC LIMIT ?");
 		getRecentDesignsFromNow = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_ID+" FROM " + DBConst.DESIGN_TABLE + " WHERE "+DBConst.DESIGN_IS_ALIVE+" = 1 ORDER BY "+DBConst.DESIGN_ID +" DESC LIMIT ?");
+		
+		// we don't need to grab everything, so let's decrease the size of the cursor that's opened
+		// DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_DATE).toString()
+		getRecentCommentsOnMyActivity = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.COMMENT_ID+", "+DBConst.COMMENT_DESIGN+", "+DBConst.COMMENT_USER+", "+DBConst.COMMENT_TEXT+", "+DBConst.COMMENT_REPLIESTO+", "+DBConst.COMMENT_DATE+" FROM "+DBConst.COMMENT_TABLE+" JOIN "+DBConst.DESIGN_TABLE+" ON "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN+" = "+
+				DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" WHERE "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_FAVE_LIST+" LIKE '%?%' OR "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_USER+" LIKE '?' OR "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_USER+" LIKE '?' LIMIT ?");
 	}
 
 	public void closeConnection(){
 		dbConnection.closeConnection();
 	}
-	
+
 	/**
 	 * Calls the authenticateUser method in the instance's authenticator.
 	 * @param user
@@ -509,7 +518,7 @@ public class NewDatabaseManager {
 	public boolean authenticateUser(String user, String pass){
 		return authenticator.authenticateUser(user, pass);
 	}
-	
+
 	/**
 	 * Calls the authenticateUser method in the instance's authenticator
 	 * and starts a user session
@@ -530,7 +539,7 @@ public class NewDatabaseManager {
 				int sessionID = 0;
 				if(!executeStatus){
 					ResultSet resultSet = startSession.getGeneratedKeys();
-					
+
 					if((resultSet != null) && (resultSet.next())){
 						sessionID = resultSet.getInt(1);
 					}
@@ -561,19 +570,19 @@ public class NewDatabaseManager {
 		}
 		return 0;
 	}
-	
+
 	public boolean addUser(String user, String pass, String email, String twitter, String bio, boolean bypassRequirements){
 		try {
 			String salt = Crypto.createSalt(12);
 			String hash = Crypto.doSaltedEncryption(pass, salt);
-			
+
 			addUser.setString(1, user);
 			addUser.setString(2, hash);
 			addUser.setString(3, salt);
 			addUser.setString(4, email);
-			
+
 			addUser.executeUpdate();
-			
+
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return false;
@@ -608,7 +617,7 @@ public class NewDatabaseManager {
 
 	public boolean changePassword(String user, String pass, String newPass){
 		if(authenticator.authenticateUser(user, pass)){
-			
+
 			try {
 				changePassword.setString(1, newPass);
 				changePassword.setString(2, user);
@@ -653,12 +662,12 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	
+
 	public int checkUserLevel(String user, UserType userType){
 		try {			
-				checkUserLevel.setString(1, userType.toString().toLowerCase());
-				checkUserLevel.setString(2, user);
-				ResultSet rs = checkUserLevel.executeQuery();
+			checkUserLevel.setString(1, userType.toString().toLowerCase());
+			checkUserLevel.setString(2, user);
+			ResultSet rs = checkUserLevel.executeQuery();
 			if(rs.first()){
 				rs.close();
 				return 1;
@@ -672,7 +681,7 @@ public class NewDatabaseManager {
 			return -1;
 		}
 	}
-	
+
 	/**
 	 * Retrieves the user's UserType from the database.
 	 * @param user The user to check for.
@@ -697,7 +706,7 @@ public class NewDatabaseManager {
 			return UserType.MEMBER;
 		}
 	}
-	
+
 	/**
 	 * Adds a new design to the database
 	 * @param design
@@ -827,7 +836,7 @@ public class NewDatabaseManager {
 			return false;
 		}
 	}
-	
+
 	private boolean verifyMemberOfProposalGroup(int proposalDestID, String user, String pass){
 		try {
 			if(authenticateUser(user, pass))
@@ -881,7 +890,7 @@ public class NewDatabaseManager {
 				changeDesignFile.setString(1, newFilename);
 				changeDesignFile.setInt(2, designID);
 				changeDesignFile.executeUpdate();
-				
+
 				changeModelTex.setInt(1, (textureOnOff?1:0));
 				changeModelTex.setInt(2, designID);
 				changeModelTex.executeUpdate();
@@ -982,9 +991,9 @@ public class NewDatabaseManager {
 		}
 		return null;
 	}
-	
-	
-	
+
+
+
 	private ModeledDesign modelDesignFromFull(ResultSet drs){
 		ModeledDesign d=null;
 		try {
@@ -995,19 +1004,19 @@ public class NewDatabaseManager {
 							drs.getInt(DBConst.COORD_LONZONE),
 							drs.getString(DBConst.COORD_LATZONE).charAt(0),
 							drs.getInt(DBConst.COORD_ALTITUDE)),
-					// --end of coordinate creation--
-					drs.getString(DBConst.DESIGN_ADDRESS), drs.getInt(DBConst.DESIGN_CITY), drs.getString(DBConst.DESIGN_USER),
-					drs.getString(DBConst.DESIGN_DESCRIPTION), drs.getString(DBConst.DESIGN_FILE), drs.getString(DBConst.DESIGN_URL),
-					drs.getBoolean(DBConst.DESIGN_PRIVACY), drs.getInt(DBConst.MODEL_ROTATION_X), drs.getInt(DBConst.MODEL_ROTATION_Y),
-					drs.getInt(DBConst.MODEL_ROTATION_Z), drs.getBoolean(DBConst.MODEL_TEX));
+							// --end of coordinate creation--
+							drs.getString(DBConst.DESIGN_ADDRESS), drs.getInt(DBConst.DESIGN_CITY), drs.getString(DBConst.DESIGN_USER),
+							drs.getString(DBConst.DESIGN_DESCRIPTION), drs.getString(DBConst.DESIGN_FILE), drs.getString(DBConst.DESIGN_URL),
+							drs.getBoolean(DBConst.DESIGN_PRIVACY), drs.getInt(DBConst.MODEL_ROTATION_X), drs.getInt(DBConst.MODEL_ROTATION_Y),
+							drs.getInt(DBConst.MODEL_ROTATION_Z), drs.getBoolean(DBConst.MODEL_TEX));
 			if(drs.getInt(DBConst.PROPOSAL_SOURCE)!=0){
-				
+
 			}
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return null;
 		}
-		
+
 		return d;
 	}
 
@@ -1033,13 +1042,13 @@ public class NewDatabaseManager {
 				else{
 					classification=Classification.VERSION;
 				}
-				
+
 				obstructionList = ProposalUtils.interpretRemovablesString(getProposalRemoveList(id));
-				
+
 				// get proposal permission
 				Type type = null;
 				String level = proposalRS.getString(DBConst.PROPOSAL_PERMISSIONS_LEVEL);
-				
+
 				// check for the case where we have not yet been inserting proposal permissions
 				if(level==null){
 					proposalPermission =  new ProposalPermission(Type.CLOSED);
@@ -1057,7 +1066,7 @@ public class NewDatabaseManager {
 				}
 				String group = proposalRS.getString(DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY);
 				List<String> users = UserArrayUtils.getArrayUsers(group);
-				
+
 				proposalPermission =  new ProposalPermission(type, users);
 			}
 			String type = drs.getString(DBConst.DESIGN_TYPE);
@@ -1131,7 +1140,7 @@ public class NewDatabaseManager {
 	public int removeDesign(int designID, String user, String pass){
 		if(authenticator.authenticateUser(user, pass) && // user & pass must be correct as well as:
 				((getUserLevel(user).equals(UserType.ADMIN) ||  getUserLevel(user).equals(UserType.MODERATOR)) // must be an admin or moderator, OR
-				|| verifyDesignOwnership(designID, user, pass))){ // the original creator of the design
+						|| verifyDesignOwnership(designID, user, pass))){ // the original creator of the design
 			try {
 				removeDesign.setInt(1, designID);
 				removeDesign.executeUpdate();
@@ -1216,9 +1225,9 @@ public class NewDatabaseManager {
 				designs.add(designFromResultSet(drs));
 			}
 			drs.close();
-			
+
 			logger.debug(designs.size() + " designs found for user " + user);
-			
+
 			return designs;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -1235,7 +1244,7 @@ public class NewDatabaseManager {
 		new java.sql.Date(date);
 		return null;
 	}
-	
+
 	/**
 	 * 
 	 * @param cityID
@@ -1294,7 +1303,7 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param cityID
@@ -1328,7 +1337,7 @@ public class NewDatabaseManager {
 						designs.add(d);
 					}
 				}
-				
+
 				count++;
 			}
 			drs.close();
@@ -1338,7 +1347,7 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	
+
 	//TODO complete
 	/*
 	public Vector<Design> findModelDesignsByCity(int cityID, boolean onlyBase){
@@ -1369,8 +1378,8 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	*/
-	
+	 */
+
 
 	/**
 	 * @param cityID
@@ -1393,7 +1402,7 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Adds a proposal to the proposal table.
 	 * @param source
@@ -1514,7 +1523,7 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param designID
@@ -1528,7 +1537,7 @@ public class NewDatabaseManager {
 			if(rs.first()){
 				Type type = null;
 				String level = rs.getString(DBConst.PROPOSAL_PERMISSIONS_LEVEL);
-				
+
 				// check for the case where we have not yet been inserting proposal permissions
 				if(level==null){
 					return new ProposalPermission(Type.CLOSED);
@@ -1544,7 +1553,7 @@ public class NewDatabaseManager {
 				}
 				String group = rs.getString(DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY);
 				List<String> users = UserArrayUtils.getArrayUsers(group);
-				
+
 				return new ProposalPermission(type, users);
 			}
 		} catch (SQLException e) {
@@ -1584,7 +1593,7 @@ public class NewDatabaseManager {
 		}
 		else return null;			
 	}
-	
+
 	/**
 	 * Gets the list of designs that need to be removed for a proposal
 	 * to be displayed properly
@@ -1637,7 +1646,7 @@ public class NewDatabaseManager {
 			return -1;
 		}
 	}
-	
+
 	public List<City> findAllCities(){
 		ArrayList<City> cities = new ArrayList<City>();
 		try {
@@ -1773,9 +1782,9 @@ public class NewDatabaseManager {
 			addCoordinate.setInt(5, altitude);
 			addCoordinate.setInt(6, eastingCM);
 			addCoordinate.setInt(7, northingCM);
-			
+
 			addCoordinate.executeUpdate();
-			
+
 			ResultSet resultSet = addCoordinate.getGeneratedKeys();
 			if((resultSet != null) && (resultSet.next())){
 				int returned = resultSet.getInt(1);
@@ -1907,7 +1916,7 @@ public class NewDatabaseManager {
 		}
 		return comments;
 	}
-	
+
 	/**
 	 * @param user
 	 * @param pass
@@ -1921,7 +1930,7 @@ public class NewDatabaseManager {
 		try {
 			retrieveFaves.setInt(1, designID);
 			ResultSet rs = retrieveFaves.executeQuery();
-			
+
 			if(rs.first()){
 				String list = rs.getString(DBConst.DESIGN_FAVE_LIST);
 
@@ -1947,7 +1956,7 @@ public class NewDatabaseManager {
 		}
 		return 0;
 	}
-	
+
 	/**
 	 * Creates a new wormhole
 	 * @param coordinate
@@ -2009,7 +2018,7 @@ public class NewDatabaseManager {
 		}
 		else return -3;
 	}
-	
+
 	/**
 	 * 
 	 * @param newLocation
@@ -2036,7 +2045,7 @@ public class NewDatabaseManager {
 		}
 		else return -3;
 	}
-	
+
 	/**
 	 * 
 	 * @param name
@@ -2059,13 +2068,13 @@ public class NewDatabaseManager {
 		}
 		else return -3;
 	}
-	
+
 	public ArrayList<Wormhole> getAllWormholes(){
 		try {
 			ResultSet rs = getAllWormholes.executeQuery();
-			
+
 			ArrayList<Wormhole> wormholes = new ArrayList<Wormhole>();
-			
+
 			while(rs.next()){
 				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), 0), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
 			}
@@ -2076,7 +2085,7 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Gets the wormholes located in a city
 	 * @param cityID The city to search for wormholes in
@@ -2088,9 +2097,9 @@ public class NewDatabaseManager {
 		try {
 			getAllWormholesInCity.setInt(1, cityID);
 			ResultSet rs = getAllWormholesInCity.executeQuery();
-			
+
 			ArrayList<Wormhole> wormholes = new ArrayList<Wormhole>();
-			
+
 			while(rs.next()){
 				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), 0), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
 			}
@@ -2101,7 +2110,7 @@ public class NewDatabaseManager {
 			return new ArrayList<Wormhole>();
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param location
@@ -2123,9 +2132,9 @@ public class NewDatabaseManager {
 			getWormholesAtLocation.setInt(7, box[0].getEasting());
 			getWormholesAtLocation.setInt(8, box[1].getEasting());
 			ResultSet rs = getWormholesAtLocation.executeQuery();
-			
+
 			ArrayList<Wormhole> wormholes = new ArrayList<Wormhole>();
-			
+
 			while(rs.next()){
 				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), 0), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
 			}
@@ -2136,20 +2145,20 @@ public class NewDatabaseManager {
 			return new ArrayList<Wormhole>();
 		}
 	}
-	
+
 	/**
 	 * Retrieves the 50 most recent comments
 	 * @return A {@link List} of Comments
 	 * @see Comment
 	 */
 	public ArrayList<Comment> retrieveRecentComments(){
-		
+
 		try {
 			getRecentCommentsFromNow.setInt(1, 50);
 			ResultSet rs = getRecentCommentsFromNow.executeQuery();
-			
+
 			ArrayList<Comment> comments = new ArrayList<Comment>();
-			
+
 			while(rs.next()){
 				comments.add(new Comment(rs.getInt(DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_DATE).toString()));
 			}
@@ -2159,21 +2168,20 @@ public class NewDatabaseManager {
 			logger.error("SQL ERROR", e);
 			return new ArrayList<Comment>();
 		}
-		
 	}
-	
+
 	/**
 	 * Retrieves the 50 most recent design ID's
 	 * @return a {@link List} of design ID's
 	 */
 	public ArrayList<Integer> retrieveRecentDesignIDs(){
-		
+
 		try {
 			getRecentDesignsFromNow.setInt(1, 50);
 			ResultSet rs = getRecentDesignsFromNow.executeQuery();
-			
+
 			ArrayList<Integer> designs = new ArrayList<Integer>();
-			
+
 			while(rs.next()){
 				designs.add(rs.getInt(DBConst.DESIGN_ID));
 			}
@@ -2183,9 +2191,33 @@ public class NewDatabaseManager {
 			logger.error("SQL ERROR", e);
 			return new ArrayList<Integer>();
 		}
-		
 	}
-	
+
+	/**
+	 * Retrieves the 50 most recent design ID's
+	 * @return a {@link List} of design ID's
+	 */
+	public ArrayList<Comment> retrieveCommentsOnMyActivity(Session session){
+		try {
+			getRecentCommentsOnMyActivity.setString(1, session.getUser());
+			getRecentCommentsOnMyActivity.setString(2, session.getUser());
+			getRecentCommentsOnMyActivity.setString(3, session.getUser());
+			getRecentCommentsOnMyActivity.setInt(4, 50);
+			ResultSet rs = getRecentCommentsOnMyActivity.executeQuery();
+
+			ArrayList<Comment> comments = new ArrayList<Comment>();
+
+			while(rs.next()){
+				comments.add(new Comment(rs.getInt(DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_DATE).toString()));
+			}
+			rs.close();
+			return comments;
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return new ArrayList<Comment>();
+		}
+	}
+
 	/**
 	 * Synchronizes client and server data 
 	 * @param hashMap
