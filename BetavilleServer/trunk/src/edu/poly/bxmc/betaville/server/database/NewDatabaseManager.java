@@ -500,8 +500,8 @@ public class NewDatabaseManager {
 		
 		// we don't need to grab everything, so let's decrease the size of the cursor that's opened
 		// DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_DATE).toString()
-		getRecentCommentsOnMyActivity = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.COMMENT_ID+", "+DBConst.COMMENT_DESIGN+", "+DBConst.COMMENT_USER+", "+DBConst.COMMENT_TEXT+", "+DBConst.COMMENT_REPLIESTO+", "+DBConst.COMMENT_DATE+" FROM "+DBConst.COMMENT_TABLE+" JOIN "+DBConst.DESIGN_TABLE+" ON "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN+" = "+
-				DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" WHERE "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_FAVE_LIST+" LIKE '%?%' OR "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_USER+" LIKE '?' OR "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_USER+" LIKE '?' LIMIT ?");
+		getRecentCommentsOnMyActivity = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.COMMENT_ID+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_USER+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_TEXT+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_REPLIESTO+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DATE+" FROM "+DBConst.COMMENT_TABLE+" JOIN "+DBConst.DESIGN_TABLE+" ON "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN+" = "+
+				DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" WHERE "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_IS_ALIVE+"=1 AND ("+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_FAVE_LIST+" LIKE ? OR "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_USER+" LIKE ? OR "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_USER+" LIKE ?) LIMIT ?");
 	}
 
 	public void closeConnection(){
@@ -2198,8 +2198,12 @@ public class NewDatabaseManager {
 	 * @return a {@link List} of design ID's
 	 */
 	public ArrayList<Comment> retrieveCommentsOnMyActivity(Session session){
+		if(session==null){
+			logger.error("Null session passed to retrieveCommentsOnMyActivity");
+			return new ArrayList<Comment>();
+		}
 		try {
-			getRecentCommentsOnMyActivity.setString(1, session.getUser());
+			getRecentCommentsOnMyActivity.setString(1, "%"+session.getUser()+"%");
 			getRecentCommentsOnMyActivity.setString(2, session.getUser());
 			getRecentCommentsOnMyActivity.setString(3, session.getUser());
 			getRecentCommentsOnMyActivity.setInt(4, 50);
@@ -2208,9 +2212,10 @@ public class NewDatabaseManager {
 			ArrayList<Comment> comments = new ArrayList<Comment>();
 
 			while(rs.next()){
-				comments.add(new Comment(rs.getInt(DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_DATE).toString()));
+				comments.add(new Comment(rs.getInt(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DATE).toString()));
 			}
 			rs.close();
+			
 			return comments;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
