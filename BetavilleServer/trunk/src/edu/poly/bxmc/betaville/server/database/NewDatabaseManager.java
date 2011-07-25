@@ -952,6 +952,7 @@ public class NewDatabaseManager {
 	}
 
 	public boolean changeModeledDesignLocation(int designID, int rotY, UTMCoordinate newLocation, String user, String pass){
+		logger.info(user + " changing design location for design " + designID);
 		if(verifyDesignOwnership(designID, user, pass)
 				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){
 			try {
@@ -1809,10 +1810,12 @@ public class NewDatabaseManager {
 			changeCoordinate.setString(3, ""+latZone);
 			changeCoordinate.setInt(4, lonZone);
 			changeCoordinate.setInt(5, altitude);
-			changeCoordinate.setInt(6, coordinateID);
-			changeCoordinate.setInt(7, eastingCM);
-			changeCoordinate.setInt(8, northingCM);
-			changeCoordinate.executeUpdate();
+			changeCoordinate.setInt(6, eastingCM);
+			changeCoordinate.setInt(7, northingCM);
+			changeCoordinate.setInt(8, coordinateID);
+			int updateCount = changeCoordinate.executeUpdate();
+			if(updateCount>1) logger.warn("More than one coordinates ("+updateCount+") were updated");
+			else if(updateCount==0) logger.error("No coordinates were updated");
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 		}
