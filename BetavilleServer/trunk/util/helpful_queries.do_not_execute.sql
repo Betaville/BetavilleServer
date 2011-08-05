@@ -7,7 +7,7 @@
 SELECT * FROM design LEFT JOIN proposal ON design.designid=proposal.destinationid WHERE proposal.destinationid IS NULL AND cityid=2;
 
 -- Delete all of the base designs in a city
-UPDATE design LEFT JOIN proposal ON design.designid=proposal.destinationid set isalive=0 WHERE proposal.destinationid IS NULL AND cityid=2;
+UPDATE design LEFT JOIN proposal ON design.designid=proposal.destinationid set isalive=0 WHERE proposal.destinationid IS NULL AND  design.name NOT LIKE '%EMPTY_DESIGN%' AND cityid=2;
 
 -- Count the number of non-deleted designs in the database --
 SELECT count(*) FROM design WHERE isalive=1;

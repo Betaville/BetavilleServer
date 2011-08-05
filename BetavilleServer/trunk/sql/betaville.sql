@@ -51,7 +51,7 @@ COLLATE = latin1_swedish_ci;
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `betaville`.`sketchdesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `rotY` SMALLINT NOT NULL ,
+  `rotY` FLOAT NOT NULL ,
   `length` DECIMAL(6,2) NULL ,
   `width` DECIMAL(6,2) NULL ,
   `upPlane` ENUM('X','Y','Z') NOT NULL ,
@@ -183,13 +183,13 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `betaville`.`modeldesign` (
   `designid` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `rotY` SMALLINT NOT NULL ,
+  `rotY` FLOAT NOT NULL ,
   `length` DECIMAL(6,2) NULL ,
   `width` DECIMAL(6,2) NULL ,
   `height` DECIMAL(6,2) NULL ,
   `textured` TINYINT(1)  NOT NULL ,
-  `rotX` SMALLINT NULL ,
-  `rotZ` SMALLINT NULL ,
+  `rotX` FLOAT NULL ,
+  `rotZ` FLOAT NULL ,
   PRIMARY KEY (`designid`) )
 ENGINE = InnoDB;
 
