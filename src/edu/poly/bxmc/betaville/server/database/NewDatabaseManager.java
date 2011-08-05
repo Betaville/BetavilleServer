@@ -961,7 +961,7 @@ public class NewDatabaseManager {
 				if(rs.first()){
 					int coordinateID = rs.getInt(DBConst.DESIGN_COORDINATE);
 					changeCoordinate(coordinateID, newLocation);
-					changeModeledDesignLocation.setInt(1, rotY);
+					changeModeledDesignLocation.setFloat(1, rotY);
 					changeModeledDesignLocation.setInt(2, designID);
 					changeModeledDesignLocation.executeUpdate();
 					rs.close();
@@ -1008,8 +1008,8 @@ public class NewDatabaseManager {
 							// --end of coordinate creation--
 							drs.getString(DBConst.DESIGN_ADDRESS), drs.getInt(DBConst.DESIGN_CITY), drs.getString(DBConst.DESIGN_USER),
 							drs.getString(DBConst.DESIGN_DESCRIPTION), drs.getString(DBConst.DESIGN_FILE), drs.getString(DBConst.DESIGN_URL),
-							drs.getBoolean(DBConst.DESIGN_PRIVACY), drs.getInt(DBConst.MODEL_ROTATION_X), drs.getInt(DBConst.MODEL_ROTATION_Y),
-							drs.getInt(DBConst.MODEL_ROTATION_Z), drs.getBoolean(DBConst.MODEL_TEX));
+							drs.getBoolean(DBConst.DESIGN_PRIVACY), drs.getFloat(DBConst.MODEL_ROTATION_X), drs.getFloat(DBConst.MODEL_ROTATION_Y),
+							drs.getFloat(DBConst.MODEL_ROTATION_Z), drs.getBoolean(DBConst.MODEL_TEX));
 			if(drs.getInt(DBConst.PROPOSAL_SOURCE)!=0){
 
 			}
@@ -1085,9 +1085,9 @@ public class NewDatabaseManager {
 			if(type.equals(DBConst.DESIGN_TYPE_MODEL)){
 				ResultSet mrs = dbConnection.sendQuery("SELECT * FROM " + DBConst.MODEL_TABLE + " WHERE " + DBConst.MODEL_ID + " = " + id +";");
 				mrs.first();
-				int rotX = mrs.getInt(DBConst.MODEL_ROTATION_X);
-				int rotY = mrs.getInt(DBConst.MODEL_ROTATION_Y);
-				int rotZ = mrs.getInt(DBConst.MODEL_ROTATION_Z);
+				float rotX = mrs.getFloat(DBConst.MODEL_ROTATION_X);
+				float rotY = mrs.getFloat(DBConst.MODEL_ROTATION_Y);
+				float rotZ = mrs.getFloat(DBConst.MODEL_ROTATION_Z);
 				boolean designIsTextured = mrs.getBoolean(DBConst.MODEL_TEX);
 				ModeledDesign md =  new ModeledDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, rotX, rotY, rotZ, designIsTextured);
 				returnable = md;
