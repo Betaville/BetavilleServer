@@ -951,7 +951,7 @@ public class NewDatabaseManager {
 		else return false;
 	}
 
-	public boolean changeModeledDesignLocation(int designID, int rotY, UTMCoordinate newLocation, String user, String pass){
+	public boolean changeModeledDesignLocation(int designID, float rotY, UTMCoordinate newLocation, String user, String pass){
 		logger.info(user + " changing design location for design " + designID);
 		if(verifyDesignOwnership(designID, user, pass)
 				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){

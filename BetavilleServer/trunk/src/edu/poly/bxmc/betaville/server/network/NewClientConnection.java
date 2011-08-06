@@ -309,7 +309,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
 				else if(((String)inObject[1]).equals("changemodellocation")){
-					output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Integer)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
+					output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Float)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
 				}
 				else if(((String)inObject[1]).equals("findbyid")){
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
