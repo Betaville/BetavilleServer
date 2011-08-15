@@ -497,7 +497,7 @@ public class NewDatabaseManager {
 		getAllWormholesInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.WORMHOLE_CITY+"=?");
 		getRecentCommentsFromNow = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.COMMENT_TABLE + " WHERE "+DBConst.COMMENT_SPAMVERIFIED+" = 0 ORDER BY "+DBConst.COMMENT_ID +" DESC LIMIT ?");
 		getRecentDesignsFromNow = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_ID+" FROM " + DBConst.DESIGN_TABLE + " WHERE "+DBConst.DESIGN_IS_ALIVE+" = 1 ORDER BY "+DBConst.DESIGN_ID +" DESC LIMIT ?");
-		
+
 		// we don't need to grab everything, so let's decrease the size of the cursor that's opened
 		// DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_DATE).toString()
 		getRecentCommentsOnMyActivity = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.COMMENT_ID+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_USER+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_TEXT+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_REPLIESTO+", "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DATE+" FROM "+DBConst.COMMENT_TABLE+" JOIN "+DBConst.DESIGN_TABLE+" ON "+DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN+" = "+
@@ -1822,7 +1822,7 @@ public class NewDatabaseManager {
 	}
 
 	/**
-	 * 
+	 * Constructs a coordinate from within the database
 	 * @param coordinateID
 	 * @return
 	 * @see UTMCoordinate
@@ -1832,7 +1832,7 @@ public class NewDatabaseManager {
 			retrieveCoordinate.setInt(1, coordinateID);
 			ResultSet rs = retrieveCoordinate.executeQuery();
 			if(rs.first()){
-				return new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getInt(DBConst.COORD_ALTITUDE));
+				return new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getShort(DBConst.COORD_EASTING_CM), rs.getShort(DBConst.COORD_NORTHING_CM), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getInt(DBConst.COORD_ALTITUDE));
 			}
 			else return null;
 		} catch (SQLException e) {
@@ -2218,7 +2218,7 @@ public class NewDatabaseManager {
 				comments.add(new Comment(rs.getInt(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_ID), rs.getInt(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DESIGN), rs.getString(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_USER), rs.getString(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_TEXT), rs.getInt(DBConst.COMMENT_REPLIESTO), rs.getDate(DBConst.COMMENT_TABLE+"."+DBConst.COMMENT_DATE).toString()));
 			}
 			rs.close();
-			
+
 			return comments;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
