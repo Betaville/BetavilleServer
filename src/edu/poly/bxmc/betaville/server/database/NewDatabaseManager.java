@@ -993,34 +993,6 @@ public class NewDatabaseManager {
 		return null;
 	}
 
-
-
-	private ModeledDesign modelDesignFromFull(ResultSet drs){
-		ModeledDesign d=null;
-		try {
-			d = new ModeledDesign(drs.getString(DBConst.DESIGN_NAME),
-					// --Create UTM coordinate here--
-					new UTMCoordinate(drs.getInt(DBConst.COORD_EASTING),
-							drs.getInt(DBConst.COORD_NORTHING),
-							drs.getInt(DBConst.COORD_LONZONE),
-							drs.getString(DBConst.COORD_LATZONE).charAt(0),
-							drs.getInt(DBConst.COORD_ALTITUDE)),
-							// --end of coordinate creation--
-							drs.getString(DBConst.DESIGN_ADDRESS), drs.getInt(DBConst.DESIGN_CITY), drs.getString(DBConst.DESIGN_USER),
-							drs.getString(DBConst.DESIGN_DESCRIPTION), drs.getString(DBConst.DESIGN_FILE), drs.getString(DBConst.DESIGN_URL),
-							drs.getBoolean(DBConst.DESIGN_PRIVACY), drs.getFloat(DBConst.MODEL_ROTATION_X), drs.getFloat(DBConst.MODEL_ROTATION_Y),
-							drs.getFloat(DBConst.MODEL_ROTATION_Z), drs.getBoolean(DBConst.MODEL_TEX));
-			if(drs.getInt(DBConst.PROPOSAL_SOURCE)!=0){
-
-			}
-		} catch (SQLException e) {
-			logger.error("SQL ERROR", e);
-			return null;
-		}
-
-		return d;
-	}
-
 	private Design designFromResultSet(ResultSet drs){
 		try {
 			int id = drs.getInt(DBConst.DESIGN_ID);
@@ -1774,13 +1746,13 @@ public class NewDatabaseManager {
 	 * @param altitude
 	 * @return
 	 */
-	public int addCoordinate(int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, int altitude){
+	public int addCoordinate(int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, float altitude){
 		try {
 			addCoordinate.setInt(1, northing);
 			addCoordinate.setInt(2, easting);
 			addCoordinate.setString(3, ""+latZone);
 			addCoordinate.setInt(4, lonZone);
-			addCoordinate.setInt(5, altitude);
+			addCoordinate.setFloat(5, altitude);
 			addCoordinate.setInt(6, eastingCM);
 			addCoordinate.setInt(7, northingCM);
 
@@ -1803,13 +1775,13 @@ public class NewDatabaseManager {
 		changeCoordinate(coordinateID, utm.getEasting(), utm.getEastingCentimeters(), utm.getNorthing(), utm.getNorthingCentimeters(), utm.getLonZone(), utm.getLatZone(), utm.getAltitude());
 	}
 
-	private void changeCoordinate(int coordinateID, int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, int altitude){
+	private void changeCoordinate(int coordinateID, int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, float altitude){
 		try {
 			changeCoordinate.setInt(1, easting);
 			changeCoordinate.setInt(2, northing);
 			changeCoordinate.setString(3, ""+latZone);
 			changeCoordinate.setInt(4, lonZone);
-			changeCoordinate.setInt(5, altitude);
+			changeCoordinate.setFloat(5, altitude);
 			changeCoordinate.setInt(6, eastingCM);
 			changeCoordinate.setInt(7, northingCM);
 			changeCoordinate.setInt(8, coordinateID);
@@ -1832,7 +1804,7 @@ public class NewDatabaseManager {
 			retrieveCoordinate.setInt(1, coordinateID);
 			ResultSet rs = retrieveCoordinate.executeQuery();
 			if(rs.first()){
-				return new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getShort(DBConst.COORD_EASTING_CM), rs.getShort(DBConst.COORD_NORTHING_CM), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getInt(DBConst.COORD_ALTITUDE));
+				return new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getShort(DBConst.COORD_EASTING_CM), rs.getShort(DBConst.COORD_NORTHING_CM), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getFloat(DBConst.COORD_ALTITUDE));
 			}
 			else return null;
 		} catch (SQLException e) {
@@ -2037,7 +2009,7 @@ public class NewDatabaseManager {
 				changeWormholeLocation.setInt(2, newLocation.getNorthing());
 				changeWormholeLocation.setString(3, ""+newLocation.getLatZone());
 				changeWormholeLocation.setInt(4, newLocation.getLonZone());
-				changeWormholeLocation.setInt(5, newLocation.getAltitude());
+				changeWormholeLocation.setFloat(5, newLocation.getAltitude());
 				changeWormholeLocation.setInt(6, wormholeID);
 				changeWormholeLocation.executeUpdate();
 			} catch (SQLException e) {
@@ -2072,6 +2044,11 @@ public class NewDatabaseManager {
 		else return -3;
 	}
 
+	/**
+	 * Gets all wormholes in the database
+	 * @return a {@link List} of all located wormholes, will be empty if there were none found
+	 * @see Wormhole
+	 */
 	public ArrayList<Wormhole> getAllWormholes(){
 		try {
 			ResultSet rs = getAllWormholes.executeQuery();
