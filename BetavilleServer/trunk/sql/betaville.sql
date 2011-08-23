@@ -83,7 +83,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`coordinate` (
   `northingCM` INT NOT NULL ,
   `easting` INT NOT NULL ,
   `eastingCM` INT NOT NULL ,
-  `altitude` INT NOT NULL ,
+  `altitude` FLOAT NOT NULL ,
   `latZone` CHAR(1)  NOT NULL ,
   `lonZone` TINYINT NOT NULL ,
   PRIMARY KEY (`coordinateID`) )
