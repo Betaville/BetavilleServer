@@ -1799,11 +1799,11 @@ public class NewDatabaseManager {
 		}
 	}
 
-	public void changeCoordinate(int coordinateID, UTMCoordinate utm){
+	private void changeCoordinate(int coordinateID, UTMCoordinate utm){
 		changeCoordinate(coordinateID, utm.getEasting(), utm.getEastingCentimeters(), utm.getNorthing(), utm.getNorthingCentimeters(), utm.getLonZone(), utm.getLatZone(), utm.getAltitude());
 	}
 
-	public void changeCoordinate(int coordinateID, int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, int altitude){
+	private void changeCoordinate(int coordinateID, int easting, short eastingCM, int northing, short northingCM, int lonZone, char latZone, int altitude){
 		try {
 			changeCoordinate.setInt(1, easting);
 			changeCoordinate.setInt(2, northing);
