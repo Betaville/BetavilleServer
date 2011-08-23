@@ -14,3 +14,6 @@ SELECT count(*) FROM design WHERE isalive=1;
 
 -- Count the number of non-deleted proposals in the database --
 SELECT count(*) FROM design LEFT JOIN proposal ON design.designid=proposal.destinationid WHERE proposal.destinationid IS NOT NULL AND isalive=1;
+
+-- Get the coordinates for a design --
+SELECT northing, northingCM, easting, eastingCM, altitude, latZone, lonZone FROM coordinate JOIN design ON coordinate.coordinateid = design.coordinateid WHERE designid = 1;
