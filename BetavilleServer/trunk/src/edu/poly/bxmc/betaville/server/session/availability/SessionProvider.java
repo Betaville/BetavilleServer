@@ -50,5 +50,7 @@ public interface SessionProvider {
 	public int killSession(String sessionToken);
 
 	public Session getSession(String sessionToken);
+	
+	public boolean sessionTokenExists(String tokenCandidate);
 
 }
