@@ -57,7 +57,12 @@ public class InMemorySessionTracker extends SessionTracker{
 		return session;
 	}
 	
-	private boolean sessionTokenExists(String tokenCandidate){
+	/*
+	 * (non-Javadoc)
+	 * @see edu.poly.bxmc.betaville.server.session.availability.SessionProvider#sessionTokenExists(java.lang.String)
+	 */
+	@Override
+	public boolean sessionTokenExists(String tokenCandidate){
 		for(Session session : sessions){
 			if(session.getSessionToken()==tokenCandidate) return true;
 		}
