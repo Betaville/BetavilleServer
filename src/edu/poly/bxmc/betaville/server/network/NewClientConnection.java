@@ -55,7 +55,6 @@ import edu.poly.bxmc.betaville.net.PhysicalFileTransporter;
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
-import edu.poly.bxmc.betaville.server.mail.GMailer;
 import edu.poly.bxmc.betaville.server.mail.MailSystem;
 import edu.poly.bxmc.betaville.server.mail.ShareBetavilleMessage;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
@@ -158,12 +157,12 @@ public class NewClientConnection implements Runnable {
 				}
 				else{
 					logger.info("Session with token " + sessionToken + " needs to be ended but the sessionID could" +
-					"not be found in the SessionTracker");
+							"not be found in the SessionTracker");
 				}
 			}
 			else{
 				logger.warn("Session with token " + sessionToken + " is trying to be closed again although it no longer" +
-				"seems to be open!");
+						"seems to be open!");
 			}
 		}
 		input.close();
@@ -293,6 +292,10 @@ public class NewClientConnection implements Runnable {
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
 					if(designID>0){
 						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
+						// see if a thumbnail has been packed as well
+						if(inObject.length>6){
+							((PhysicalFileTransporter)inObject[6]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+						}
 					}
 					output.writeObject(Integer.toString(designID));
 				}
@@ -451,7 +454,7 @@ public class NewClientConnection implements Runnable {
 					// TODO implement this
 				}
 			}
-			
+
 			// ACTIVITY FUNCTIONALITY
 			else if(((String)inObject[0]).equals("activity")){
 				if(((String)inObject[1]).equals("comments")){
@@ -462,7 +465,7 @@ public class NewClientConnection implements Runnable {
 				}
 				else if(((String)inObject[1]).equals("myactivity")){
 					output.writeObject(dbManager.retrieveCommentsOnMyActivity(SessionTracker.get().getSession((String)inObject[2])));
-					
+
 				}
 			}
 
