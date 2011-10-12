@@ -45,6 +45,9 @@ public class Preferences{
 	
 	protected static final String SERVER_BASE = "betaville.server.";
 	
+	public static final String HTTP_STORAGE_ENABLED=SERVER_BASE+"http.storage.enabled";
+	public static final String HTTP_STORAGE_LOCATION=SERVER_BASE+"http.storage.location";
+	
 	public static final String NETWORK_DEFAULT_PORT=SERVER_BASE+"network.default.port";
 	public static final String NETWORK_SSL_PORT=SERVER_BASE+"network.ssl.port";
 	public static final String NETWORK_USE_SSL=SERVER_BASE+"network.ssl.enabled";

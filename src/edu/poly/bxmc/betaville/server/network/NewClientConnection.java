@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -350,7 +351,14 @@ public class NewClientConnection implements Runnable {
 				}
 				else if(((String)inObject[1]).equals("requestfile")){
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
-					output.writeObject(wrapFile(design));
+					// send out a PFT if http file storage is disabled
+					if(Boolean.parseBoolean(System.getProperty(Preferences.HTTP_STORAGE_ENABLED))){
+						URL fileURL = new URL(System.getProperty(Preferences.HTTP_STORAGE_LOCATION+design.getFilepath()));
+						output.writeObject(fileURL);
+					}
+					else{
+						output.writeObject(wrapFile(design));
+					}
 				}
 				else if(((String)inObject[1]).equals("requestthumb")){
 					output.writeObject(wrapThumbnail((Integer)inObject[2]));

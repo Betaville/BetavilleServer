@@ -55,6 +55,9 @@ public class DefaultPreferenceWriter {
 	 */
 	public static void writeDefaultPreferences(File file) throws IOException {
 		System.out.println("Writing default preferences");
+		
+		if(System.getProperty(Preferences.HTTP_STORAGE_ENABLED)==null) System.setProperty(Preferences.HTTP_STORAGE_ENABLED, "false");
+		if(System.getProperty(Preferences.HTTP_STORAGE_LOCATION)==null) System.setProperty(Preferences.HTTP_STORAGE_LOCATION, "http://localhost/storage/");
 		if(System.getProperty(Preferences.LOG_REPORT_INTERVAL)==null) System.setProperty(Preferences.LOG_REPORT_INTERVAL, "600000");
 		if(System.getProperty(Preferences.NETWORK_DEFAULT_PORT)==null) System.setProperty(Preferences.NETWORK_DEFAULT_PORT, "14500");
 		if(System.getProperty(Preferences.NETWORK_SSL_PORT)==null) System.setProperty(Preferences.NETWORK_SSL_PORT, "14501");
