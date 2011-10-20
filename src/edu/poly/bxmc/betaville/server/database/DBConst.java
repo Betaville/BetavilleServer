@@ -109,6 +109,7 @@ public class DBConst {
 	public final static String USER_EMAIL = "email";
 	public final static String USER_EMAIL_VISIBLE = "showEmail";
 	public final static String USER_ACTIVATED = "activated";
+	public final static String USER_CONFIRMCODE = "confirmcode";
 	public final static String USER_BIO = "bio";
 	public final static String USER_WEBSITE = "website";
 	public final static String USER_TYPE = "type";
