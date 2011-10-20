@@ -21,6 +21,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`user` (
   `displayName` VARCHAR(45) NULL ,
   `strongpass` CHAR(40) NOT NULL ,
   `strongsalt` CHAR(12) NOT NULL ,
+  `confirmcode` CHAR(32) NOT NULL ,
   PRIMARY KEY (`userName`) ,
   INDEX `userName` (`userName` ASC) ,
   INDEX `userName_2` (`userName` ASC) )
