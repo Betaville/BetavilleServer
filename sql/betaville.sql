@@ -13,7 +13,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`user` (
   `userPass` CHAR(32) NULL ,
   `twitterName` VARCHAR(16) NULL DEFAULT NULL ,
   `email` VARCHAR(255) NOT NULL ,
-  `activacted` TINYINT(1) NOT NULL DEFAULT '0' ,
+  `activated` TINYINT(1) NOT NULL DEFAULT '0' ,
   `bio` VARCHAR(255) NULL DEFAULT NULL ,
   `showEmail` TINYINT(1) NOT NULL DEFAULT 0 ,
   `website` TINYTEXT NULL DEFAULT NULL ,
