@@ -289,6 +289,18 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`wormhole` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `betaville`.`live_sessions`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `betaville`.`live_sessions` (
+  `session_token` CHAR(40) NULL ,
+  `user` TINYTEXT NULL ,
+  `ip_address` VARCHAR(15) NULL ,
+  `session_start` DATETIME NULL ,
+  `last_touched` DATETIME NULL )
+ENGINE = InnoDB;
+
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
