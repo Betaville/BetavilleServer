@@ -308,6 +308,10 @@ public class NewClientConnection implements Runnable {
 						if(dbManager.verifyDesignOwnership(designID, (String)inObject[4], (String)inObject[5]) || dbManager.getUserLevel((String)inObject[4]).compareTo(UserType.MODERATOR)>-1){
 							PhysicalFileTransporter pft = (PhysicalFileTransporter)inObject[3];
 							pft.writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+							output.writeObject(Integer.toString(0));
+						}
+						else{
+							output.writeObject(Integer.toString(-1));
 						}
 					}
 				}
