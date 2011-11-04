@@ -300,6 +300,17 @@ public class NewClientConnection implements Runnable {
 					}
 					output.writeObject(Integer.toString(designID));
 				}
+				else if(((String)inObject[1]).equals("setthumb")){
+					// check that the supplied username and password is correct
+					if(dbManager.authenticateUser((String)inObject[4], (String)inObject[5])){
+						int designID = (Integer)inObject[2];
+						// ensure that the user has control over the design
+						if(dbManager.verifyDesignOwnership(designID, (String)inObject[4], (String)inObject[5]) || dbManager.getUserLevel((String)inObject[4]).compareTo(UserType.MODERATOR)>-1){
+							PhysicalFileTransporter pft = (PhysicalFileTransporter)inObject[3];
+							pft.writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+						}
+					}
+				}
 				else if(((String)inObject[1]).equals("changename")){
 					output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}

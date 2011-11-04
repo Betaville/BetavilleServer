@@ -816,7 +816,7 @@ public class NewDatabaseManager {
 	 * @param pass
 	 * @return true if the design is owned by the user
 	 */
-	private boolean verifyDesignOwnership(int designID, String user, String pass){
+	public boolean verifyDesignOwnership(int designID, String user, String pass){
 		try {
 			if(authenticateUser(user, pass))
 			{
