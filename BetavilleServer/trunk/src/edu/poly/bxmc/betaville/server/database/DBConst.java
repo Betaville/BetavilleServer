@@ -158,7 +158,7 @@ public class DBConst {
 	public final static String PROPOSAL_PERMISSIONS_LEVEL_CLOSED = "closed";
 	public final static String PROPOSAL_PERMISSIONS_LEVEL_GROUP = "group";
 	public final static String PROPOSAL_PERMISSIONS_LEVEL_ALL = "all";
-	public final static String PROPOSAL_PERMISSIONS_GROUP_ARRAY = "group";
+	public final static String PROPOSAL_PERMISSIONS_GROUP_ARRAY = "user_group";
 	
 	public final static String WORMHOLE_TABLE = "wormhole";
 	public final static String WORMHOLE_ID = "wormholeid";
