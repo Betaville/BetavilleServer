@@ -202,16 +202,17 @@ public class NewClientConnection implements Runnable {
 				closeConnectionFromError();
 				return;
 			}
-
-
+			
+			String section = (String)inObject[0];
+			String request = ((String)inObject[1]);
 
 			// USER FUNCTIONALITY
-			if(((String)inObject[0]).equals("user")){
-				if(((String)inObject[1]).equals("auth")){
+			if(section.equals("user")){
+				if(request.equals("auth")){
 					boolean response = dbManager.authenticateUser((String)inObject[2], (String)inObject[3]);
 					output.writeObject(Boolean.toString(response));
 				}
-				if(((String)inObject[1]).equals("startsession")){
+				if(request.equals("startsession")){
 					int response = dbManager.startSession((String)inObject[2], (String)inObject[3]);
 					// only create a session if the response was valid
 					String sessionToken = "";
@@ -221,7 +222,7 @@ public class NewClientConnection implements Runnable {
 					sessionOpen=true;
 					output.writeObject(new Object[]{Integer.toString(response),sessionToken});
 				}
-				if(((String)inObject[1]).equals("endsession")){
+				if(request.equals("endsession")){
 					logger.info("Attempting end session");
 					int sessionID = SessionTracker.get().killSession((String)inObject[2]);
 					if(sessionID>0){
@@ -230,43 +231,43 @@ public class NewClientConnection implements Runnable {
 					}
 					else output.writeObject(Integer.toString(sessionID));
 				}
-				else if(((String)inObject[1]).equals("add")){
+				else if(request.equals("add")){
 					// Do not bypass the username requirements since this is a public registration process
 					// TODO: Perhaps we should put in a token-authenticated add user method that allows an administrator to bypass these restrictions..
 					boolean response = dbManager.addUser((String)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5], (String)inObject[6], false);
 					output.writeObject(Boolean.toString(response));
 				}
-				else if(((String)inObject[1]).equals("available")){
+				else if(request.equals("available")){
 					boolean response = dbManager.checkNameAvailability((String)inObject[2]);
 					output.writeObject(Boolean.toString(response));
 				}
-				else if(((String)inObject[1]).equals("changepass")){
+				else if(request.equals("changepass")){
 					output.writeObject(Boolean.toString(dbManager.changePassword((String)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
-				else if(((String)inObject[1]).equals("changebio")){
+				else if(request.equals("changebio")){
 					output.writeObject(Boolean.toString(dbManager.changeBio((String)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
-				else if(((String)inObject[1]).equals("getmail")){
+				else if(request.equals("getmail")){
 					output.writeObject(dbManager.getUserEmail((String)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("checklevel")){
+				else if(request.equals("checklevel")){
 					output.writeObject(Integer.toString(dbManager.checkUserLevel((String)inObject[2], (UserType)inObject[3])));
 				}
-				else if(((String)inObject[1]).equals("getlevel")){
+				else if(request.equals("getlevel")){
 					output.writeObject(dbManager.getUserLevel((String)inObject[2]));
 				}
 			}
 
 
 			// DESIGN FUNCTIONALITY
-			else if(((String)inObject[0]).equals("design")){
-				if(((String)inObject[1]).equals("synchronizedata")){
+			else if(section.equals("design")){
+				if(request.equals("synchronizedata")){
 					output.writeObject(dbManager.synchronizeData((HashMap<Integer, Integer>)inObject[2]));
 				}
-				if(((String)inObject[1]).equals("addempty")){
+				if(request.equals("addempty")){
 					output.writeObject(Integer.toString(dbManager.addDesign((EmptyDesign)inObject[2], (String)inObject[3], (String)inObject[4], "none")));
 				}
-				else if(((String)inObject[1]).equals("addproposal")){
+				else if(request.equals("addproposal")){
 					Design design = (Design)inObject[2];
 					ProposalPermission permission=(ProposalPermission)inObject[8];
 					if(permission!=null) logger.debug("Permissions Received!");
@@ -287,7 +288,7 @@ public class NewClientConnection implements Runnable {
 					}
 					output.writeObject(Integer.toString(designID));
 				}
-				else if(((String)inObject[1]).equals("addbase")){
+				else if(request.equals("addbase")){
 					Design design = (Design)inObject[2];
 					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
@@ -300,7 +301,7 @@ public class NewClientConnection implements Runnable {
 					}
 					output.writeObject(Integer.toString(designID));
 				}
-				else if(((String)inObject[1]).equals("setthumb")){
+				else if(request.equals("setthumb")){
 					// check that the supplied username and password is correct
 					if(dbManager.authenticateUser((String)inObject[4], (String)inObject[5])){
 						int designID = (Integer)inObject[2];
@@ -315,56 +316,56 @@ public class NewClientConnection implements Runnable {
 						}
 					}
 				}
-				else if(((String)inObject[1]).equals("changename")){
+				else if(request.equals("changename")){
 					output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
-				else if(((String)inObject[1]).equals("changedescription")){
+				else if(request.equals("changedescription")){
 					output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
-				else if(((String)inObject[1]).equals("changeaddress")){
+				else if(request.equals("changeaddress")){
 					output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
-				else if(((String)inObject[1]).equals("changeurl")){
+				else if(request.equals("changeurl")){
 					output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
-				else if(((String)inObject[1]).equals("changemodellocation")){
+				else if(request.equals("changemodellocation")){
 					output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Float)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
 				}
-				else if(((String)inObject[1]).equals("findbyid")){
+				else if(request.equals("findbyid")){
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
 					output.writeObject(design);
 				}
-				else if(((String)inObject[1]).equals("findbyname")){
+				else if(request.equals("findbyname")){
 					output.writeObject(dbManager.findDesignsByName((String)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findbyuser")){
+				else if(request.equals("findbyuser")){
 					output.writeObject(dbManager.findDesignsByUser((String)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findbydate")){
+				else if(request.equals("findbydate")){
 					output.writeObject(dbManager.findDesignsByDate((Long)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findbycity")){
+				else if(request.equals("findbycity")){
 					output.writeObject(dbManager.findDesignsByCity((Integer)inObject[2], (Boolean)inObject[3]));
 				}
-				else if(((String)inObject[1]).equals("terrainbycity")){
+				else if(request.equals("terrainbycity")){
 					output.writeObject(dbManager.findTerrainDesignsByCity((Integer)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findmodeledbycity")){
+				else if(request.equals("findmodeledbycity")){
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_MODEL));
 				}
-				else if(((String)inObject[1]).equals("findaudiobycity")){
+				else if(request.equals("findaudiobycity")){
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_AUDIO));
 				}
-				else if(((String)inObject[1]).equals("findimagebycity")){
+				else if(request.equals("findimagebycity")){
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_SKETCH));
 				}
-				else if(((String)inObject[1]).equals("findvideobycity")){
+				else if(request.equals("findvideobycity")){
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_VIDEO));
 				}
-				else if(((String)inObject[1]).equals("allproposals")){
+				else if(request.equals("allproposals")){
 					output.writeObject(dbManager.findAllProposals((Integer)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("requestfile")){
+				else if(request.equals("requestfile")){
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
 					// send out a PFT if http file storage is disabled
 					if(Boolean.parseBoolean(System.getProperty(Preferences.HTTP_STORAGE_ENABLED))){
@@ -375,10 +376,10 @@ public class NewClientConnection implements Runnable {
 						output.writeObject(wrapFile(design));
 					}
 				}
-				else if(((String)inObject[1]).equals("requestthumb")){
+				else if(request.equals("requestthumb")){
 					output.writeObject(wrapThumbnail((Integer)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("changefile")){
+				else if(request.equals("changefile")){
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
 					String currentFile = design.getFilepath().substring(0, design.getFilepath().lastIndexOf("."));
 					String newFilename=null;
@@ -393,19 +394,19 @@ public class NewClientConnection implements Runnable {
 					pft.writeToFileSystem(new File(modelBinLocation+"designmedia/"+newFilename));
 					output.writeObject(Boolean.toString(dbManager.changeDesignFile(design.getID(), newFilename, (String)inObject[3], (String)inObject[4], (Boolean)inObject[5])));
 				}
-				else if(((String)inObject[1]).equals("reserve")){
+				else if(request.equals("reserve")){
 					Design design = (Design)inObject[2];
 					design.setPublic(false);
 					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
 					output.writeObject(dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension));
 				}
-				else if(((String)inObject[1]).equals("remove")){
+				else if(request.equals("remove")){
 					int designID = (Integer)inObject[2];
 					String user = (String)inObject[3];
 					String pass = (String)inObject[4];
 					output.writeObject(Integer.toString(dbManager.removeDesign(designID, user, pass)));
 				}
-				else if(((String)inObject[1]).equals("synchronize")){
+				else if(request.equals("synchronize")){
 					int[] hashes = (int[])inObject[2];
 					int[] idList = new int[hashes.length/2];
 					for(int i=0; i<hashes.length; i+=2){
@@ -435,19 +436,19 @@ public class NewClientConnection implements Runnable {
 			}
 
 			// DESIGN FUNCTIONALITY
-			else if(((String)inObject[0]).equals("design-android")){
-				androidDesign(inObject);
+			else if(section.equals("design-android")){
+				androidDesign(request, inObject);
 			}
 
 			// PROPOSAL FUNCTIONALITY
-			else if(((String)inObject[0]).equals("proposal")){
-				if(((String)inObject[1]).equals("findinradius")){
+			else if(section.equals("proposal")){
+				if(request.equals("findinradius")){
 					output.writeObject(dbManager.findAllProposalsInArea((UTMCoordinate)inObject[2], (Integer)inObject[3]));
 				}
-				if(((String)inObject[1]).equals("getpermissions")){
+				if(request.equals("getpermissions")){
 					output.writeObject(dbManager.getProposalPermissions((Integer)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("addversion")){
+				else if(request.equals("addversion")){
 					Design design = (Design)inObject[2];
 					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
 					System.out.print("filepath being added: " + design.getFilepath());
@@ -462,31 +463,31 @@ public class NewClientConnection implements Runnable {
 			}
 
 			// VERSION FUNCTIONALITY
-			else if(((String)inObject[0]).equals("version")){
-				if(((String)inObject[1]).equals("versionsofproposal")){
+			else if(section.equals("version")){
+				if(request.equals("versionsofproposal")){
 					output.writeObject(dbManager.findVersionsOfProposal((Integer)inObject[2]));
 				}
 			}
 
 			// FAVE FUNCTIONALITY
-			else if(((String)inObject[0]).equals("fave")){
-				if(((String)inObject[1]).equals("add")){
+			else if(section.equals("fave")){
+				if(request.equals("add")){
 					output.writeObject(Integer.toString(dbManager.faveDesign((String)inObject[2], (String)inObject[3], (Integer)inObject[4])));
 				}
-				else if(((String)inObject[1]).equals("remove")){
+				else if(request.equals("remove")){
 					// TODO implement this
 				}
 			}
 
 			// ACTIVITY FUNCTIONALITY
-			else if(((String)inObject[0]).equals("activity")){
-				if(((String)inObject[1]).equals("comments")){
+			else if(section.equals("activity")){
+				if(request.equals("comments")){
 					output.writeObject(dbManager.retrieveRecentComments());
 				}
-				else if(((String)inObject[1]).equals("designs")){
+				else if(request.equals("designs")){
 					output.writeObject(dbManager.retrieveRecentDesignIDs());
 				}
-				else if(((String)inObject[1]).equals("myactivity")){
+				else if(request.equals("myactivity")){
 					output.writeObject(dbManager.retrieveCommentsOnMyActivity(SessionTracker.get().getSession((String)inObject[2])));
 
 				}
@@ -494,12 +495,12 @@ public class NewClientConnection implements Runnable {
 
 
 			//SHARE FUNCTIONALITY
-			else if(((String)inObject[0]).equals("share")){
+			else if(section.equals("share")){
 				if (Preferences.getBooleanSetting(Preferences.MAIL_ENABLED)){
 					logger.info("Share requested");
 					// This is an example on how to use the mailer!
 					try {
-						MimeMessage message = new ShareBetavilleMessage(MailSystem.getMailer().getSession(), ((String)inObject[1]), ((String)inObject[2]), ((String)inObject[3]), ((String)inObject[4]));
+						MimeMessage message = new ShareBetavilleMessage(MailSystem.getMailer().getSession(), request, ((String)inObject[2]), ((String)inObject[3]), ((String)inObject[4]));
 						message.setFrom(new InternetAddress("notifications@betaville.net"));
 						MailSystem.getMailer().sendMailNow(message);
 						output.writeObject(new Object[]{Integer.toString(1)});
@@ -515,81 +516,81 @@ public class NewClientConnection implements Runnable {
 
 
 			// COMMENT FUNCTIONALITY
-			else if(((String)inObject[0]).equals("comment")){
-				if(((String)inObject[1]).equals("add")){
+			else if(section.equals("comment")){
+				if(request.equals("add")){
 					output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2], (String)inObject[3])));
 				}
-				if(((String)inObject[1]).equals("delete")){
+				if(request.equals("delete")){
 					output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
-				if(((String)inObject[1]).equals("reportspam")){
+				if(request.equals("reportspam")){
 					dbManager.reportSpamComment((Integer)inObject[2]);
 				}
-				if(((String)inObject[1]).equals("getforid")){
+				if(request.equals("getforid")){
 					output.writeObject(dbManager.getComments((Integer)inObject[2]));
 				}
 			}
 
 			// ANDROID COMMENT FUNCTIONALITY
-			else if(((String)inObject[0]).equals("comment-android")){
-				androidComment(inObject);
+			else if(section.equals("comment-android")){
+				androidComment(request, inObject);
 			}
 
 			// CITY FUNCTIONALITY
-			else if(((String)inObject[0]).equals("city")){
-				if(((String)inObject[1]).equals("add")){
+			else if(section.equals("city")){
+				if(request.equals("add")){
 					output.writeObject(Integer.toString(dbManager.addCity((String)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
-				else if(((String)inObject[1]).equals("findbyname")){
+				else if(request.equals("findbyname")){
 					output.writeObject(dbManager.findCitiesByName((String)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findbystate")){
+				else if(request.equals("findbystate")){
 					output.writeObject(dbManager.findCitiesByState((String)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findbycountry")){
+				else if(request.equals("findbycountry")){
 					output.writeObject(dbManager.findCitiesByCountry((String)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findbyid")){
+				else if(request.equals("findbyid")){
 					output.writeObject(dbManager.findCityByID((Integer)inObject[2]));
 				}
-				else if(((String)inObject[1]).equals("findbyall")){
+				else if(request.equals("findbyall")){
 					output.writeObject(dbManager.findCityByAll((String)inObject[2], (String)inObject[3], (String)inObject[4]));
 				}
-				else if(((String)inObject[1]).equals("getall")){
+				else if(request.equals("getall")){
 					output.writeObject(dbManager.findAllCities());
 				}
 			}
 
 			// WORMHOLES
-			else if(((String)inObject[0]).equals("wormhole")){
-				if(((String)inObject[1]).equals("add")){
+			else if(section.equals("wormhole")){
+				if(request.equals("add")){
 					logger.info("Adding Wormhole");
 					output.writeObject(Integer.toString(dbManager.addWormhole((UTMCoordinate)inObject[2], (String)inObject[3], (Integer)inObject[4], (String)inObject[5])));
 				}
-				else if(((String)inObject[1]).equals("delete")){
+				else if(request.equals("delete")){
 					output.writeObject(Integer.toString(dbManager.deleteWormhole((Integer)inObject[2], (String)inObject[3])));
 				}
-				else if(((String)inObject[1]).equals("editname")){
+				else if(request.equals("editname")){
 					output.writeObject(Integer.toString(dbManager.changeWormholeName((String)inObject[2], (Integer)inObject[3], (String)inObject[4])));
 				}
-				else if(((String)inObject[1]).equals("editlocation")){
+				else if(request.equals("editlocation")){
 					output.writeObject(Integer.toString(dbManager.changeWormholeLocation((UTMCoordinate)inObject[2], (Integer)inObject[3], (String)inObject[4])));
 				}
-				else if(((String)inObject[1]).equals("getwithin")){
+				else if(request.equals("getwithin")){
 					output.writeObject(dbManager.getWormholesWithin((UTMCoordinate)inObject[2], (Integer)inObject[3], (Integer)inObject[4]));
 				}
-				else if(((String)inObject[1]).equals("getall")){
+				else if(request.equals("getall")){
 					output.writeObject(dbManager.getAllWormholes());
 				}
-				else if(((String)inObject[1]).equals("getallincity")){
+				else if(request.equals("getallincity")){
 					logger.info("getallincity command received");
 					output.writeObject(dbManager.getAllWormholesInCity((Integer)inObject[2]));
 				}
 			}
 
 			// VERSION ENFORCEMENT
-			else if(((String)inObject[0]).equals("softwareversion")){
-				if(((String)inObject[1]).equals("getdesign")){
+			else if(section.equals("softwareversion")){
+				if(request.equals("getdesign")){
 					output.writeObject(Long.toString(Design.serialVersionUID));
 				}
 			}
@@ -599,47 +600,47 @@ public class NewClientConnection implements Runnable {
 		}
 	}
 
-	private void androidDesign(Object[] inObject) throws IOException{
+	private void androidDesign(String request, Object[] inObject) throws IOException{
 		logger.info("Inside Android Design: " + (String)inObject[1]);
-		if(((String)inObject[1]).equals("changename")){
+		if(request.equals("changename")){
 			output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 		}
-		else if(((String)inObject[1]).equals("changedescription")){
+		else if(request.equals("changedescription")){
 			output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 		}
-		else if(((String)inObject[1]).equals("changeaddress")){
+		else if(request.equals("changeaddress")){
 			output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 		}
-		else if(((String)inObject[1]).equals("changeurl")){
+		else if(request.equals("changeurl")){
 			output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 		}
-		else if(((String)inObject[1]).equals("changemodellocation")){
+		else if(request.equals("changemodellocation")){
 			output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Integer)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
 		}
-		else if(((String)inObject[1]).equals("findbyid")){
+		else if(request.equals("findbyid")){
 			logger.info("finding "+(Integer)inObject[2]);
 			Design design = dbManager.findDesignByID((Integer)inObject[2]);
 			logger.info("design " + design.getName());
 			logger.info("\n"+xo.outputString(DataExporter.export(design)));
 			output.writeObject(xo.outputString(DataExporter.export(design)));
 		}
-		else if(((String)inObject[1]).equals("findbyname")){
+		else if(request.equals("findbyname")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByName((String)inObject[2]))));
 		}
-		else if(((String)inObject[1]).equals("findbyuser")){
+		else if(request.equals("findbyuser")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByUser((String)inObject[2]))));
 		}
-		else if(((String)inObject[1]).equals("findbydate")){
+		else if(request.equals("findbydate")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByDate((Long)inObject[2]))));
 		}
-		else if(((String)inObject[1]).equals("findbycity")){
+		else if(request.equals("findbycity")){
 			List<Design> designs = dbManager.findDesignsByCity((Integer)inObject[2], (Boolean)inObject[3]);
 			logger.info(designs.size()+" designs retrieved");
 			String xmlResponse = xo.outputString(DataExporter.exportDesigns(designs));
 			logger.info("Responding with: " + xmlResponse);
 			output.writeObject(xmlResponse);
 		}
-		else if(((String)inObject[1]).equals("findbycitysetstartend")){
+		else if(request.equals("findbycitysetstartend")){
 			List<Design> designs = dbManager.findDesignsByCitySetStartEnd((Integer)inObject[2], (Boolean)inObject[3],
 					(Integer)inObject[4], (Integer)inObject[5]);
 			logger.info(designs.size()+" designs retrieved");
@@ -647,28 +648,28 @@ public class NewClientConnection implements Runnable {
 			logger.info("Responding with: " + xmlResponse);
 			output.writeObject(StringZipper.compress(xmlResponse));
 		}
-		else if(((String)inObject[1]).equals("terrainbycity")){
+		else if(request.equals("terrainbycity")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTerrainDesignsByCity((Integer)inObject[2]))));
 		}
-		else if(((String)inObject[1]).equals("findmodeledbycity")){
+		else if(request.equals("findmodeledbycity")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_MODEL))));
 		}
-		else if(((String)inObject[1]).equals("findaudiobycity")){
+		else if(request.equals("findaudiobycity")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_AUDIO))));
 		}
-		else if(((String)inObject[1]).equals("findimagebycity")){
+		else if(request.equals("findimagebycity")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_SKETCH))));
 		}
-		else if(((String)inObject[1]).equals("findvideobycity")){
+		else if(request.equals("findvideobycity")){
 			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_VIDEO))));
 		}
-		else if(((String)inObject[1]).equals("allproposals")){
+		else if(request.equals("allproposals")){
 			output.writeObject(dbManager.findAllProposals((Integer)inObject[2]));
 		}
-		else if(((String)inObject[1]).equals("requestthumb")){
+		else if(request.equals("requestthumb")){
 			output.writeObject(wrapThumbnail((Integer)inObject[2]));
 		}
-		else if(((String)inObject[1]).equals("remove")){
+		else if(request.equals("remove")){
 			int designID = (Integer)inObject[2];
 			String user = (String)inObject[3];
 			String pass = (String)inObject[4];
@@ -676,17 +677,17 @@ public class NewClientConnection implements Runnable {
 		}
 	}
 
-	private void androidComment(Object[] inObject) throws IOException{
-		if(((String)inObject[1]).equals("add")){// TODO: NOT ANDROID SAFE YET
+	private void androidComment(String request, Object[] inObject) throws IOException{
+		if(request.equals("add")){// TODO: NOT ANDROID SAFE YET
 			output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2], (String)inObject[3])));
 		}
-		if(((String)inObject[1]).equals("delete")){// TODO: NOT ANDROID SAFE YET
+		if(request.equals("delete")){// TODO: NOT ANDROID SAFE YET
 			output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], (String)inObject[3], (String)inObject[4])));
 		}
-		if(((String)inObject[1]).equals("reportspam")){// TODO: NOT ANDROID SAFE YET
+		if(request.equals("reportspam")){// TODO: NOT ANDROID SAFE YET
 			dbManager.reportSpamComment((Integer)inObject[2]);
 		}
-		if(((String)inObject[1]).equals("getforid")){
+		if(request.equals("getforid")){
 			output.writeObject(xo.outputString(DataExporter.exportComments(dbManager.getComments((Integer)inObject[2]))));
 		}
 	}
