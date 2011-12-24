@@ -69,6 +69,7 @@ import edu.poly.bxmc.betaville.xml.DataExporter;
  */
 public class NewClientConnection implements Runnable {
 	private static final Logger logger = Logger.getLogger(NewClientConnection.class);
+	private static final String DELIMITER = "\t";
 	/**
 	 * Attribute <DBManager> - Database manager
 	 */
@@ -209,10 +210,12 @@ public class NewClientConnection implements Runnable {
 			// USER FUNCTIONALITY
 			if(section.equals("user")){
 				if(request.equals("auth")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:auth");
 					boolean response = dbManager.authenticateUser((String)inObject[2], (String)inObject[3]);
 					output.writeObject(Boolean.toString(response));
 				}
 				if(request.equals("startsession")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:startsession");
 					int response = dbManager.startSession((String)inObject[2], (String)inObject[3]);
 					// only create a session if the response was valid
 					String sessionToken = "";
@@ -223,6 +226,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(new Object[]{Integer.toString(response),sessionToken});
 				}
 				if(request.equals("endsession")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:endsession");
 					logger.info("Attempting end session");
 					int sessionID = SessionTracker.get().killSession((String)inObject[2]);
 					if(sessionID>0){
@@ -232,28 +236,35 @@ public class NewClientConnection implements Runnable {
 					else output.writeObject(Integer.toString(sessionID));
 				}
 				else if(request.equals("add")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:add");
 					// Do not bypass the username requirements since this is a public registration process
 					// TODO: Perhaps we should put in a token-authenticated add user method that allows an administrator to bypass these restrictions..
 					boolean response = dbManager.addUser((String)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5], (String)inObject[6], false);
 					output.writeObject(Boolean.toString(response));
 				}
 				else if(request.equals("available")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:available");
 					boolean response = dbManager.checkNameAvailability((String)inObject[2]);
 					output.writeObject(Boolean.toString(response));
 				}
 				else if(request.equals("changepass")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:changepass");
 					output.writeObject(Boolean.toString(dbManager.changePassword((String)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
 				else if(request.equals("changebio")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:changebio");
 					output.writeObject(Boolean.toString(dbManager.changeBio((String)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
 				else if(request.equals("getmail")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:getmail");
 					output.writeObject(dbManager.getUserEmail((String)inObject[2]));
 				}
 				else if(request.equals("checklevel")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:checklevel");
 					output.writeObject(Integer.toString(dbManager.checkUserLevel((String)inObject[2], (UserType)inObject[3])));
 				}
 				else if(request.equals("getlevel")){
+					logger.info(client.getClientAdress()+DELIMITER+"user:getlevel");
 					output.writeObject(dbManager.getUserLevel((String)inObject[2]));
 				}
 			}
@@ -262,12 +273,15 @@ public class NewClientConnection implements Runnable {
 			// DESIGN FUNCTIONALITY
 			else if(section.equals("design")){
 				if(request.equals("synchronizedata")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:synchronizedata");
 					output.writeObject(dbManager.synchronizeData((HashMap<Integer, Integer>)inObject[2]));
 				}
 				if(request.equals("addempty")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:addempty");
 					output.writeObject(Integer.toString(dbManager.addDesign((EmptyDesign)inObject[2], (String)inObject[3], (String)inObject[4], "none")));
 				}
 				else if(request.equals("addproposal")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:addproposal");
 					Design design = (Design)inObject[2];
 					ProposalPermission permission=(ProposalPermission)inObject[8];
 					if(permission!=null) logger.debug("Permissions Received!");
@@ -289,6 +303,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(Integer.toString(designID));
 				}
 				else if(request.equals("addbase")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:addbase");
 					Design design = (Design)inObject[2];
 					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
@@ -302,6 +317,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(Integer.toString(designID));
 				}
 				else if(request.equals("setthumb")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:setthumb");
 					// check that the supplied username and password is correct
 					if(dbManager.authenticateUser((String)inObject[4], (String)inObject[5])){
 						int designID = (Integer)inObject[2];
@@ -317,55 +333,72 @@ public class NewClientConnection implements Runnable {
 					}
 				}
 				else if(request.equals("changename")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:changename");
 					output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
 				else if(request.equals("changedescription")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:changedescription");
 					output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
 				else if(request.equals("changeaddress")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:changeaddress");
 					output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
 				else if(request.equals("changeurl")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:changeurl");
 					output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
 				}
 				else if(request.equals("changemodellocation")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:changemodellocation");
 					output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Float)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
 				}
 				else if(request.equals("findbyid")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findbyid");
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
 					output.writeObject(design);
 				}
 				else if(request.equals("findbyname")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findbyname");
 					output.writeObject(dbManager.findDesignsByName((String)inObject[2]));
 				}
 				else if(request.equals("findbyuser")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findbyuser");
 					output.writeObject(dbManager.findDesignsByUser((String)inObject[2]));
 				}
 				else if(request.equals("findbydate")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findbydate");
 					output.writeObject(dbManager.findDesignsByDate((Long)inObject[2]));
 				}
 				else if(request.equals("findbycity")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findbycity");
 					output.writeObject(dbManager.findDesignsByCity((Integer)inObject[2], (Boolean)inObject[3]));
 				}
 				else if(request.equals("terrainbycity")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:terrainbycity");
 					output.writeObject(dbManager.findTerrainDesignsByCity((Integer)inObject[2]));
 				}
 				else if(request.equals("findmodeledbycity")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findmodeledbycity");
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_MODEL));
 				}
 				else if(request.equals("findaudiobycity")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findaudiobycity");
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_AUDIO));
 				}
 				else if(request.equals("findimagebycity")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findimagebycity");
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_SKETCH));
 				}
 				else if(request.equals("findvideobycity")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findvideobycity");
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_VIDEO));
 				}
 				else if(request.equals("allproposals")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:allproposals");
 					output.writeObject(dbManager.findAllProposals((Integer)inObject[2]));
 				}
 				else if(request.equals("requestfile")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:requestfile");
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
 					// send out a PFT if http file storage is disabled
 					if(Boolean.parseBoolean(System.getProperty(Preferences.HTTP_STORAGE_ENABLED))){
@@ -377,9 +410,11 @@ public class NewClientConnection implements Runnable {
 					}
 				}
 				else if(request.equals("requestthumb")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:requestthumb");
 					output.writeObject(wrapThumbnail((Integer)inObject[2]));
 				}
 				else if(request.equals("changefile")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:changefile");
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
 					String currentFile = design.getFilepath().substring(0, design.getFilepath().lastIndexOf("."));
 					String newFilename=null;
@@ -395,18 +430,21 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(Boolean.toString(dbManager.changeDesignFile(design.getID(), newFilename, (String)inObject[3], (String)inObject[4], (Boolean)inObject[5])));
 				}
 				else if(request.equals("reserve")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:reserve");
 					Design design = (Design)inObject[2];
 					design.setPublic(false);
 					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
 					output.writeObject(dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension));
 				}
 				else if(request.equals("remove")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:remove");
 					int designID = (Integer)inObject[2];
 					String user = (String)inObject[3];
 					String pass = (String)inObject[4];
 					output.writeObject(Integer.toString(dbManager.removeDesign(designID, user, pass)));
 				}
 				else if(request.equals("synchronize")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:synchronize");
 					int[] hashes = (int[])inObject[2];
 					int[] idList = new int[hashes.length/2];
 					for(int i=0; i<hashes.length; i+=2){
@@ -443,12 +481,15 @@ public class NewClientConnection implements Runnable {
 			// PROPOSAL FUNCTIONALITY
 			else if(section.equals("proposal")){
 				if(request.equals("findinradius")){
+					logger.info(client.getClientAdress()+DELIMITER+"proposal:findinradius");
 					output.writeObject(dbManager.findAllProposalsInArea((UTMCoordinate)inObject[2], (Integer)inObject[3]));
 				}
 				if(request.equals("getpermissions")){
+					logger.info(client.getClientAdress()+DELIMITER+"proposal:getpermissions");
 					output.writeObject(dbManager.getProposalPermissions((Integer)inObject[2]));
 				}
 				else if(request.equals("addversion")){
+					logger.info(client.getClientAdress()+DELIMITER+"proposal:addversion");
 					Design design = (Design)inObject[2];
 					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
 					System.out.print("filepath being added: " + design.getFilepath());
@@ -465,6 +506,7 @@ public class NewClientConnection implements Runnable {
 			// VERSION FUNCTIONALITY
 			else if(section.equals("version")){
 				if(request.equals("versionsofproposal")){
+					logger.info(client.getClientAdress()+DELIMITER+"version:versionsofproposal");
 					output.writeObject(dbManager.findVersionsOfProposal((Integer)inObject[2]));
 				}
 			}
@@ -472,9 +514,11 @@ public class NewClientConnection implements Runnable {
 			// FAVE FUNCTIONALITY
 			else if(section.equals("fave")){
 				if(request.equals("add")){
+					logger.info(client.getClientAdress()+DELIMITER+"fave:add");
 					output.writeObject(Integer.toString(dbManager.faveDesign((String)inObject[2], (String)inObject[3], (Integer)inObject[4])));
 				}
 				else if(request.equals("remove")){
+					logger.info(client.getClientAdress()+DELIMITER+"fave:remove");
 					// TODO implement this
 				}
 			}
@@ -482,12 +526,15 @@ public class NewClientConnection implements Runnable {
 			// ACTIVITY FUNCTIONALITY
 			else if(section.equals("activity")){
 				if(request.equals("comments")){
+					logger.info(client.getClientAdress()+DELIMITER+"activity:comments");
 					output.writeObject(dbManager.retrieveRecentComments());
 				}
 				else if(request.equals("designs")){
+					logger.info(client.getClientAdress()+DELIMITER+"activity:designs");
 					output.writeObject(dbManager.retrieveRecentDesignIDs());
 				}
 				else if(request.equals("myactivity")){
+					logger.info(client.getClientAdress()+DELIMITER+"activity:myactivity");
 					output.writeObject(dbManager.retrieveCommentsOnMyActivity(SessionTracker.get().getSession((String)inObject[2])));
 
 				}
@@ -496,6 +543,7 @@ public class NewClientConnection implements Runnable {
 
 			//SHARE FUNCTIONALITY
 			else if(section.equals("share")){
+				logger.info(client.getClientAdress()+DELIMITER+"share");
 				if (Preferences.getBooleanSetting(Preferences.MAIL_ENABLED)){
 					logger.info("Share requested");
 					// This is an example on how to use the mailer!
@@ -518,15 +566,19 @@ public class NewClientConnection implements Runnable {
 			// COMMENT FUNCTIONALITY
 			else if(section.equals("comment")){
 				if(request.equals("add")){
+					logger.info(client.getClientAdress()+DELIMITER+"comment:add");
 					output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2], (String)inObject[3])));
 				}
 				if(request.equals("delete")){
+					logger.info(client.getClientAdress()+DELIMITER+"comment:delete");
 					output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
 				if(request.equals("reportspam")){
+					logger.info(client.getClientAdress()+DELIMITER+"comment:reportspam");
 					dbManager.reportSpamComment((Integer)inObject[2]);
 				}
 				if(request.equals("getforid")){
+					logger.info(client.getClientAdress()+DELIMITER+"comment:getforid");
 					output.writeObject(dbManager.getComments((Integer)inObject[2]));
 				}
 			}
@@ -539,24 +591,31 @@ public class NewClientConnection implements Runnable {
 			// CITY FUNCTIONALITY
 			else if(section.equals("city")){
 				if(request.equals("add")){
+					logger.info(client.getClientAdress()+DELIMITER+"city:add");
 					output.writeObject(Integer.toString(dbManager.addCity((String)inObject[2], (String)inObject[3], (String)inObject[4])));
 				}
 				else if(request.equals("findbyname")){
+					logger.info(client.getClientAdress()+DELIMITER+"city:findbyname");
 					output.writeObject(dbManager.findCitiesByName((String)inObject[2]));
 				}
 				else if(request.equals("findbystate")){
+					logger.info(client.getClientAdress()+DELIMITER+"city:findbystate");
 					output.writeObject(dbManager.findCitiesByState((String)inObject[2]));
 				}
 				else if(request.equals("findbycountry")){
+					logger.info(client.getClientAdress()+DELIMITER+"city:findbycountry");
 					output.writeObject(dbManager.findCitiesByCountry((String)inObject[2]));
 				}
 				else if(request.equals("findbyid")){
+					logger.info(client.getClientAdress()+DELIMITER+"city:findbyid");
 					output.writeObject(dbManager.findCityByID((Integer)inObject[2]));
 				}
 				else if(request.equals("findbyall")){
+					logger.info(client.getClientAdress()+DELIMITER+"city:findbyall");
 					output.writeObject(dbManager.findCityByAll((String)inObject[2], (String)inObject[3], (String)inObject[4]));
 				}
 				else if(request.equals("getall")){
+					logger.info(client.getClientAdress()+DELIMITER+"city:getall");
 					output.writeObject(dbManager.findAllCities());
 				}
 			}
@@ -564,26 +623,32 @@ public class NewClientConnection implements Runnable {
 			// WORMHOLES
 			else if(section.equals("wormhole")){
 				if(request.equals("add")){
+					logger.info(client.getClientAdress()+DELIMITER+"wormhole:add");
 					logger.info("Adding Wormhole");
 					output.writeObject(Integer.toString(dbManager.addWormhole((UTMCoordinate)inObject[2], (String)inObject[3], (Integer)inObject[4], (String)inObject[5])));
 				}
 				else if(request.equals("delete")){
+					logger.info(client.getClientAdress()+DELIMITER+"wormhole:delete");
 					output.writeObject(Integer.toString(dbManager.deleteWormhole((Integer)inObject[2], (String)inObject[3])));
 				}
 				else if(request.equals("editname")){
+					logger.info(client.getClientAdress()+DELIMITER+"wormhole:editname");
 					output.writeObject(Integer.toString(dbManager.changeWormholeName((String)inObject[2], (Integer)inObject[3], (String)inObject[4])));
 				}
 				else if(request.equals("editlocation")){
+					logger.info(client.getClientAdress()+DELIMITER+"wormhole:editlocation");
 					output.writeObject(Integer.toString(dbManager.changeWormholeLocation((UTMCoordinate)inObject[2], (Integer)inObject[3], (String)inObject[4])));
 				}
 				else if(request.equals("getwithin")){
+					logger.info(client.getClientAdress()+DELIMITER+"wormhole:getwithin");
 					output.writeObject(dbManager.getWormholesWithin((UTMCoordinate)inObject[2], (Integer)inObject[3], (Integer)inObject[4]));
 				}
 				else if(request.equals("getall")){
+					logger.info(client.getClientAdress()+DELIMITER+"wormhole:getall");
 					output.writeObject(dbManager.getAllWormholes());
 				}
 				else if(request.equals("getallincity")){
-					logger.info("getallincity command received");
+					logger.info(client.getClientAdress()+DELIMITER+"wormhole:getallincity");
 					output.writeObject(dbManager.getAllWormholesInCity((Integer)inObject[2]));
 				}
 			}
@@ -591,6 +656,7 @@ public class NewClientConnection implements Runnable {
 			// VERSION ENFORCEMENT
 			else if(section.equals("softwareversion")){
 				if(request.equals("getdesign")){
+					logger.info(client.getClientAdress()+DELIMITER+"softwareversion:getdesign");
 					output.writeObject(Long.toString(Design.serialVersionUID));
 				}
 			}
