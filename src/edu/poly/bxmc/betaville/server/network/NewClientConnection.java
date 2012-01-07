@@ -437,11 +437,12 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension));
 				}
 				else if(request.equals("remove")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:remove");
 					int designID = (Integer)inObject[2];
 					String user = (String)inObject[3];
 					String pass = (String)inObject[4];
-					output.writeObject(Integer.toString(dbManager.removeDesign(designID, user, pass)));
+					int response = dbManager.removeDesign(designID, user, pass);
+					if(response==0) logger.info(client.getClientAdress()+DELIMITER+"design:remove"+DELIMITER+designID+DELIMITER+user);
+					output.writeObject(Integer.toString(response));
 				}
 				else if(request.equals("synchronize")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:synchronize");
