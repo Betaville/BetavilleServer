@@ -144,7 +144,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`proposal` (
   `type` ENUM('proposal','version') NOT NULL ,
   `removables` TEXT NOT NULL ,
   `level` ENUM('closed','group','all') NULL ,
-  `user_group` TEXT NULL ,
+  `user_group` TEXT NOT NULL ,
   `featured` TINYINT UNSIGNED NULL ,
   PRIMARY KEY (`proposalID`) ,
   INDEX `sourceID` (`sourceID` ASC) ,
