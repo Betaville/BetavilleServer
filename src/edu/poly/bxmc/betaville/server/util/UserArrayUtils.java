@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2012, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,45 +33,51 @@ import java.util.List;
  *
  */
 public class UserArrayUtils {
+	
 	public static List<String> getArrayUsers(String array){
 		ArrayList<String> users = new ArrayList<String>();
-		if(array!=null){
-			if(array.startsWith("0:")) return users;
-			String semiDelimVals = array.substring(array.indexOf(":")+1);
-			while(semiDelimVals.contains(";")){
-				users.add(semiDelimVals.substring(0,semiDelimVals.indexOf(";")));
-				semiDelimVals = semiDelimVals.substring(semiDelimVals.indexOf(";")+1);
-			}
+		
+		if(array==null || !array.matches(",[A-Za-z0-9]*,")) return users;
+		
+		String userList = array.substring(1);
+		userList = userList.substring(0, userList.length()-1);
+		
+		String[] userArray = userList.split(",");
+		
+		for(String user : userArray){
+			users.add(user);
 		}
+		
 		return users;
 	}
 
 	public static boolean checkArrayForUser(String array, String user){
-		String semiDelimVals = array.substring(array.indexOf(":")+1);
 		
-		while(semiDelimVals.contains(";")){
-			System.out.println(semiDelimVals.substring(0,semiDelimVals.indexOf(";")));
-			if(user.equals(semiDelimVals.substring(0,semiDelimVals.indexOf(";")))) return true;
-			semiDelimVals = semiDelimVals.substring(semiDelimVals.indexOf(";")+1);
-		}
+		return array.contains(","+user+",");
 		
-		return false;
 	}
 	
 	public static String getArrayNamesAsSemiDelim(String array){
 		return array.substring(array.indexOf(":")+1);
 	}
 	
-	public static int getSizeOfFaveArray(String array){
-		return Integer.parseInt(array.substring(0, array.indexOf(":")));
+	public static int getSizeOfUserArray(String array){
+		String userList = array.substring(1);
+		userList = userList.substring(0, userList.length()-1);
+		
+		String[] userArray = userList.split(",");
+		return userArray.length;
 	}
 	
 	public static String createArrayFromUsers(List<String> userList){
-		if(userList.size()==0) return "0:;";
-		String array = ""+userList.size()+":";
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append(",");
 		for(String user : userList){
-			array+=(user+";");
+			builder.append(user);
+			builder.append(",");
 		}
-		return array;
+		
+		return builder.toString();
 	}
 }
