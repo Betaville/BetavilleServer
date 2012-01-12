@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2012, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -995,6 +995,7 @@ public class NewDatabaseManager {
 
 	private Design designFromResultSet(ResultSet drs){
 		try {
+			
 			int id = drs.getInt(DBConst.DESIGN_ID);
 
 			// Check to see if design is "deleted"
@@ -1044,7 +1045,9 @@ public class NewDatabaseManager {
 			}
 			String type = drs.getString(DBConst.DESIGN_TYPE);
 			UTMCoordinate utm = retrieveCoordinate(drs.getInt(DBConst.DESIGN_COORDINATE));
+			logger.info("Checking for faves");
 			List<String> favedBy = UserArrayUtils.getArrayUsers(drs.getString(DBConst.DESIGN_FAVE_LIST));
+			logger.info("faves checked");
 			String designName = drs.getString(DBConst.DESIGN_NAME);
 			String designAddress = drs.getString(DBConst.DESIGN_ADDRESS);
 			int designCity = drs.getInt(DBConst.DESIGN_CITY);
@@ -1390,7 +1393,7 @@ public class NewDatabaseManager {
 			addProposal.setString(3, removableToInsert);
 			addProposal.setString(4, permission.getType().name().toLowerCase());
 			if(permission.getType().equals(Type.GROUP)) addProposal.setString(5, UserArrayUtils.createArrayFromUsers(permission.getUsers()));
-			else addProposal.setString(5, "");
+			else addProposal.setString(5, ",");
 			addProposal.executeUpdate();
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -1912,13 +1915,13 @@ public class NewDatabaseManager {
 				// if the list starts with 0 then we don't need to check if the user has already faved this
 				if(list!=null){
 					if(!UserArrayUtils.checkArrayForUser(list, user)){
-						String newArray = (UserArrayUtils.getSizeOfFaveArray(list)+1)+":"+UserArrayUtils.getArrayNamesAsSemiDelim(list)+user+";";
+						String newArray = list+user+",";
 						faveDesign.setString(1, newArray);
 					}
 					else return -2;
 				}
 				else{
-					faveDesign.setString(1, "1:"+user+";");
+					faveDesign.setString(1, ","+user+",");
 				}
 			}
 
