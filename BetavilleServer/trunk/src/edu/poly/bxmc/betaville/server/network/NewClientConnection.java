@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -87,7 +88,7 @@ public class NewClientConnection implements Runnable {
 	 */
 	private Client client;
 
-	boolean clientIsSafe = true;
+	AtomicBoolean clientIsSafe = new AtomicBoolean(true);
 
 	private String modelBinLocation = Preferences.getSetting(Preferences.STORAGE_MEDIA);
 
@@ -133,7 +134,7 @@ public class NewClientConnection implements Runnable {
 			e.printStackTrace();
 		}
 
-		while (clientIsSafe) {
+		while (clientIsSafe.get()) {
 			receive();
 		}
 
@@ -169,7 +170,7 @@ public class NewClientConnection implements Runnable {
 		}
 		input.close();
 		client.getClientSocket().close();
-		clientIsSafe=false;
+		clientIsSafe.set(false);
 		if(dbManager!=null) dbManager.closeConnection();
 	}
 
@@ -187,7 +188,7 @@ public class NewClientConnection implements Runnable {
 					// Process connection codes
 					if(((Integer)in)==ConnectionCodes.CLOSE){
 						logger.info("Socket from " + client.getClientAdress() + " close requested");
-						clientIsSafe=false;
+						clientIsSafe.set(false);
 						output.close();
 						client.getClientSocket().close();
 						if(dbManager!=null) dbManager.closeConnection();
@@ -661,7 +662,9 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(Long.toString(Design.serialVersionUID));
 				}
 			}
-
+			
+			// clear references held by the output stream
+			output.reset();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -758,6 +761,7 @@ public class NewClientConnection implements Runnable {
 			output.writeObject(xo.outputString(DataExporter.exportComments(dbManager.getComments((Integer)inObject[2]))));
 		}
 	}
+	
 	public void setFutureKey(String key){
 		futureKey=key;
 	}
