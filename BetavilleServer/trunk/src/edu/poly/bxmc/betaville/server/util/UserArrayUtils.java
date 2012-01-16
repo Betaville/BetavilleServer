@@ -39,8 +39,8 @@ public class UserArrayUtils {
 		
 		if(array==null || !array.matches(",[A-Za-z0-9]*,")) return users;
 		
-		String userList = array.substring(1);
-		userList = userList.substring(0, userList.length()-1);
+		String userList = new String(array.substring(1));
+		userList = new String(userList.substring(0, userList.length()-1));
 		
 		String[] userArray = userList.split(",");
 		
@@ -58,12 +58,12 @@ public class UserArrayUtils {
 	}
 	
 	public static String getArrayNamesAsSemiDelim(String array){
-		return array.substring(array.indexOf(":")+1);
+		return new String(array.substring(array.indexOf(":")+1));
 	}
 	
 	public static int getSizeOfUserArray(String array){
-		String userList = array.substring(1);
-		userList = userList.substring(0, userList.length()-1);
+		String userList = new String(array.substring(1));
+		userList = new String(userList.substring(0, userList.length()-1));
 		
 		String[] userArray = userList.split(",");
 		return userArray.length;
