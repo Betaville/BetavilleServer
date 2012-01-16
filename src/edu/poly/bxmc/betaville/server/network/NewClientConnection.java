@@ -293,7 +293,7 @@ public class NewClientConnection implements Runnable {
 						design.setSourceID(emptyDesignID);
 					}
 
-					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
+					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
 					dbManager.addProposal(design.getSourceID(), designID, (String)inObject[6], permission);
 					if(designID>0){
@@ -305,7 +305,7 @@ public class NewClientConnection implements Runnable {
 				else if(request.equals("addbase")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:addbase");
 					Design design = (Design)inObject[2];
-					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
+					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
 					if(designID>0){
 						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
@@ -416,10 +416,10 @@ public class NewClientConnection implements Runnable {
 				else if(request.equals("changefile")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:changefile");
 					Design design = dbManager.findDesignByID((Integer)inObject[2]);
-					String currentFile = design.getFilepath().substring(0, design.getFilepath().lastIndexOf("."));
+					String currentFile = new String(design.getFilepath().substring(0, design.getFilepath().lastIndexOf(".")));
 					String newFilename=null;
 					if(currentFile.contains("_")){
-						int currentIteration = Integer.parseInt(currentFile.substring(currentFile.lastIndexOf("_")+1, currentFile.length()));
+						int currentIteration = Integer.parseInt(new String(currentFile.substring(currentFile.lastIndexOf("_")+1, currentFile.length())));
 						newFilename = design.getID()+"_"+(currentIteration+1)+".jme";
 					}
 					else{
@@ -433,7 +433,7 @@ public class NewClientConnection implements Runnable {
 					logger.info(client.getClientAdress()+DELIMITER+"design:reserve");
 					Design design = (Design)inObject[2];
 					design.setPublic(false);
-					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
+					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 					output.writeObject(dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension));
 				}
 				else if(request.equals("remove")){
@@ -492,7 +492,7 @@ public class NewClientConnection implements Runnable {
 				else if(request.equals("addversion")){
 					logger.info(client.getClientAdress()+DELIMITER+"proposal:addversion");
 					Design design = (Design)inObject[2];
-					String extension = design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length());
+					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 					System.out.print("filepath being added: " + design.getFilepath());
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
 					dbManager.addVersion(design.getSourceID(), designID, (String)inObject[6]);

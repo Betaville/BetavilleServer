@@ -514,6 +514,86 @@ public class NewDatabaseManager {
 	}
 
 	public void closeConnection(){
+		logger.info("Closing Connections");
+		// clean up prepared statement resources
+		try {
+			addUser.close();
+			checkNameAvailability.close();
+			changePassword.close();
+			changeBio.close();
+			getUserEmail.close();
+			authenticaterUserAgainstUsername.close();
+			updateUserToHardenedEncryption.close();
+			checkUserLevel.close();
+			addDesign.close();
+			getDesignUser.close();
+			verifyDesignOwnership.close();
+			verifyProposalMembership.close();
+			changeDesignName.close();
+			changeDesignFile.close();
+			getModeledDesignTypeRow.close();
+			getSketchDesignTypeRow.close();
+			getAudioDesignTypeRow.close();
+			getVideoDesignTypeRow.close();
+			getEmptyDesignTypeRow.close();
+			changeDesignDescription.close();
+			changeDesignAddress.close();
+			changeDesignURL.close();
+			getDesignType.close();
+			removeDesign.close();
+			findDesignByID.close();
+			findDesignsByName.close();
+			findDesignsByUser.close();
+			findDesignsByCity.close();
+			findTypeDesignsByCity.close();
+			findModelDesignsByCity.close();
+			findBaseModelDesignByID.close();
+			findTerrainDesignsByCity.close();
+			addProposal.close();
+			startSession.close();
+			endSession.close();
+			getUserLevel.close();
+			changeModelTex.close();
+			selectModelDesignCoordinates.close();
+			changeModeledDesignLocation.close();
+			getProposalRowForDesign.close();
+			isProposal.close();
+			addVersion.close();
+			findAllProposals.close();
+			findVersionsOfProposal.close();
+			getProposalRemoveList.close();
+			addCity.close();
+			findAllCities.close();
+			findCitiesByName.close();
+			findCitiesByState.close();
+			findCitiesByCountry.close();
+			findCityByID.close();
+			findCityByAll.close();
+			addCoordinate.close();
+			changeCoordinate.close();
+			retrieveCoordinate.close();
+			reportSpamContent.close();
+			getComments.close();
+			faveDesign.close();
+			retrieveFaves.close();
+			addComment.close();
+			deleteComment.close();
+			addWormhole.close();
+			deleteWormhole.close();
+			changeWormholeName.close();
+			changeWormholeLocation.close();
+			getWormholesAtLocation.close();
+			getAllWormholes.close();
+			getAllWormholesInCity.close();
+			getRecentCommentsFromNow.close();
+			getRecentDesignsFromNow.close();
+			getRecentCommentsOnMyActivity.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// close database connection
 		dbConnection.closeConnection();
 	}
 
@@ -754,7 +834,7 @@ public class NewDatabaseManager {
 					ResultSet idSet = addDesign.getGeneratedKeys();
 					if(idSet.next()){
 						designID = idSet.getInt(1);
-						dbConnection.sendUpdate("UPDATE " + DBConst.DESIGN_TABLE + " SET " + DBConst.DESIGN_FILE + " = '"+designID+design.getFilepath().substring(design.getFilepath().lastIndexOf("."), design.getFilepath().length())+"' WHERE "+DBConst.DESIGN_ID+" = "+designID+";");
+						dbConnection.sendUpdate("UPDATE " + DBConst.DESIGN_TABLE + " SET " + DBConst.DESIGN_FILE + " = '"+new String(designID+design.getFilepath().substring(design.getFilepath().lastIndexOf("."), design.getFilepath().length()))+"' WHERE "+DBConst.DESIGN_ID+" = "+designID+";");
 						dbConnection.sendUpdate("INSERT INTO "+DBConst.MODEL_TABLE+" (`"+DBConst.MODEL_ID+"`, `"+DBConst.MODEL_ROTATION_X+"`, `"+DBConst.MODEL_ROTATION_Y+"`, `"+DBConst.MODEL_ROTATION_Z+"`, `"+DBConst.MODEL_TEX+"`) VALUES ("+designID+","+((ModeledDesign)design).getRotationX()+", "+((ModeledDesign)design).getRotationY()+", "+((ModeledDesign)design).getRotationZ()+", "+texturedValue+");");
 						return designID;
 					}
