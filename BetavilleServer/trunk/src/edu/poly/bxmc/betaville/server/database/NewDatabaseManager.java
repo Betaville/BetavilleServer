@@ -122,6 +122,12 @@ public class NewDatabaseManager {
 	private PreparedStatement changeDesignName;
 	private PreparedStatement changeDesignFile;
 
+	private PreparedStatement getModeledDesignTypeRow;
+	private PreparedStatement getSketchDesignTypeRow;
+	private PreparedStatement getAudioDesignTypeRow;
+	private PreparedStatement getVideoDesignTypeRow;
+	private PreparedStatement getEmptyDesignTypeRow;
+
 	/**
 	 * 1) newDescription	-	String<br>
 	 * 2) designID			-	int<br>
@@ -151,15 +157,13 @@ public class NewDatabaseManager {
 	private PreparedStatement findTerrainDesignsByCity;
 	private PreparedStatement addProposal;
 
-
-	//Added by Ram
 	private PreparedStatement startSession;
 	private PreparedStatement endSession;
 	private PreparedStatement getUserLevel;
 	private PreparedStatement changeModelTex;
 	private PreparedStatement selectModelDesignCoordinates;
 	private PreparedStatement changeModeledDesignLocation;
-	private PreparedStatement getProposalPermissions;
+	private PreparedStatement getProposalRowForDesign;
 	private PreparedStatement isProposal;
 	private PreparedStatement addVersion;
 	private PreparedStatement findAllProposals;
@@ -356,7 +360,7 @@ public class NewDatabaseManager {
 		addUser = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.USER_TABLE+"` (`"+
 				DBConst.USER_NAME+"`, `"+DBConst.USER_STRONG_PASS+"`, `"+DBConst.USER_STRONG_SALT+"`, `"+
 				DBConst.USER_EMAIL+"`) VALUES" +
-		"(?,?,?,?);");
+				"(?,?,?,?);");
 		//Added by Ram
 		startSession = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.SESSION_TABLE+"` " +
 				"(`"+DBConst.SESSION_USER+"`, `"+DBConst.SESSION_START+"`) VALUES (?, NOW());", PreparedStatement.RETURN_GENERATED_KEYS);
@@ -391,6 +395,11 @@ public class NewDatabaseManager {
 				DBConst.DESIGN_NAME + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
 		changeDesignFile = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.DESIGN_TABLE+" SET "+DBConst.DESIGN_FILE+
 				" = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
+		getModeledDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.MODEL_TABLE+" WHERE " + DBConst.MODEL_ID + " = ?;");
+		getSketchDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.SKETCH_TABLE+" WHERE " + DBConst.SKETCH_ID + " = ?;");
+		getAudioDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.AUDIO_TABLE+" WHERE " + DBConst.AUDIO_ID + " = ?;");
+		getVideoDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.VIDEO_TABLE+" WHERE " + DBConst.VIDEO_ID + " = ?;");
+		getEmptyDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.EMPTY_DESIGN_TABLE+" WHERE " + DBConst.EMPTY_DESIGN_ID + " = ?;");
 		changeModelTex = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.MODEL_TABLE+" SET "+DBConst.MODEL_TEX+
 				" = ? WHERE "+DBConst.MODEL_ID+" = ?;");
 		selectModelDesignCoordinates = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_COORDINATE+
@@ -439,7 +448,7 @@ public class NewDatabaseManager {
 		addProposal = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.PROPOSAL_TABLE+
 				" (`"+DBConst.PROPOSAL_SOURCE+"`, `"+DBConst.PROPOSAL_DEST+"`, `"+DBConst.PROPOSAL_TYPE+"`, `"+
 				DBConst.PROPOSAL_TYPE_REMOVABLE_LIST+"`,`"+DBConst.PROPOSAL_PERMISSIONS_LEVEL+"`,`"+DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY+"`) VALUES (?,?,'"+DBConst.PROPOSAL_TYPE_PROPOSAL+"', ?, ?, ?);");
-		getProposalPermissions = dbConnection.getConnection().prepareStatement("SELECT * FROM "+
+		getProposalRowForDesign = dbConnection.getConnection().prepareStatement("SELECT * FROM "+
 				DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ?;");
 		isProposal = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_TYPE+" FROM "+
 				DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ?;");
@@ -468,7 +477,7 @@ public class NewDatabaseManager {
 				DBConst.CITY_ID+" = ?;");
 		findCityByAll = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.CITY_TABLE+
 				" WHERE "+DBConst.CITY_NAME+" = ? AND "+DBConst.CITY_STATE+" = ? AND "+DBConst.CITY_COUNTRY+
-		" = ?;");
+				" = ?;");
 		addCoordinate = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.COORD_TABLE+
 				" ("+DBConst.COORD_TABLE+"."+DBConst.COORD_NORTHING+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_EASTING+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_LATZONE+", "+
 				DBConst.COORD_TABLE+"."+DBConst.COORD_LONZONE+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_ALTITUDE+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_EASTING_CM+", "+DBConst.COORD_TABLE+"."+DBConst.COORD_NORTHING_CM+") VALUES (?,?,?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
@@ -995,7 +1004,7 @@ public class NewDatabaseManager {
 
 	private Design designFromResultSet(ResultSet drs){
 		try {
-			
+
 			int id = drs.getInt(DBConst.DESIGN_ID);
 
 			// Check to see if design is "deleted"
@@ -1003,7 +1012,8 @@ public class NewDatabaseManager {
 				return null;
 			}
 
-			ResultSet proposalRS = dbConnection.sendQuery("SELECT * FROM "+DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+"="+id+";");
+			getProposalRowForDesign.setInt(1, id);
+			ResultSet proposalRS = getProposalRowForDesign.executeQuery();
 			int sourceID=0;
 			List<Integer> obstructionList = new ArrayList<Integer>();
 			ProposalPermission proposalPermission = null;
@@ -1025,7 +1035,7 @@ public class NewDatabaseManager {
 
 				// check for the case where we have not yet been inserting proposal permissions
 				if(level==null){
-					proposalPermission =  new ProposalPermission(Type.CLOSED);
+					proposalPermission = new ProposalPermission(Type.CLOSED);
 				}
 				else{
 					if(level.equals(DBConst.PROPOSAL_PERMISSIONS_LEVEL_CLOSED)){
@@ -1045,9 +1055,7 @@ public class NewDatabaseManager {
 			}
 			String type = drs.getString(DBConst.DESIGN_TYPE);
 			UTMCoordinate utm = retrieveCoordinate(drs.getInt(DBConst.DESIGN_COORDINATE));
-			logger.info("Checking for faves");
 			List<String> favedBy = UserArrayUtils.getArrayUsers(drs.getString(DBConst.DESIGN_FAVE_LIST));
-			logger.info("faves checked");
 			String designName = drs.getString(DBConst.DESIGN_NAME);
 			String designAddress = drs.getString(DBConst.DESIGN_ADDRESS);
 			int designCity = drs.getInt(DBConst.DESIGN_CITY);
@@ -1058,7 +1066,8 @@ public class NewDatabaseManager {
 			boolean designPrivacy = drs.getBoolean(DBConst.DESIGN_PRIVACY);
 			Design returnable=null;
 			if(type.equals(DBConst.DESIGN_TYPE_MODEL)){
-				ResultSet mrs = dbConnection.sendQuery("SELECT * FROM " + DBConst.MODEL_TABLE + " WHERE " + DBConst.MODEL_ID + " = " + id +";");
+				getModeledDesignTypeRow.setInt(1, id);
+				ResultSet mrs = getModeledDesignTypeRow.executeQuery();
 				mrs.first();
 				float rotX = mrs.getFloat(DBConst.MODEL_ROTATION_X);
 				float rotY = mrs.getFloat(DBConst.MODEL_ROTATION_Y);
@@ -1066,32 +1075,42 @@ public class NewDatabaseManager {
 				boolean designIsTextured = mrs.getBoolean(DBConst.MODEL_TEX);
 				ModeledDesign md =  new ModeledDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, rotX, rotY, rotZ, designIsTextured);
 				returnable = md;
+				mrs.close();
 			}
 			else if(type.equals(DBConst.DESIGN_TYPE_SKETCH)){
-				ResultSet srs = dbConnection.sendQuery("SELECT * FROM " + DBConst.MODEL_TABLE + " WHERE " + DBConst.MODEL_ID + " = " + id +";");
+				getSketchDesignTypeRow.setInt(1, id);
+				ResultSet srs = getSketchDesignTypeRow.executeQuery();
 				srs.first();
 				SketchedDesign sd = new SketchedDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, srs.getInt(DBConst.SKETCH_ROTATION), srs.getString(DBConst.SKETCH_UPPLANE).charAt(0));
 				returnable = sd;
+				srs.close();
 			}
 			else if(type.equals(DBConst.DESIGN_TYPE_AUDIO)){
-				ResultSet ars = dbConnection.sendQuery("SELECT * FROM " + DBConst.MODEL_TABLE + " WHERE " + DBConst.MODEL_ID + " = " + id +";");
+				getAudioDesignTypeRow.setInt(1, id);
+				ResultSet ars = getAudioDesignTypeRow.executeQuery();
 				ars.first();
 				//TODO: Chnage to a dynamically created sound style
 				AudibleDesign ad = new AudibleDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, ars.getFloat(DBConst.AUDIO_DIRECTIONX),ars.getFloat(DBConst.AUDIO_DIRECTIONY),ars.getFloat(DBConst.AUDIO_DIRECTIONZ), ars.getInt(DBConst.AUDIO_VOLUME), new PerformanceStyle());
 				returnable = ad;
+				ars.close();
 			}
-			else if(type.equals(DBConst.DESIGN_TYPE_VIDEO)){
-				ResultSet vrs = dbConnection.sendQuery("SELECT * FROM " + DBConst.MODEL_TABLE + " WHERE " + DBConst.MODEL_ID + " = " + id +";");
+			else if(type.equals(DBConst.VIDEO_TABLE)){
+				getVideoDesignTypeRow.setInt(1, id);
+				ResultSet vrs = getVideoDesignTypeRow.executeQuery();
 				vrs.first();
 				VideoDesign vd = new VideoDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, vrs.getFloat(DBConst.VIDEO_DIRECTIONX),vrs.getFloat(DBConst.VIDEO_DIRECTIONY),vrs.getFloat(DBConst.VIDEO_DIRECTIONZ), vrs.getInt(DBConst.AUDIO_VOLUME));
 				returnable = vd;
+				vrs.close();
 			}
 			else if(type.equals(DBConst.DESIGN_TYPE_EMPTY)){
-				ResultSet ers = dbConnection.sendQuery("SELECT * FROM " + DBConst.EMPTY_DESIGN_TABLE + " WHERE " + DBConst.MODEL_ID + " = " + id +";");
+				getEmptyDesignTypeRow.setInt(1, id);
+				ResultSet ers = getEmptyDesignTypeRow.executeQuery();
 				ers.first();
 				EmptyDesign vd = new EmptyDesign(utm, designAddress, designUser, designDescription, designURL, designPrivacy, ers.getInt(DBConst.EMPTY_DESIGN_LENGTH), ers.getInt(DBConst.EMPTY_DESIGN_WIDTH));
 				returnable = vd;
+				ers.close();
 			}
+
 			returnable.setID(id);
 			returnable.setSourceID(sourceID);
 			returnable.setDateAdded(DateFormat.getDateInstance().format(drs.getDate(DBConst.DESIGN_DATE)));
@@ -1099,6 +1118,9 @@ public class NewDatabaseManager {
 			returnable.setDesignsToRemove(obstructionList);
 			returnable.setFavedBy(favedBy);
 			if(proposalPermission!=null) returnable.setProposalPermission(proposalPermission);
+
+			proposalRS.close();
+
 			return returnable;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -1406,6 +1428,7 @@ public class NewDatabaseManager {
 			ResultSet propRS = isProposal.executeQuery();
 			if(propRS.first()){
 				String type = propRS.getString(DBConst.PROPOSAL_TYPE);
+				propRS.close();
 				if(type!=null){
 					if(type.toLowerCase().equals(DBConst.PROPOSAL_TYPE_PROPOSAL.toLowerCase())){
 						return true;
@@ -1508,8 +1531,8 @@ public class NewDatabaseManager {
 	 */
 	public ProposalPermission getProposalPermissions(int designID){
 		try {
-			getProposalPermissions.setInt(1, designID);
-			ResultSet rs = getProposalPermissions.executeQuery();
+			getProposalRowForDesign.setInt(1, designID);
+			ResultSet rs = getProposalRowForDesign.executeQuery();
 			if(rs.first()){
 				Type type = null;
 				String level = rs.getString(DBConst.PROPOSAL_PERMISSIONS_LEVEL);
@@ -1528,6 +1551,7 @@ public class NewDatabaseManager {
 					type = Type.ALL;
 				}
 				String group = rs.getString(DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY);
+				rs.close();
 				List<String> users = UserArrayUtils.getArrayUsers(group);
 
 				return new ProposalPermission(type, users);
@@ -1556,6 +1580,7 @@ public class NewDatabaseManager {
 			while(rs.next()){
 				proposalList.add(rs.getInt(DBConst.PROPOSAL_DEST));
 			}
+			rs.close();
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 		}
@@ -1612,8 +1637,11 @@ public class NewDatabaseManager {
 				addCity.executeUpdate();
 				ResultSet resultSet = addCity.getGeneratedKeys();
 				if((resultSet != null) && (resultSet.next())){
-					return resultSet.getInt(1);
+					int generatedID = resultSet.getInt(1);
+					resultSet.close();
+					return generatedID;
 				}
+				resultSet.close();
 				return -1;
 			}
 			else return -2;
@@ -1634,6 +1662,7 @@ public class NewDatabaseManager {
 				String country = rs.getString(DBConst.CITY_COUNTRY);
 				cities.add(new City(name, state, country, cityID));
 			}
+			rs.close();
 			return cities;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -1789,6 +1818,7 @@ public class NewDatabaseManager {
 			changeCoordinate.setInt(7, northingCM);
 			changeCoordinate.setInt(8, coordinateID);
 			int updateCount = changeCoordinate.executeUpdate();
+			changeCoordinate.close();
 			if(updateCount>1) logger.warn("More than one coordinates ("+updateCount+") were updated");
 			else if(updateCount==0) logger.error("No coordinates were updated");
 		} catch (SQLException e) {
