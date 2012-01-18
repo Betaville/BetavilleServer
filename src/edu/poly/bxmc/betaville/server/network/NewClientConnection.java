@@ -299,8 +299,8 @@ public class NewClientConnection implements Runnable {
 					dbManager.addProposal(design.getSourceID(), designID, (String)inObject[6], permission);
 					if(designID>0){
 						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
-						if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
 						try{
+							if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
 							if(inObject[9]!=null) ((PhysicalFileTransporter)inObject[9]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
 						}catch(ArrayIndexOutOfBoundsException e){
 							// the source object was not included
