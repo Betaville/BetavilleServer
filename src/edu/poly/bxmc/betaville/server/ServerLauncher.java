@@ -73,20 +73,6 @@ public class ServerLauncher {
 	 * @param args Arguments
 	 */
 	public static void main(final String[] args) {
-		
-		// Create lock file (only for Unix based systems)
-		if(System.getProperty("pid")!=null && !OS.isWindows()){
-			logger.info("Running on pid "+System.getProperty("pid"));
-			try {
-				PrintWriter writer = new PrintWriter(new File("BetavilleServer.lock"));
-				writer.write(System.getProperty("pid"));
-				writer.flush();
-				writer.close();
-			} catch (FileNotFoundException e) {
-				logger.error("Could not write PID file, update scripts will not be able to be used", e);
-			}
-			
-		}
 
 		// Is this a query? (i.e: help, versions, etc)
 		if(args.length>0){
@@ -138,6 +124,20 @@ public class ServerLauncher {
 			e.printStackTrace();
 		}
 
+		// Create lock file (only for Unix based systems)
+		if(System.getProperty("pid")!=null && !OS.isWindows()){
+			logger.info("Running on pid "+System.getProperty("pid"));
+			try {
+				PrintWriter writer = new PrintWriter(new File("BetavilleServer.lock"));
+				writer.write(System.getProperty("pid"));
+				writer.flush();
+				writer.close();
+			} catch (FileNotFoundException e) {
+				logger.error("Could not write PID file, update scripts will not be able to be used", e);
+			}
+
+		}
+
 		// Set up the mailer if it is enabled
 		if(Preferences.getBooleanSetting(Preferences.MAIL_ENABLED)){
 			try {
@@ -178,7 +178,7 @@ public class ServerLauncher {
 		}
 
 		// check for the existence of storage folders
-		
+
 		String modelBinLocation = Preferences.getSetting(Preferences.STORAGE_MEDIA);
 		File designMedia = new File(modelBinLocation+"designmedia/");
 		if(!designMedia.exists()){
