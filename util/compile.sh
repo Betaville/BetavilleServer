@@ -20,6 +20,7 @@ ant build build jar pop-db-jar
 
 # Make run.sh executable
 chmod +x util/run.sh
+chmod +x util/stop_server.sh
 
 # This is irritating, we need to move all of the jars
 mkdir deploy
@@ -33,3 +34,4 @@ mv PopulateDatabase.jar deploy
 # Move the built-in mail messages and the run script
 cp -R MailAssets deploy/MailAssets/
 cp util/run.sh deploy/run.sh
+cp util/stop_server.sh deploy/stop_server.sh
