@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2012, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,9 @@
 package edu.poly.bxmc.betaville.server;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Timer;
@@ -43,17 +45,18 @@ import org.apache.log4j.PatternLayout;
 import edu.poly.bxmc.betaville.server.mail.AbstractMailer;
 import edu.poly.bxmc.betaville.server.mail.FullDetailMailer;
 import edu.poly.bxmc.betaville.server.mail.MailSystem;
-import edu.poly.bxmc.betaville.server.mail.Mailer;
 import edu.poly.bxmc.betaville.server.network.ConnectionTracker;
 import edu.poly.bxmc.betaville.server.network.SecureServerManager;
 import edu.poly.bxmc.betaville.server.network.ServerManager;
 import edu.poly.bxmc.betaville.server.session.availability.InMemorySessionTracker;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
+import edu.poly.bxmc.betaville.util.OS;
 
 /**
  * Class <Server> - Launcher 
  *
+ * @author Skye Book
  * @author Caroline Bouchat
  */
 public class ServerLauncher {
@@ -70,6 +73,20 @@ public class ServerLauncher {
 	 * @param args Arguments
 	 */
 	public static void main(final String[] args) {
+		
+		// Create lock file (only for Unix based systems)
+		if(System.getProperty("pid")!=null && !OS.isWindows()){
+			logger.info("Running on pid "+System.getProperty("pid"));
+			try {
+				PrintWriter writer = new PrintWriter(new File("BetavilleServer.lock"));
+				writer.write(System.getProperty("pid"));
+				writer.flush();
+				writer.close();
+			} catch (FileNotFoundException e) {
+				logger.error("Could not write PID file, update scripts will not be able to be used", e);
+			}
+			
+		}
 
 		// Is this a query? (i.e: help, versions, etc)
 		if(args.length>0){
@@ -139,6 +156,7 @@ public class ServerLauncher {
 
 		// Set up session tracker
 		try {
+			@SuppressWarnings("unchecked")
 			Class<? extends SessionTracker> sessionTrackerType = (Class<? extends SessionTracker>) Class.forName(Preferences.getSetting(Preferences.SESSION_TRACKER));
 			SessionTracker.registerTracker(sessionTrackerType.newInstance());
 		} catch (ClassNotFoundException e) {
