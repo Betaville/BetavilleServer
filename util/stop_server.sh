@@ -4,4 +4,5 @@
 # Released under BSD 3-Clause license
 # author: Skye Book <skye.book@gmail.com>
 
-kill pid < cat BetavilleServer.lock
+kill pid `cat BetavilleServer.lock`
+rm BetavilleServer.lock
