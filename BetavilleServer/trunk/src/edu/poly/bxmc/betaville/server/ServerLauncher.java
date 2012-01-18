@@ -91,7 +91,7 @@ public class ServerLauncher {
 		} catch (IOException e) {
 			System.err.println("A preferences file could not be created in the Betaville directory.  " +
 					"Please ensure that you're home directory has write-permissions " +
-			"enabled.  Betaville will run but your preferences will not be saved.");
+					"enabled.  Betaville will run but your preferences will not be saved.");
 		}
 
 		// Set up logging
@@ -157,6 +157,25 @@ public class ServerLauncher {
 		} catch (IllegalAccessException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+
+		// check for the existence of storage folders
+		
+		String modelBinLocation = Preferences.getSetting(Preferences.STORAGE_MEDIA);
+		File designMedia = new File(modelBinLocation+"designmedia/");
+		if(!designMedia.exists()){
+			logger.info("Design Media folder not found, creating it");
+			designMedia.mkdirs();
+		}
+		File designThumbs = new File(modelBinLocation+"designthumbs/");
+		if(!designThumbs.exists()){
+			logger.info("Design Thumbnail folder not found, creating it");
+			designThumbs.mkdirs();
+		}
+		File sourceMedia = new File(modelBinLocation+"sourcemedia/");
+		if(!sourceMedia.exists()){
+			logger.info("Source Media folder not found, creating it");
+			sourceMedia.mkdirs();
 		}
 
 		// Create insecure manager
