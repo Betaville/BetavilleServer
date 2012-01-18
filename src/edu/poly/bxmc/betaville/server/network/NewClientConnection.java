@@ -204,7 +204,7 @@ public class NewClientConnection implements Runnable {
 				closeConnectionFromError();
 				return;
 			}
-			
+
 			String section = (String)inObject[0];
 			String request = ((String)inObject[1]);
 
@@ -300,6 +300,11 @@ public class NewClientConnection implements Runnable {
 					if(designID>0){
 						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
 						if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+						try{
+							if(inObject[8]!=null) ((PhysicalFileTransporter)inObject[8]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+						}catch(ArrayIndexOutOfBoundsException e){
+							// the source object was not included
+						}
 					}
 					output.writeObject(Integer.toString(designID));
 				}
@@ -310,9 +315,11 @@ public class NewClientConnection implements Runnable {
 					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
 					if(designID>0){
 						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
-						// see if a thumbnail has been packed as well
-						if(inObject.length>6){
-							((PhysicalFileTransporter)inObject[6]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+						try{
+							if(inObject[6]!=null) ((PhysicalFileTransporter)inObject[6]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+							if(inObject[7]!=null) ((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+						}catch(ArrayIndexOutOfBoundsException e){
+							// the source object was not included
 						}
 					}
 					output.writeObject(Integer.toString(designID));
@@ -429,6 +436,13 @@ public class NewClientConnection implements Runnable {
 					PhysicalFileTransporter pft = (PhysicalFileTransporter)inObject[6];
 					pft.writeToFileSystem(new File(modelBinLocation+"designmedia/"+newFilename));
 					output.writeObject(Boolean.toString(dbManager.changeDesignFile(design.getID(), newFilename, (String)inObject[3], (String)inObject[4], (Boolean)inObject[5])));
+
+
+					try{
+						if(inObject[7]!=null) ((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+newFilename.replace(".jme", ".zip")));
+					}catch(ArrayIndexOutOfBoundsException e){
+						// the source object was not included
+					}
 				}
 				else if(request.equals("reserve")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:reserve");
@@ -499,7 +513,12 @@ public class NewClientConnection implements Runnable {
 					dbManager.addVersion(design.getSourceID(), designID, (String)inObject[6]);
 					if(designID>0){
 						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
-						if(inObject.length==8)if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+						try{
+							if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+							if(inObject[8]!=null) ((PhysicalFileTransporter)inObject[8]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+						}catch(ArrayIndexOutOfBoundsException e){
+							// the source object was not included
+						}
 					}
 					output.writeObject(Integer.toString(designID));
 				}
@@ -662,7 +681,7 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(Long.toString(Design.serialVersionUID));
 				}
 			}
-			
+
 			// clear references held by the output stream
 			output.reset();
 		} catch (IOException e) {
@@ -761,7 +780,7 @@ public class NewClientConnection implements Runnable {
 			output.writeObject(xo.outputString(DataExporter.exportComments(dbManager.getComments((Integer)inObject[2]))));
 		}
 	}
-	
+
 	public void setFutureKey(String key){
 		futureKey=key;
 	}
