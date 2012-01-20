@@ -415,7 +415,7 @@ public class NewDatabaseManager {
 		getDesignType = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_TYPE+" FROM "+DBConst.DESIGN_TABLE+
 				" WHERE "+DBConst.DESIGN_ID+" = ?;");
 		removeDesign = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
-				DBConst.DESIGN_IS_ALIVE +" = false WHERE " + DBConst.DESIGN_ID + " = ?;");
+				DBConst.DESIGN_IS_ALIVE +" = false, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE " + DBConst.DESIGN_ID + " = ?;");
 		findDesignByID = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_ID + " = ?;");
 		findDesignsByName = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
