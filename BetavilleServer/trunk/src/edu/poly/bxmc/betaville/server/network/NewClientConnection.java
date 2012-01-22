@@ -314,7 +314,7 @@ public class NewClientConnection implements Runnable {
 							((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
 							try{
 								if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
-								if(inObject[8]!=null) ((PhysicalFileTransporter)inObject[9]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+								if(inObject[8]!=null) ((PhysicalFileTransporter)inObject[8]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
 							}catch(ArrayIndexOutOfBoundsException e){
 								// the source object was not included
 							}
