@@ -292,26 +292,29 @@ public class NewClientConnection implements Runnable {
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"design:addproposal");
 						Design design = (Design)inObject[2];
-						ProposalPermission permission=(ProposalPermission)inObject[8];
+						ProposalPermission permission=(ProposalPermission)inObject[9];
 						if(permission!=null) logger.debug("Permissions Received!");
-						else logger.debug("Permissions failed!");
+						else logger.info("Permissions failed!");
 						// if the source is linked to an invalid location, we create an empty design
 						if(design.getSourceID()==0){
 							EmptyDesign ed = new EmptyDesign(design.getCoordinate(), "no address", design.getCityID(),  session.getUser(), "none", "none", true, 5, 5);
 							int emptyDesignID = dbManager.addDesign(ed, session.getUser(), "");
+							
+							logger.info("Empty Design created: " + ed.getID());
 
 							design.setSourceID(emptyDesignID);
 						}
 
 						String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 						int designID = dbManager.addDesign(design, session.getUser(), extension);
+						logger.info("Proposal design created: " + designID);
 						design.setUser(session.getUser());
 						dbManager.addProposal(design.getSourceID(), designID, (String)inObject[6], permission);
 						if(designID>0){
 							((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
 							try{
 								if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
-								if(inObject[9]!=null) ((PhysicalFileTransporter)inObject[9]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+								if(inObject[8]!=null) ((PhysicalFileTransporter)inObject[9]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
 							}catch(ArrayIndexOutOfBoundsException e){
 								// the source object was not included
 							}
@@ -319,6 +322,7 @@ public class NewClientConnection implements Runnable {
 						output.writeObject(Integer.toString(designID));
 					}
 					else{
+						logger.info("Sending fail value");
 						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
