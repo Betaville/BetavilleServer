@@ -200,7 +200,7 @@ public class ServerLauncher {
 		managerPool.submit(new Runnable(){
 			@Override
 			public void run() {
-				new ServerManager(null, args);
+				new ServerManager(args);
 			}});
 
 		// Create SSL manager (only if SSL is enabled)
