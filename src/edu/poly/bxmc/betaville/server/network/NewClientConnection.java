@@ -63,7 +63,7 @@ import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 
 /**
- * @author Skye Book (Re-Write and Completion)
+ * @author Skye Book - (Re-Write and Completion)
  * @author Caroline Bouchat - Laid out and structured
  */
 public class NewClientConnection implements Runnable {
@@ -297,7 +297,7 @@ public class NewClientConnection implements Runnable {
 						else logger.debug("Permissions failed!");
 						// if the source is linked to an invalid location, we create an empty design
 						if(design.getSourceID()==0){
-							EmptyDesign ed = new EmptyDesign(design.getCoordinate(), "no address", design.getCityID(),  (String)inObject[3], "none", "none", true, 5, 5);
+							EmptyDesign ed = new EmptyDesign(design.getCoordinate(), "no address", design.getCityID(),  session.getUser(), "none", "none", true, 5, 5);
 							int emptyDesignID = dbManager.addDesign(ed, session.getUser(), "");
 
 							design.setSourceID(emptyDesignID);
@@ -305,6 +305,7 @@ public class NewClientConnection implements Runnable {
 
 						String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 						int designID = dbManager.addDesign(design, session.getUser(), extension);
+						design.setUser(session.getUser());
 						dbManager.addProposal(design.getSourceID(), designID, (String)inObject[6], permission);
 						if(designID>0){
 							((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
@@ -326,6 +327,7 @@ public class NewClientConnection implements Runnable {
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"design:addbase");
 						Design design = (Design)inObject[2];
+						design.setUser(session.getUser());
 						String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 						int designID = dbManager.addDesign(design, session.getUser(), extension);
 						if(designID>0){
@@ -562,6 +564,7 @@ public class NewClientConnection implements Runnable {
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"proposal:addversion");
 						Design design = (Design)inObject[2];
+						design.setUser(session.getUser());
 						String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
 						System.out.print("filepath being added: " + design.getFilepath());
 						int designID = dbManager.addDesign(design, session.getUser(), extension);
@@ -655,6 +658,7 @@ public class NewClientConnection implements Runnable {
 					Session session = SessionTracker.get().getSession((String)inObject[3]);
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"comment:add");
+						((Comment)inObject[2]).setUser(session.getUser());
 						output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2])));
 					}
 					else{
