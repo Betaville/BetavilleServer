@@ -210,17 +210,14 @@ public class NewClientConnection implements Runnable {
 
 			// USER FUNCTIONALITY
 			if(section.equals("user")){
-				if(request.equals("auth")){
-					logger.info(client.getClientAdress()+DELIMITER+"user:auth");
-					boolean response = dbManager.authenticateUser((String)inObject[2], (String)inObject[3]);
-					output.writeObject(Boolean.toString(response));
-				}
 				if(request.equals("startsession")){
 					logger.info(client.getClientAdress()+DELIMITER+"user:startsession");
 					int response = dbManager.startSession((String)inObject[2], (String)inObject[3]);
 					// only create a session if the response was valid
 					String sessionToken = "";
-					if(response>0)sessionToken = SessionTracker.get().addSession(response, (String)inObject[2]).getSessionToken();
+					if(response>0){
+						sessionToken = SessionTracker.get().addSession(response, (String)inObject[2]).getSessionToken();
+					}
 					sessionStarter=true;
 					this.sessionToken=sessionToken;
 					sessionOpen=true;
