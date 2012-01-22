@@ -51,6 +51,7 @@ import edu.poly.bxmc.betaville.model.EmptyDesign;
 import edu.poly.bxmc.betaville.model.ProposalPermission;
 import edu.poly.bxmc.betaville.model.IUser.UserType;
 import edu.poly.bxmc.betaville.net.ConnectionCodes;
+import edu.poly.bxmc.betaville.net.NotAllowedInGuestModeException;
 import edu.poly.bxmc.betaville.net.PhysicalFileTransporter;
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.database.DBConst;
@@ -250,6 +251,9 @@ public class NewClientConnection implements Runnable {
 					if(session!=null){
 						output.writeObject(Boolean.toString(dbManager.changeBio(session.getUser(), (String)inObject[3])));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 
 				}
 				else if(request.equals("getmail")){
@@ -278,6 +282,9 @@ public class NewClientConnection implements Runnable {
 					Session session = SessionTracker.get().getSession((String)inObject[3]);
 					if(session!=null){
 						output.writeObject(Integer.toString(dbManager.addDesign((EmptyDesign)inObject[2], session.getUser(), "none")));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("addproposal")){
@@ -310,6 +317,9 @@ public class NewClientConnection implements Runnable {
 						}
 						output.writeObject(Integer.toString(designID));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				else if(request.equals("addbase")){
 					Session session = SessionTracker.get().getSession((String)inObject[4]);
@@ -328,6 +338,9 @@ public class NewClientConnection implements Runnable {
 							}
 						}
 						output.writeObject(Integer.toString(designID));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("setthumb")){
@@ -348,12 +361,18 @@ public class NewClientConnection implements Runnable {
 							}
 						}
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				else if(request.equals("changename")){
 					Session session = SessionTracker.get().getSession((String)inObject[4]);
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"design:changename");
 						output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], session.getUser())));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("changedescription")){
@@ -362,12 +381,18 @@ public class NewClientConnection implements Runnable {
 						logger.info(client.getClientAdress()+DELIMITER+"design:changedescription");
 						output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], session.getUser())));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				else if(request.equals("changeaddress")){
 					Session session = SessionTracker.get().getSession((String)inObject[4]);
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"design:changeaddress");
 						output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], session.getUser())));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("changeurl")){
@@ -376,12 +401,18 @@ public class NewClientConnection implements Runnable {
 						logger.info(client.getClientAdress()+DELIMITER+"design:changeurl");
 						output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], session.getUser())));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				else if(request.equals("changemodellocation")){
 					Session session = SessionTracker.get().getSession((String)inObject[5]);
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"design:changemodellocation");
 						output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Float)inObject[4], (UTMCoordinate)inObject[3], session.getUser())));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("findbyid")){
@@ -470,16 +501,20 @@ public class NewClientConnection implements Runnable {
 							// the source object was not included
 						}
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				else if(request.equals("remove")){
 					Session session = SessionTracker.get().getSession((String)inObject[3]);
 					if(session!=null){
 						int designID = (Integer)inObject[2];
-						String user = (String)inObject[3];
-						String pass = (String)inObject[4];
 						int response = dbManager.removeDesign(designID, session.getUser());
-						if(response==0) logger.info(client.getClientAdress()+DELIMITER+"design:remove"+DELIMITER+designID+DELIMITER+user);
+						if(response==0) logger.info(client.getClientAdress()+DELIMITER+"design:remove"+DELIMITER+designID+DELIMITER+session.getUser());
 						output.writeObject(Integer.toString(response));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("synchronize")){
@@ -542,6 +577,9 @@ public class NewClientConnection implements Runnable {
 						}
 						output.writeObject(Integer.toString(designID));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 			}
 
@@ -561,10 +599,13 @@ public class NewClientConnection implements Runnable {
 						logger.info(client.getClientAdress()+DELIMITER+"fave:add");
 						output.writeObject(Integer.toString(dbManager.faveDesign(session.getUser(), (Integer)inObject[3])));
 					}
-					else if(request.equals("remove")){
-						logger.info(client.getClientAdress()+DELIMITER+"fave:remove");
-						// TODO implement this
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
+				}
+				else if(request.equals("remove")){
+					logger.info(client.getClientAdress()+DELIMITER+"fave:remove");
+					// TODO implement this
 				}
 			}
 
@@ -616,12 +657,18 @@ public class NewClientConnection implements Runnable {
 						logger.info(client.getClientAdress()+DELIMITER+"comment:add");
 						output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2])));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				if(request.equals("delete")){
 					Session session = SessionTracker.get().getSession((String)inObject[3]);
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"comment:delete");
 						output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], session.getUser())));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				if(request.equals("reportspam")){
@@ -675,12 +722,18 @@ public class NewClientConnection implements Runnable {
 						logger.info("Adding Wormhole");
 						output.writeObject(Integer.toString(dbManager.addWormhole((UTMCoordinate)inObject[2], (String)inObject[3], (Integer)inObject[4], session.getUser())));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				else if(request.equals("delete")){
 					Session session = SessionTracker.get().getSession((String)inObject[3]);
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"wormhole:delete");
 						output.writeObject(Integer.toString(dbManager.deleteWormhole((Integer)inObject[2], session.getUser())));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("editname")){
@@ -689,12 +742,18 @@ public class NewClientConnection implements Runnable {
 						logger.info(client.getClientAdress()+DELIMITER+"wormhole:editname");
 						output.writeObject(Integer.toString(dbManager.changeWormholeName((String)inObject[2], (Integer)inObject[3], session.getUser())));
 					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
+					}
 				}
 				else if(request.equals("editlocation")){
 					Session session = SessionTracker.get().getSession((String)inObject[4]);
 					if(session!=null){
 						logger.info(client.getClientAdress()+DELIMITER+"wormhole:editlocation");
 						output.writeObject(Integer.toString(dbManager.changeWormholeLocation((UTMCoordinate)inObject[2], (Integer)inObject[3], session.getUser())));
+					}
+					else{
+						output.writeObject(new NotAllowedInGuestModeException("A valid session token was not sent"));
 					}
 				}
 				else if(request.equals("getwithin")){
