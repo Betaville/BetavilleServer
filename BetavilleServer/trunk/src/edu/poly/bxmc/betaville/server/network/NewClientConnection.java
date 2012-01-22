@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2011, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2012, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,7 +43,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.log4j.Logger;
-import org.jdom.output.XMLOutputter;
 
 import edu.poly.bxmc.betaville.jme.map.UTMCoordinate;
 import edu.poly.bxmc.betaville.model.Comment;
@@ -59,10 +57,9 @@ import edu.poly.bxmc.betaville.server.database.DBConst;
 import edu.poly.bxmc.betaville.server.database.NewDatabaseManager;
 import edu.poly.bxmc.betaville.server.mail.MailSystem;
 import edu.poly.bxmc.betaville.server.mail.ShareBetavilleMessage;
+import edu.poly.bxmc.betaville.server.session.Session;
 import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
-import edu.poly.bxmc.betaville.util.StringZipper;
-import edu.poly.bxmc.betaville.xml.DataExporter;
 
 /**
  * @author Skye Book (Re-Write and Completion)
@@ -104,8 +101,6 @@ public class NewClientConnection implements Runnable {
 	private String sessionToken = null;
 
 	private String futureKey=null;
-
-	private XMLOutputter xo = new XMLOutputter();
 
 	public NewClientConnection(Client client) {
 		this.client = client;
@@ -183,6 +178,7 @@ public class NewClientConnection implements Runnable {
 				lastRequest=System.currentTimeMillis();
 				if(in instanceof Object[]){
 					inObject = (Object[])in;
+					Session session = SessionTracker.get().getSession((String)inObject[2]);
 				}
 				else if(in instanceof Integer){
 					// Process connection codes
@@ -251,7 +247,11 @@ public class NewClientConnection implements Runnable {
 				}
 				else if(request.equals("changebio")){
 					logger.info(client.getClientAdress()+DELIMITER+"user:changebio");
-					output.writeObject(Boolean.toString(dbManager.changeBio((String)inObject[2], (String)inObject[3], (String)inObject[4])));
+					Session session = SessionTracker.get().getSession((String)inObject[2]);
+					if(session!=null){
+						output.writeObject(Boolean.toString(dbManager.changeBio(session.getUser(), (String)inObject[3])));
+					}
+
 				}
 				else if(request.equals("getmail")){
 					logger.info(client.getClientAdress()+DELIMITER+"user:getmail");
@@ -276,86 +276,114 @@ public class NewClientConnection implements Runnable {
 				}
 				if(request.equals("addempty")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:addempty");
-					output.writeObject(Integer.toString(dbManager.addDesign((EmptyDesign)inObject[2], (String)inObject[3], (String)inObject[4], "none")));
+					Session session = SessionTracker.get().getSession((String)inObject[3]);
+					if(session!=null){
+						output.writeObject(Integer.toString(dbManager.addDesign((EmptyDesign)inObject[2], session.getUser(), "none")));
+					}
 				}
 				else if(request.equals("addproposal")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:addproposal");
-					Design design = (Design)inObject[2];
-					ProposalPermission permission=(ProposalPermission)inObject[8];
-					if(permission!=null) logger.debug("Permissions Received!");
-					else logger.debug("Permissions failed!");
-					// if the source is linked to an invalid location, we create an empty design
-					if(design.getSourceID()==0){
-						EmptyDesign ed = new EmptyDesign(design.getCoordinate(), "no address", design.getCityID(),  (String)inObject[3], "none", "none", true, 5, 5);
-						int emptyDesignID = dbManager.addDesign(ed, (String)inObject[3], (String)inObject[4], "");
-						design.setSourceID(emptyDesignID);
-					}
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:addproposal");
+						Design design = (Design)inObject[2];
+						ProposalPermission permission=(ProposalPermission)inObject[8];
+						if(permission!=null) logger.debug("Permissions Received!");
+						else logger.debug("Permissions failed!");
+						// if the source is linked to an invalid location, we create an empty design
+						if(design.getSourceID()==0){
+							EmptyDesign ed = new EmptyDesign(design.getCoordinate(), "no address", design.getCityID(),  (String)inObject[3], "none", "none", true, 5, 5);
+							int emptyDesignID = dbManager.addDesign(ed, session.getUser(), "");
 
-					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
-					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
-					dbManager.addProposal(design.getSourceID(), designID, (String)inObject[6], permission);
-					if(designID>0){
-						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
-						try{
-							if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
-							if(inObject[9]!=null) ((PhysicalFileTransporter)inObject[9]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
-						}catch(ArrayIndexOutOfBoundsException e){
-							// the source object was not included
+							design.setSourceID(emptyDesignID);
 						}
+
+						String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
+						int designID = dbManager.addDesign(design, session.getUser(), extension);
+						dbManager.addProposal(design.getSourceID(), designID, (String)inObject[6], permission);
+						if(designID>0){
+							((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
+							try{
+								if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+								if(inObject[9]!=null) ((PhysicalFileTransporter)inObject[9]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+							}catch(ArrayIndexOutOfBoundsException e){
+								// the source object was not included
+							}
+						}
+						output.writeObject(Integer.toString(designID));
 					}
-					output.writeObject(Integer.toString(designID));
 				}
 				else if(request.equals("addbase")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:addbase");
-					Design design = (Design)inObject[2];
-					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
-					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
-					if(designID>0){
-						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
-						try{
-							if(inObject[6]!=null) ((PhysicalFileTransporter)inObject[6]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
-							if(inObject[7]!=null) ((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
-						}catch(ArrayIndexOutOfBoundsException e){
-							// the source object was not included
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:addbase");
+						Design design = (Design)inObject[2];
+						String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
+						int designID = dbManager.addDesign(design, session.getUser(), extension);
+						if(designID>0){
+							((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
+							try{
+								if(inObject[6]!=null) ((PhysicalFileTransporter)inObject[6]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+								if(inObject[7]!=null) ((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+							}catch(ArrayIndexOutOfBoundsException e){
+								// the source object was not included
+							}
 						}
+						output.writeObject(Integer.toString(designID));
 					}
-					output.writeObject(Integer.toString(designID));
 				}
 				else if(request.equals("setthumb")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:setthumb");
-					// check that the supplied username and password is correct
-					if(dbManager.authenticateUser((String)inObject[4], (String)inObject[5])){
-						int designID = (Integer)inObject[2];
-						// ensure that the user has control over the design
-						if(dbManager.verifyDesignOwnership(designID, (String)inObject[4], (String)inObject[5]) || dbManager.getUserLevel((String)inObject[4]).compareTo(UserType.MODERATOR)>-1){
-							PhysicalFileTransporter pft = (PhysicalFileTransporter)inObject[3];
-							pft.writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
-							output.writeObject(Integer.toString(0));
-						}
-						else{
-							output.writeObject(Integer.toString(-1));
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:setthumb");
+						// check that the supplied username and password is correct
+						if(dbManager.authenticateUser((String)inObject[4], (String)inObject[5])){
+							int designID = (Integer)inObject[2];
+							// ensure that the user has control over the design
+							if(dbManager.verifyDesignOwnership(designID, session.getUser()) || dbManager.getUserLevel((String)inObject[4]).compareTo(UserType.MODERATOR)>-1){
+								PhysicalFileTransporter pft = (PhysicalFileTransporter)inObject[3];
+								pft.writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+								output.writeObject(Integer.toString(0));
+							}
+							else{
+								output.writeObject(Integer.toString(-1));
+							}
 						}
 					}
 				}
 				else if(request.equals("changename")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:changename");
-					output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:changename");
+						output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], session.getUser())));
+					}
 				}
 				else if(request.equals("changedescription")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:changedescription");
-					output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:changedescription");
+						output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], session.getUser())));
+					}
 				}
 				else if(request.equals("changeaddress")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:changeaddress");
-					output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:changeaddress");
+						output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], session.getUser())));
+					}
 				}
 				else if(request.equals("changeurl")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:changeurl");
-					output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:changeurl");
+						output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], session.getUser())));
+					}
 				}
 				else if(request.equals("changemodellocation")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:changemodellocation");
-					output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Float)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
+					Session session = SessionTracker.get().getSession((String)inObject[5]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:changemodellocation");
+						output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Float)inObject[4], (UTMCoordinate)inObject[3], session.getUser())));
+					}
 				}
 				else if(request.equals("findbyid")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:findbyid");
@@ -419,42 +447,41 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(wrapThumbnail((Integer)inObject[2]));
 				}
 				else if(request.equals("changefile")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:changefile");
-					Design design = dbManager.findDesignByID((Integer)inObject[2]);
-					String currentFile = new String(design.getFilepath().substring(0, design.getFilepath().lastIndexOf(".")));
-					String newFilename=null;
-					if(currentFile.contains("_")){
-						int currentIteration = Integer.parseInt(new String(currentFile.substring(currentFile.lastIndexOf("_")+1, currentFile.length())));
-						newFilename = design.getID()+"_"+(currentIteration+1)+".jme";
-					}
-					else{
-						newFilename=design.getID()+"_"+1+".jme";
-					}
-					PhysicalFileTransporter pft = (PhysicalFileTransporter)inObject[6];
-					pft.writeToFileSystem(new File(modelBinLocation+"designmedia/"+newFilename));
-					output.writeObject(Boolean.toString(dbManager.changeDesignFile(design.getID(), newFilename, (String)inObject[3], (String)inObject[4], (Boolean)inObject[5])));
+					Session session = SessionTracker.get().getSession((String)inObject[3]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"design:changefile");
+						Design design = dbManager.findDesignByID((Integer)inObject[2]);
+						String currentFile = new String(design.getFilepath().substring(0, design.getFilepath().lastIndexOf(".")));
+						String newFilename=null;
+						if(currentFile.contains("_")){
+							int currentIteration = Integer.parseInt(new String(currentFile.substring(currentFile.lastIndexOf("_")+1, currentFile.length())));
+							newFilename = design.getID()+"_"+(currentIteration+1)+".jme";
+						}
+						else{
+							newFilename=design.getID()+"_"+1+".jme";
+						}
+						PhysicalFileTransporter pft = (PhysicalFileTransporter)inObject[6];
+						pft.writeToFileSystem(new File(modelBinLocation+"designmedia/"+newFilename));
+						output.writeObject(Boolean.toString(dbManager.changeDesignFile(design.getID(), newFilename, session.getUser(), (Boolean)inObject[5])));
 
 
-					try{
-						if(inObject[7]!=null) ((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+newFilename.replace(".jme", ".zip")));
-					}catch(ArrayIndexOutOfBoundsException e){
-						// the source object was not included
+						try{
+							if(inObject[7]!=null) ((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+newFilename.replace(".jme", ".zip")));
+						}catch(ArrayIndexOutOfBoundsException e){
+							// the source object was not included
+						}
 					}
-				}
-				else if(request.equals("reserve")){
-					logger.info(client.getClientAdress()+DELIMITER+"design:reserve");
-					Design design = (Design)inObject[2];
-					design.setPublic(false);
-					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
-					output.writeObject(dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension));
 				}
 				else if(request.equals("remove")){
-					int designID = (Integer)inObject[2];
-					String user = (String)inObject[3];
-					String pass = (String)inObject[4];
-					int response = dbManager.removeDesign(designID, user, pass);
-					if(response==0) logger.info(client.getClientAdress()+DELIMITER+"design:remove"+DELIMITER+designID+DELIMITER+user);
-					output.writeObject(Integer.toString(response));
+					Session session = SessionTracker.get().getSession((String)inObject[3]);
+					if(session!=null){
+						int designID = (Integer)inObject[2];
+						String user = (String)inObject[3];
+						String pass = (String)inObject[4];
+						int response = dbManager.removeDesign(designID, session.getUser());
+						if(response==0) logger.info(client.getClientAdress()+DELIMITER+"design:remove"+DELIMITER+designID+DELIMITER+user);
+						output.writeObject(Integer.toString(response));
+					}
 				}
 				else if(request.equals("synchronize")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:synchronize");
@@ -486,11 +513,6 @@ public class NewClientConnection implements Runnable {
 				}
 			}
 
-			// DESIGN FUNCTIONALITY
-			else if(section.equals("design-android")){
-				androidDesign(request, inObject);
-			}
-
 			// PROPOSAL FUNCTIONALITY
 			else if(section.equals("proposal")){
 				if(request.equals("findinradius")){
@@ -502,22 +524,25 @@ public class NewClientConnection implements Runnable {
 					output.writeObject(dbManager.getProposalPermissions((Integer)inObject[2]));
 				}
 				else if(request.equals("addversion")){
-					logger.info(client.getClientAdress()+DELIMITER+"proposal:addversion");
-					Design design = (Design)inObject[2];
-					String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
-					System.out.print("filepath being added: " + design.getFilepath());
-					int designID = dbManager.addDesign(design, (String)inObject[3], (String)inObject[4], extension);
-					dbManager.addVersion(design.getSourceID(), designID, (String)inObject[6]);
-					if(designID>0){
-						((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
-						try{
-							if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
-							if(inObject[8]!=null) ((PhysicalFileTransporter)inObject[8]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
-						}catch(ArrayIndexOutOfBoundsException e){
-							// the source object was not included
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"proposal:addversion");
+						Design design = (Design)inObject[2];
+						String extension = new String(design.getFilepath().substring(design.getFilepath().lastIndexOf(".")+1, design.getFilepath().length()));
+						System.out.print("filepath being added: " + design.getFilepath());
+						int designID = dbManager.addDesign(design, session.getUser(), extension);
+						dbManager.addVersion(design.getSourceID(), designID, (String)inObject[6]);
+						if(designID>0){
+							((PhysicalFileTransporter)inObject[5]).writeToFileSystem(new File(modelBinLocation+"designmedia/"+designID+"."+extension));
+							try{
+								if(inObject[7]!=null)((PhysicalFileTransporter)inObject[7]).writeToFileSystem(new File(modelBinLocation+"designthumbs/"+designID+".png"));
+								if(inObject[8]!=null) ((PhysicalFileTransporter)inObject[8]).writeToFileSystem(new File(modelBinLocation+"sourcemedia/"+designID+".zip"));
+							}catch(ArrayIndexOutOfBoundsException e){
+								// the source object was not included
+							}
 						}
+						output.writeObject(Integer.toString(designID));
 					}
-					output.writeObject(Integer.toString(designID));
 				}
 			}
 
@@ -532,12 +557,15 @@ public class NewClientConnection implements Runnable {
 			// FAVE FUNCTIONALITY
 			else if(section.equals("fave")){
 				if(request.equals("add")){
-					logger.info(client.getClientAdress()+DELIMITER+"fave:add");
-					output.writeObject(Integer.toString(dbManager.faveDesign((String)inObject[2], (String)inObject[3], (Integer)inObject[4])));
-				}
-				else if(request.equals("remove")){
-					logger.info(client.getClientAdress()+DELIMITER+"fave:remove");
-					// TODO implement this
+					Session session = SessionTracker.get().getSession((String)inObject[2]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"fave:add");
+						output.writeObject(Integer.toString(dbManager.faveDesign(session.getUser(), (Integer)inObject[3])));
+					}
+					else if(request.equals("remove")){
+						logger.info(client.getClientAdress()+DELIMITER+"fave:remove");
+						// TODO implement this
+					}
 				}
 			}
 
@@ -584,12 +612,18 @@ public class NewClientConnection implements Runnable {
 			// COMMENT FUNCTIONALITY
 			else if(section.equals("comment")){
 				if(request.equals("add")){
-					logger.info(client.getClientAdress()+DELIMITER+"comment:add");
-					output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2], (String)inObject[3])));
+					Session session = SessionTracker.get().getSession((String)inObject[3]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"comment:add");
+						output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2])));
+					}
 				}
 				if(request.equals("delete")){
-					logger.info(client.getClientAdress()+DELIMITER+"comment:delete");
-					output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], (String)inObject[3], (String)inObject[4])));
+					Session session = SessionTracker.get().getSession((String)inObject[3]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"comment:delete");
+						output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], session.getUser())));
+					}
 				}
 				if(request.equals("reportspam")){
 					logger.info(client.getClientAdress()+DELIMITER+"comment:reportspam");
@@ -599,11 +633,6 @@ public class NewClientConnection implements Runnable {
 					logger.info(client.getClientAdress()+DELIMITER+"comment:getforid");
 					output.writeObject(dbManager.getComments((Integer)inObject[2]));
 				}
-			}
-
-			// ANDROID COMMENT FUNCTIONALITY
-			else if(section.equals("comment-android")){
-				androidComment(request, inObject);
 			}
 
 			// CITY FUNCTIONALITY
@@ -641,21 +670,33 @@ public class NewClientConnection implements Runnable {
 			// WORMHOLES
 			else if(section.equals("wormhole")){
 				if(request.equals("add")){
-					logger.info(client.getClientAdress()+DELIMITER+"wormhole:add");
-					logger.info("Adding Wormhole");
-					output.writeObject(Integer.toString(dbManager.addWormhole((UTMCoordinate)inObject[2], (String)inObject[3], (Integer)inObject[4], (String)inObject[5])));
+					Session session = SessionTracker.get().getSession((String)inObject[5]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"wormhole:add");
+						logger.info("Adding Wormhole");
+						output.writeObject(Integer.toString(dbManager.addWormhole((UTMCoordinate)inObject[2], (String)inObject[3], (Integer)inObject[4], session.getUser())));
+					}
 				}
 				else if(request.equals("delete")){
-					logger.info(client.getClientAdress()+DELIMITER+"wormhole:delete");
-					output.writeObject(Integer.toString(dbManager.deleteWormhole((Integer)inObject[2], (String)inObject[3])));
+					Session session = SessionTracker.get().getSession((String)inObject[3]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"wormhole:delete");
+						output.writeObject(Integer.toString(dbManager.deleteWormhole((Integer)inObject[2], session.getUser())));
+					}
 				}
 				else if(request.equals("editname")){
-					logger.info(client.getClientAdress()+DELIMITER+"wormhole:editname");
-					output.writeObject(Integer.toString(dbManager.changeWormholeName((String)inObject[2], (Integer)inObject[3], (String)inObject[4])));
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"wormhole:editname");
+						output.writeObject(Integer.toString(dbManager.changeWormholeName((String)inObject[2], (Integer)inObject[3], session.getUser())));
+					}
 				}
 				else if(request.equals("editlocation")){
-					logger.info(client.getClientAdress()+DELIMITER+"wormhole:editlocation");
-					output.writeObject(Integer.toString(dbManager.changeWormholeLocation((UTMCoordinate)inObject[2], (Integer)inObject[3], (String)inObject[4])));
+					Session session = SessionTracker.get().getSession((String)inObject[4]);
+					if(session!=null){
+						logger.info(client.getClientAdress()+DELIMITER+"wormhole:editlocation");
+						output.writeObject(Integer.toString(dbManager.changeWormholeLocation((UTMCoordinate)inObject[2], (Integer)inObject[3], session.getUser())));
+					}
 				}
 				else if(request.equals("getwithin")){
 					logger.info(client.getClientAdress()+DELIMITER+"wormhole:getwithin");
@@ -683,98 +724,6 @@ public class NewClientConnection implements Runnable {
 			output.reset();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-	}
-
-	private void androidDesign(String request, Object[] inObject) throws IOException{
-		logger.info("Inside Android Design: " + (String)inObject[1]);
-		if(request.equals("changename")){
-			output.writeObject(Boolean.toString(dbManager.changeDesignName((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
-		}
-		else if(request.equals("changedescription")){
-			output.writeObject(Boolean.toString(dbManager.changeDesignDescription((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
-		}
-		else if(request.equals("changeaddress")){
-			output.writeObject(Boolean.toString(dbManager.changeDesignAddress((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
-		}
-		else if(request.equals("changeurl")){
-			output.writeObject(Boolean.toString(dbManager.changeDesignURL((Integer)inObject[2], (String)inObject[3], (String)inObject[4], (String)inObject[5])));
-		}
-		else if(request.equals("changemodellocation")){
-			output.writeObject(Boolean.toString(dbManager.changeModeledDesignLocation((Integer)inObject[2], (Integer)inObject[4], (UTMCoordinate)inObject[3], (String)inObject[5], (String)inObject[6])));
-		}
-		else if(request.equals("findbyid")){
-			logger.info("finding "+(Integer)inObject[2]);
-			Design design = dbManager.findDesignByID((Integer)inObject[2]);
-			logger.info("design " + design.getName());
-			logger.info("\n"+xo.outputString(DataExporter.export(design)));
-			output.writeObject(xo.outputString(DataExporter.export(design)));
-		}
-		else if(request.equals("findbyname")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByName((String)inObject[2]))));
-		}
-		else if(request.equals("findbyuser")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByUser((String)inObject[2]))));
-		}
-		else if(request.equals("findbydate")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findDesignsByDate((Long)inObject[2]))));
-		}
-		else if(request.equals("findbycity")){
-			List<Design> designs = dbManager.findDesignsByCity((Integer)inObject[2], (Boolean)inObject[3]);
-			logger.info(designs.size()+" designs retrieved");
-			String xmlResponse = xo.outputString(DataExporter.exportDesigns(designs));
-			logger.info("Responding with: " + xmlResponse);
-			output.writeObject(xmlResponse);
-		}
-		else if(request.equals("findbycitysetstartend")){
-			List<Design> designs = dbManager.findDesignsByCitySetStartEnd((Integer)inObject[2], (Boolean)inObject[3],
-					(Integer)inObject[4], (Integer)inObject[5]);
-			logger.info(designs.size()+" designs retrieved");
-			String xmlResponse = xo.outputString(DataExporter.exportDesigns(designs));
-			logger.info("Responding with: " + xmlResponse);
-			output.writeObject(StringZipper.compress(xmlResponse));
-		}
-		else if(request.equals("terrainbycity")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTerrainDesignsByCity((Integer)inObject[2]))));
-		}
-		else if(request.equals("findmodeledbycity")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_MODEL))));
-		}
-		else if(request.equals("findaudiobycity")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_AUDIO))));
-		}
-		else if(request.equals("findimagebycity")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_SKETCH))));
-		}
-		else if(request.equals("findvideobycity")){
-			output.writeObject(xo.outputString(DataExporter.exportDesigns(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_VIDEO))));
-		}
-		else if(request.equals("allproposals")){
-			output.writeObject(dbManager.findAllProposals((Integer)inObject[2]));
-		}
-		else if(request.equals("requestthumb")){
-			output.writeObject(wrapThumbnail((Integer)inObject[2]));
-		}
-		else if(request.equals("remove")){
-			int designID = (Integer)inObject[2];
-			String user = (String)inObject[3];
-			String pass = (String)inObject[4];
-			output.writeObject(Integer.toString(dbManager.removeDesign(designID, user, pass)));
-		}
-	}
-
-	private void androidComment(String request, Object[] inObject) throws IOException{
-		if(request.equals("add")){// TODO: NOT ANDROID SAFE YET
-			output.writeObject(Boolean.toString(dbManager.addComment((Comment)inObject[2], (String)inObject[3])));
-		}
-		if(request.equals("delete")){// TODO: NOT ANDROID SAFE YET
-			output.writeObject(Boolean.toString(dbManager.deleteComment((Integer)inObject[2], (String)inObject[3], (String)inObject[4])));
-		}
-		if(request.equals("reportspam")){// TODO: NOT ANDROID SAFE YET
-			dbManager.reportSpamComment((Integer)inObject[2]);
-		}
-		if(request.equals("getforid")){
-			output.writeObject(xo.outputString(DataExporter.exportComments(dbManager.getComments((Integer)inObject[2]))));
 		}
 	}
 
