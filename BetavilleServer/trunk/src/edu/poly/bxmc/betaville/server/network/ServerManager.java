@@ -1,4 +1,4 @@
-/** Copyright (c) 2008-2010, Brooklyn eXperimental Media Center
+/** Copyright (c) 2008-2012, Brooklyn eXperimental Media Center
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@ import java.util.concurrent.Future;
 
 import edu.poly.bxmc.betaville.server.Client;
 import edu.poly.bxmc.betaville.server.ServerLauncher;
-import edu.poly.bxmc.betaville.server.gui.ServerGUI;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 
 /**
@@ -55,7 +54,7 @@ public class ServerManager {
 	 * @param manager
 	 * @param gui
 	 */
-	public ServerManager(ServerGUI gui, String[] startupArgs) {
+	public ServerManager(String[] startupArgs) {
 		try {
 			// Creation of the server socket
 			ServerSocket server = new ServerSocket(serverPort);
