@@ -178,7 +178,6 @@ public class NewClientConnection implements Runnable {
 				lastRequest=System.currentTimeMillis();
 				if(in instanceof Object[]){
 					inObject = (Object[])in;
-					Session session = SessionTracker.get().getSession((String)inObject[2]);
 				}
 				else if(in instanceof Integer){
 					// Process connection codes
