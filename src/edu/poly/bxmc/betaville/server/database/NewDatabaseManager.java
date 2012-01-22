@@ -490,7 +490,7 @@ public class NewDatabaseManager {
 		retrieveFaves = dbConnection.getConnection().prepareStatement("SELECT + "+DBConst.DESIGN_FAVE_LIST+" FROM " +DBConst.DESIGN_TABLE + " WHERE " + DBConst.DESIGN_ID + " = ?;");
 		addComment = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.COMMENT_TABLE+" (`"+DBConst.COMMENT_DESIGN+"`, `"+DBConst.COMMENT_USER+"`, `"+DBConst.COMMENT_TEXT+"`, `"+DBConst.COMMENT_DATE+"`, `"+DBConst.COMMENT_REPLIESTO+"`) VALUES (?,?,?,NOW(),?);", PreparedStatement.RETURN_GENERATED_KEYS);
 		deleteComment = dbConnection.getConnection().prepareStatement("DELETE FROM " + DBConst.COMMENT_TABLE + " WHERE " + 
-				DBConst.COMMENT_ID + " = ?");
+				DBConst.COMMENT_ID + " = ? AND " + DBConst.COMMENT_USER +" LIKE ?");
 		reportSpamContent = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.COMMENT_TABLE+" SET "+
 				DBConst.COMMENT_SPAMFLAG+" = 1 WHERE "+DBConst.COMMENT_ID+" = ?;");
 		getComments = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.COMMENT_TABLE+" WHERE "+
@@ -720,20 +720,22 @@ public class NewDatabaseManager {
 		else return false;
 	}
 
-	public boolean changeBio(String user, String pass, String newBio){
-		if(authenticator.authenticateUser(user, pass)){
-
-			try {
-				changeBio.setString(1, newBio);
-				changeBio.setString(2, user);
-				changeBio.executeUpdate();
-			} catch (SQLException e) {
-				logger.error("SQL ERROR", e);
-				return false;
-			}
-			return true;
+	/**
+	 * 
+	 * @param user
+	 * @param newBio
+	 * @return
+	 */
+	public boolean changeBio(String user, String newBio){
+		try {
+			changeBio.setString(1, newBio);
+			changeBio.setString(2, user);
+			changeBio.executeUpdate();
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return false;
 		}
-		else return false;
+		return true;
 	}
 
 	public String getUserEmail(String user){
@@ -800,102 +802,99 @@ public class NewDatabaseManager {
 	 * Adds a new design to the database
 	 * @param design
 	 * @param user
-	 * @param pass
 	 * @param removableString removables list for proposal
 	 * @return The new design's ID, or -1 for SQL error, -2 for unsupported <code>Design</code>, or -3 for failed authentication
 	 */
-	public int addDesign(Design design, String user, String pass, String fileExtension){
-		if(authenticator.authenticateUser(user, pass)){
-			int privacy;
-			if(design.isPublic()) privacy=1;
-			else privacy=0;
-			int coordinateID=addCoordinate(design.getCoordinate());
-			int designID;
-			try {
+	public int addDesign(Design design, String user, String fileExtension){
+		int privacy;
+		if(design.isPublic()) privacy=1;
+		else privacy=0;
+		int coordinateID=addCoordinate(design.getCoordinate());
+		int designID;
+		try {
 
-				// these are generic components of a design
-				addDesign.setString(1, design.getName());
-				addDesign.setString(2, design.getFilepath());
-				addDesign.setInt(3, design.getCityID());
-				addDesign.setString(4, design.getUser());
-				addDesign.setInt(5, coordinateID);
-				addDesign.setInt(6, privacy);
-				addDesign.setString(7, design.getDescription());
-				addDesign.setString(8, design.getURL());
-				addDesign.setString(10, design.getAddress());
+			// these are generic components of a design
+			addDesign.setString(1, design.getName());
+			addDesign.setString(2, design.getFilepath());
+			addDesign.setInt(3, design.getCityID());
+			addDesign.setString(4, design.getUser());
+			addDesign.setInt(5, coordinateID);
+			addDesign.setInt(6, privacy);
+			addDesign.setString(7, design.getDescription());
+			addDesign.setString(8, design.getURL());
+			addDesign.setString(10, design.getAddress());
 
-				if(design instanceof ModeledDesign){
-					int texturedValue=0;
-					if(((ModeledDesign)design).isTextured()) texturedValue=1;
+			if(design instanceof ModeledDesign){
+				int texturedValue=0;
+				if(((ModeledDesign)design).isTextured()) texturedValue=1;
 
-					addDesign.setString(9, "model");
-					addDesign.executeUpdate();
+				addDesign.setString(9, "model");
+				addDesign.executeUpdate();
 
-					ResultSet idSet = addDesign.getGeneratedKeys();
-					if(idSet.next()){
-						designID = idSet.getInt(1);
-						dbConnection.sendUpdate("UPDATE " + DBConst.DESIGN_TABLE + " SET " + DBConst.DESIGN_FILE + " = '"+new String(designID+design.getFilepath().substring(design.getFilepath().lastIndexOf("."), design.getFilepath().length()))+"' WHERE "+DBConst.DESIGN_ID+" = "+designID+";");
-						dbConnection.sendUpdate("INSERT INTO "+DBConst.MODEL_TABLE+" (`"+DBConst.MODEL_ID+"`, `"+DBConst.MODEL_ROTATION_X+"`, `"+DBConst.MODEL_ROTATION_Y+"`, `"+DBConst.MODEL_ROTATION_Z+"`, `"+DBConst.MODEL_TEX+"`) VALUES ("+designID+","+((ModeledDesign)design).getRotationX()+", "+((ModeledDesign)design).getRotationY()+", "+((ModeledDesign)design).getRotationZ()+", "+texturedValue+");");
-						return designID;
-					}
+				ResultSet idSet = addDesign.getGeneratedKeys();
+				if(idSet.next()){
+					designID = idSet.getInt(1);
+					dbConnection.sendUpdate("UPDATE " + DBConst.DESIGN_TABLE + " SET " + DBConst.DESIGN_FILE + " = '"+new String(designID+design.getFilepath().substring(design.getFilepath().lastIndexOf("."), design.getFilepath().length()))+"' WHERE "+DBConst.DESIGN_ID+" = "+designID+";");
+					dbConnection.sendUpdate("INSERT INTO "+DBConst.MODEL_TABLE+" (`"+DBConst.MODEL_ID+"`, `"+DBConst.MODEL_ROTATION_X+"`, `"+DBConst.MODEL_ROTATION_Y+"`, `"+DBConst.MODEL_ROTATION_Z+"`, `"+DBConst.MODEL_TEX+"`) VALUES ("+designID+","+((ModeledDesign)design).getRotationX()+", "+((ModeledDesign)design).getRotationY()+", "+((ModeledDesign)design).getRotationZ()+", "+texturedValue+");");
+					return designID;
 				}
-				else if(design instanceof SketchedDesign){
-					addDesign.setString(9, "sketch");
-					addDesign.executeUpdate();
-
-					ResultSet idSet = addDesign.getGeneratedKeys();
-					if(idSet.next()){
-						designID = idSet.getInt(1);
-						dbConnection.sendUpdate("INSERT INTO "+DBConst.SKETCH_TABLE+" (`"+DBConst.SKETCH_ID+"`, `"+DBConst.SKETCH_ROTATION+"`, `"+DBConst.SKETCH_UPPLANE+"`) VALUES ("+designID+","+((SketchedDesign)design).getRotation()+",'"+((SketchedDesign)design).getUpPlane()+"');");
-						return designID;
-					}
-				}
-				else if(design instanceof AudibleDesign){
-					addDesign.setString(9, "audio");
-					addDesign.executeUpdate();
-
-					ResultSet idSet = addDesign.getGeneratedKeys();
-
-					if(idSet.next()){
-						designID = idSet.getInt(1);
-						dbConnection.sendUpdate("INSERT INTO "+DBConst.AUDIO_TABLE+" (`"+DBConst.AUDIO_ID+"`, `"+DBConst.AUDIO_DIRECTIONX+"`, `"+DBConst.AUDIO_DIRECTIONY+"`, `"+DBConst.AUDIO_DIRECTIONZ+"`) VALUES ("+designID+","+((AudibleDesign)design).getDirectionX()+","+((AudibleDesign)design).getDirectionY()+","+((AudibleDesign)design).getDirectionZ()+");");
-						return designID;
-					}
-				}
-				else if(design instanceof VideoDesign){
-					addDesign.setString(9, "video");
-					addDesign.executeUpdate();
-
-					ResultSet idSet = addDesign.getGeneratedKeys();
-
-					if(idSet.next()){
-						designID = idSet.getInt(1);
-						dbConnection.sendUpdate("INSERT INTO "+DBConst.VIDEO_TABLE+" (`"+DBConst.VIDEO_ID+"`, `"+DBConst.VIDEO_DIRECTIONX+"`, `"+DBConst.VIDEO_DIRECTIONY+"`, `"+DBConst.VIDEO_DIRECTIONZ+"`) VALUES ("+designID+","+((VideoDesign)design).getDirectionX()+","+((VideoDesign)design).getDirectionY()+","+((VideoDesign)design).getDirectionZ()+");");
-						changeDesignFilename(designID, fileExtension);
-						return designID;
-					}
-				}
-				else if(design instanceof EmptyDesign){
-					addDesign.setString(9, "empty");
-					addDesign.executeUpdate();
-
-					ResultSet idSet = addDesign.getGeneratedKeys();
-
-					if(idSet.next()){
-						designID = idSet.getInt(1);
-						dbConnection.sendUpdate("INSERT INTO "+DBConst.EMPTY_DESIGN_TABLE+" (`"+DBConst.EMPTY_DESIGN_ID+"`,  `"+DBConst.EMPTY_DESIGN_LENGTH+"`,  `"+DBConst.EMPTY_DESIGN_WIDTH+"`) VALUES ("+designID+","+((EmptyDesign)design).getLength()+","+((EmptyDesign)design).getWidth()+");");
-						changeDesignFilename(designID, fileExtension);
-						return designID;
-					}
-				}
-				else return -2;
-
-			} catch (SQLException e) {
-				logger.error("SQL ERROR", e);
-				return -1;
 			}
+			else if(design instanceof SketchedDesign){
+				addDesign.setString(9, "sketch");
+				addDesign.executeUpdate();
+
+				ResultSet idSet = addDesign.getGeneratedKeys();
+				if(idSet.next()){
+					designID = idSet.getInt(1);
+					dbConnection.sendUpdate("INSERT INTO "+DBConst.SKETCH_TABLE+" (`"+DBConst.SKETCH_ID+"`, `"+DBConst.SKETCH_ROTATION+"`, `"+DBConst.SKETCH_UPPLANE+"`) VALUES ("+designID+","+((SketchedDesign)design).getRotation()+",'"+((SketchedDesign)design).getUpPlane()+"');");
+					return designID;
+				}
+			}
+			else if(design instanceof AudibleDesign){
+				addDesign.setString(9, "audio");
+				addDesign.executeUpdate();
+
+				ResultSet idSet = addDesign.getGeneratedKeys();
+
+				if(idSet.next()){
+					designID = idSet.getInt(1);
+					dbConnection.sendUpdate("INSERT INTO "+DBConst.AUDIO_TABLE+" (`"+DBConst.AUDIO_ID+"`, `"+DBConst.AUDIO_DIRECTIONX+"`, `"+DBConst.AUDIO_DIRECTIONY+"`, `"+DBConst.AUDIO_DIRECTIONZ+"`) VALUES ("+designID+","+((AudibleDesign)design).getDirectionX()+","+((AudibleDesign)design).getDirectionY()+","+((AudibleDesign)design).getDirectionZ()+");");
+					return designID;
+				}
+			}
+			else if(design instanceof VideoDesign){
+				addDesign.setString(9, "video");
+				addDesign.executeUpdate();
+
+				ResultSet idSet = addDesign.getGeneratedKeys();
+
+				if(idSet.next()){
+					designID = idSet.getInt(1);
+					dbConnection.sendUpdate("INSERT INTO "+DBConst.VIDEO_TABLE+" (`"+DBConst.VIDEO_ID+"`, `"+DBConst.VIDEO_DIRECTIONX+"`, `"+DBConst.VIDEO_DIRECTIONY+"`, `"+DBConst.VIDEO_DIRECTIONZ+"`) VALUES ("+designID+","+((VideoDesign)design).getDirectionX()+","+((VideoDesign)design).getDirectionY()+","+((VideoDesign)design).getDirectionZ()+");");
+					changeDesignFilename(designID, fileExtension);
+					return designID;
+				}
+			}
+			else if(design instanceof EmptyDesign){
+				addDesign.setString(9, "empty");
+				addDesign.executeUpdate();
+
+				ResultSet idSet = addDesign.getGeneratedKeys();
+
+				if(idSet.next()){
+					designID = idSet.getInt(1);
+					dbConnection.sendUpdate("INSERT INTO "+DBConst.EMPTY_DESIGN_TABLE+" (`"+DBConst.EMPTY_DESIGN_ID+"`,  `"+DBConst.EMPTY_DESIGN_LENGTH+"`,  `"+DBConst.EMPTY_DESIGN_WIDTH+"`) VALUES ("+designID+","+((EmptyDesign)design).getLength()+","+((EmptyDesign)design).getWidth()+");");
+					changeDesignFilename(designID, fileExtension);
+					return designID;
+				}
+			}
+			else return -2;
+
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return -1;
 		}
-		return -3;
+		return -2;
 	}
 
 	/**
@@ -905,42 +904,36 @@ public class NewDatabaseManager {
 	 * @param pass
 	 * @return true if the design is owned by the user
 	 */
-	public boolean verifyDesignOwnership(int designID, String user, String pass){
+	public boolean verifyDesignOwnership(int designID, String user){
 		try {
-			if(authenticateUser(user, pass))
-			{
-				verifyDesignOwnership.setString(1, user);
-				verifyDesignOwnership.setInt(2, designID);
-				ResultSet stepTwo = verifyDesignOwnership.executeQuery();
-				if(stepTwo.first()){
-					stepTwo.close();
-					return true;
-				} else{
-					stepTwo.close();
-					return false;
-				}
-			} else return false;
+			verifyDesignOwnership.setString(1, user);
+			verifyDesignOwnership.setInt(2, designID);
+			ResultSet stepTwo = verifyDesignOwnership.executeQuery();
+			if(stepTwo.first()){
+				stepTwo.close();
+				return true;
+			} else{
+				stepTwo.close();
+				return false;
+			}
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return false;
 		}
 	}
 
-	private boolean verifyMemberOfProposalGroup(int proposalDestID, String user, String pass){
+	private boolean verifyMemberOfProposalGroup(int proposalDestID, String user){
 		try {
-			if(authenticateUser(user, pass))
-			{
-				verifyProposalMembership.setInt(1, proposalDestID);
-				ResultSet rs = verifyProposalMembership.executeQuery();
-				if(rs.first()){
-					boolean answer = UserArrayUtils.checkArrayForUser(rs.getString(DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY), user);
-					rs.close();
-					return answer;
-				} else{
-					rs.close();
-					return false;
-				}
-			} else return false;
+			verifyProposalMembership.setInt(1, proposalDestID);
+			ResultSet rs = verifyProposalMembership.executeQuery();
+			if(rs.first()){
+				boolean answer = UserArrayUtils.checkArrayForUser(rs.getString(DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY), user);
+				rs.close();
+				return answer;
+			} else{
+				rs.close();
+				return false;
+			}
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return false;
@@ -956,9 +949,8 @@ public class NewDatabaseManager {
 		}
 	}
 
-	public boolean changeDesignName(int designID, String newName, String user, String pass){
-		if(verifyDesignOwnership(designID, user, pass)
-				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){
+	public boolean changeDesignName(int designID, String newName, String user){
+		if(verifyDesignOwnership(designID, user) || getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
 				changeDesignName.setString(1, newName);
 				changeDesignName.setInt(2, designID);
@@ -972,9 +964,8 @@ public class NewDatabaseManager {
 		else return false;
 	}
 
-	public boolean changeDesignFile(int designID, String newFilename, String user, String pass, boolean textureOnOff){
-		if(verifyDesignOwnership(designID, user, pass)
-				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){
+	public boolean changeDesignFile(int designID, String newFilename, String user, boolean textureOnOff){
+		if(verifyDesignOwnership(designID, user) || getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
 				changeDesignFile.setString(1, newFilename);
 				changeDesignFile.setInt(2, designID);
@@ -992,9 +983,9 @@ public class NewDatabaseManager {
 		else return false;
 	}
 
-	public boolean changeDesignDescription(int designID, String newDescription, String user, String pass){
-		if(verifyDesignOwnership(designID, user, pass) || verifyMemberOfProposalGroup(designID, user, pass)
-				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){
+	public boolean changeDesignDescription(int designID, String newDescription, String user){
+		if(verifyDesignOwnership(designID, user) || verifyMemberOfProposalGroup(designID, user)
+				|| getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
 				changeDesignDescription.setString(1, newDescription);
 				changeDesignDescription.setInt(2, designID);
@@ -1008,9 +999,9 @@ public class NewDatabaseManager {
 		else return false;
 	}
 
-	public boolean changeDesignAddress(int designID, String newAddress, String user, String pass){
-		if(verifyDesignOwnership(designID, user, pass) || verifyMemberOfProposalGroup(designID, user, pass)
-				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){
+	public boolean changeDesignAddress(int designID, String newAddress, String user){
+		if(verifyDesignOwnership(designID, user) || verifyMemberOfProposalGroup(designID, user)
+				|| getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
 				changeDesignAddress.setString(1, newAddress);
 				changeDesignAddress.setInt(2, designID);
@@ -1024,9 +1015,8 @@ public class NewDatabaseManager {
 		else return false;
 	}
 
-	public boolean changeDesignURL(int designID, String newURL, String user, String pass){
-		if(verifyDesignOwnership(designID, user, pass)
-				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){
+	public boolean changeDesignURL(int designID, String newURL, String user){
+		if(verifyDesignOwnership(designID, user)|| getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
 				changeDesignURL.setString(1, newURL);
 				changeDesignURL.setInt(2, designID);
@@ -1040,10 +1030,9 @@ public class NewDatabaseManager {
 		else return false;
 	}
 
-	public boolean changeModeledDesignLocation(int designID, float rotY, UTMCoordinate newLocation, String user, String pass){
+	public boolean changeModeledDesignLocation(int designID, float rotY, UTMCoordinate newLocation, String user){
 		logger.info(user + " changing design location for design " + designID);
-		if(verifyDesignOwnership(designID, user, pass)
-				|| (authenticateUser(user, pass) && getUserLevel(user).compareTo(UserType.MODERATOR)>=0)){
+		if(verifyDesignOwnership(designID, user) || getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
 				selectModelDesignCoordinates.setInt(1, designID);
 				ResultSet rs = selectModelDesignCoordinates.executeQuery();
@@ -1215,10 +1204,9 @@ public class NewDatabaseManager {
 	 * @param pass
 	 * @return 0 for success, -3 for failed authentication
 	 */
-	public int removeDesign(int designID, String user, String pass){
-		if(authenticator.authenticateUser(user, pass) && // user & pass must be correct as well as:
-				((getUserLevel(user).equals(UserType.ADMIN) ||  getUserLevel(user).equals(UserType.MODERATOR)) // must be an admin or moderator, OR
-						|| verifyDesignOwnership(designID, user, pass))){ // the original creator of the design
+	public int removeDesign(int designID, String user){
+		if(((getUserLevel(user).equals(UserType.ADMIN) ||  getUserLevel(user).equals(UserType.MODERATOR)) // must be an admin or moderator, OR
+				|| verifyDesignOwnership(designID, user))){ // the original creator of the design
 			try {
 				removeDesign.setInt(1, designID);
 				removeDesign.executeUpdate();
@@ -1926,50 +1914,52 @@ public class NewDatabaseManager {
 		}
 	}
 
-	public boolean addComment(Comment comment, String pass){
-		if(authenticator.authenticateUser(comment.getUser(),pass)){
-			try {
-				addComment.setInt(1, comment.getDesignID());
-				addComment.setString(2, comment.getUser());
-				addComment.setString(3, comment.getComment());
-				addComment.setInt(4, comment.repliesTo());
-				addComment.executeUpdate();
-				if(mailer!=null){
-					getDesignUser.setInt(1, comment.getDesignID());
-					ResultSet rs = getDesignUser.executeQuery();
-					if(rs.first()){
-						try {
-							CommentNotificationMessage message = new CommentNotificationMessage(mailer.getSession(), rs.getString(DBConst.DESIGN_USER), comment.getUser(), rs.getString(DBConst.DESIGN_NAME), comment.getComment(), rs.getString(DBConst.USER_EMAIL));
-							mailer.sendMailNow(message);
-						} catch (MessagingException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+	public boolean addComment(Comment comment){
+		try {
+			addComment.setInt(1, comment.getDesignID());
+			addComment.setString(2, comment.getUser());
+			addComment.setString(3, comment.getComment());
+			addComment.setInt(4, comment.repliesTo());
+			addComment.executeUpdate();
+			if(mailer!=null){
+				getDesignUser.setInt(1, comment.getDesignID());
+				ResultSet rs = getDesignUser.executeQuery();
+				if(rs.first()){
+					try {
+						CommentNotificationMessage message = new CommentNotificationMessage(mailer.getSession(), rs.getString(DBConst.DESIGN_USER), comment.getUser(), rs.getString(DBConst.DESIGN_NAME), comment.getComment(), rs.getString(DBConst.USER_EMAIL));
+						mailer.sendMailNow(message);
+					} catch (MessagingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
-				return true;
-			} catch (SQLException e) {
-				logger.error("SQL ERROR", e);
-				return false;
 			}
+			return true;
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return false;
 		}
-		else return false;
 	}
 
-	public boolean deleteComment(int commentID, String user, String password){
-		if(authenticator.authenticateUser(user, password)){
-			try {
-				deleteComment.setInt(1, commentID);
-				deleteComment.executeUpdate();
-				return true;
-			} catch (SQLException e) {
-				logger.error("SQL ERROR", e);
-			}
+	/**
+	 * 
+	 * @param commentID
+	 * @param user
+	 * @return
+	 */
+	public boolean deleteComment(int commentID, String user){
+		try {
+			deleteComment.setInt(1, commentID);
+			deleteComment.setString(3, user);
+			deleteComment.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return false;
 		}
-		return false;
 	}
 
 	public void reportSpamComment(int commentID){
@@ -2011,10 +2001,7 @@ public class NewDatabaseManager {
 	 * @param designID
 	 * @return 0 for success, -1 for SQL error, -2 if its already faved, -3 for failed authentication
 	 */
-	public int faveDesign(String user, String pass, int designID){
-		if(!authenticator.authenticateUser(user, pass)){
-			return -3;
-		}
+	public int faveDesign(String user, int designID){
 		try {
 			retrieveFaves.setInt(1, designID);
 			ResultSet rs = retrieveFaves.executeQuery();
@@ -2049,16 +2036,15 @@ public class NewDatabaseManager {
 	 * Creates a new wormhole
 	 * @param coordinate
 	 * @param name
-	 * @param rotateX
-	 * @param rotateY
-	 * @param rotateZ
+	 * @param cityID
+	 * @param user
 	 * @return the new wormhole's ID on success or a failure value less than zero
 	 */
-	public int addWormhole(UTMCoordinate coordinate, String name, int cityID, String sessionToken){
+	public int addWormhole(UTMCoordinate coordinate, String name, int cityID, String user){
 		// we're good to go if this is not -1
 		// TODO: Work on standardized fail values
 		logger.info("off to look for userType!");
-		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
+		UserType userType = getUserLevel(user);
 		logger.info("Usertype is " + userType.name());
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			int createdCoordinate = addCoordinate(coordinate);
@@ -2089,11 +2075,11 @@ public class NewDatabaseManager {
 	/**
 	 * 
 	 * @param wormholeToDelete
-	 * @param sessionToken
+	 * @param user
 	 * @return 0 for success, -1 for SQL error, -3 for failed authentication
 	 */
-	public int deleteWormhole(int wormholeToDelete, String sessionToken){
-		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
+	public int deleteWormhole(int wormholeToDelete, String user){
+		UserType userType = getUserLevel(user);
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			try {
 				deleteWormhole.setInt(1, wormholeToDelete);
@@ -2111,11 +2097,11 @@ public class NewDatabaseManager {
 	 * 
 	 * @param newLocation
 	 * @param wormholeID
-	 * @param sessionToken
+	 * @param user
 	 * @return 0 for success, -1 for SQL error, -3 for failed authentication
 	 */
-	public int changeWormholeLocation(UTMCoordinate newLocation, int wormholeID, String sessionToken){
-		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
+	public int changeWormholeLocation(UTMCoordinate newLocation, int wormholeID, String user){
+		UserType userType = getUserLevel(user);
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			try {
 				changeWormholeLocation.setInt(1, newLocation.getEasting());
@@ -2138,11 +2124,11 @@ public class NewDatabaseManager {
 	 * 
 	 * @param name
 	 * @param wormholeID
-	 * @param sessionToken
+	 * @param user
 	 * @return 0 for success, -1 for SQL error, -3 for failed authentication
 	 */
-	public int changeWormholeName(String name, int wormholeID, String sessionToken){
-		UserType userType = getUserLevel(SessionTracker.get().getSession(sessionToken).getUser());
+	public int changeWormholeName(String name, int wormholeID, String user){
+		UserType userType = getUserLevel(user);
 		if(userType.equals(UserType.MODERATOR) || userType.equals(UserType.ADMIN)){
 			try {
 				changeWormholeName.setString(1, name);
