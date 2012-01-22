@@ -61,7 +61,6 @@ import edu.poly.bxmc.betaville.server.authentication.IAuthenticator;
 import edu.poly.bxmc.betaville.server.mail.AbstractMailer;
 import edu.poly.bxmc.betaville.server.mail.CommentNotificationMessage;
 import edu.poly.bxmc.betaville.server.session.Session;
-import edu.poly.bxmc.betaville.server.session.availability.SessionTracker;
 import edu.poly.bxmc.betaville.server.util.Preferences;
 import edu.poly.bxmc.betaville.server.util.UserArrayUtils;
 import edu.poly.bxmc.betaville.sound.PerformanceStyle;
@@ -589,8 +588,7 @@ public class NewDatabaseManager {
 			getRecentDesignsFromNow.close();
 			getRecentCommentsOnMyActivity.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.fatal("Could not prepare SQL queries", e);
 		}
 
 		// close database connection
