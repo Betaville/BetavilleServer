@@ -168,6 +168,7 @@ public class NewDatabaseManager {
 	private PreparedStatement findAllProposals;
 	private PreparedStatement findAllProposalsInCity;
 	private PreparedStatement findVersionsOfProposal;
+	private PreparedStatement getVersionsOfProposal;
 	private PreparedStatement getProposalRemoveList;
 	private PreparedStatement addCity;
 	private PreparedStatement findAllCities;
@@ -457,10 +458,11 @@ public class NewDatabaseManager {
 				"`, `"+DBConst.PROPOSAL_TYPE_REMOVABLE_LIST+"`) VALUES (?,?,?,?);");
 		findAllProposals = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_DEST+" FROM "+
 				DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_SOURCE+" = ? AND "+DBConst.PROPOSAL_TYPE+" = ?;");
-		findAllProposalsInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.DESIGN_TABLE+" JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" = "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_DEST+" WHERE "+DBConst.PROPOSAL_TYPE+" = '"+DBConst.PROPOSAL_TYPE_PROPOSAL+"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 and cityID=?");
+		findAllProposalsInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.DESIGN_TABLE+" JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" = "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_DEST+" WHERE "+DBConst.PROPOSAL_TYPE+" = '"+DBConst.PROPOSAL_TYPE_PROPOSAL+"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.DESIGN_CITY+"=?");
 		findVersionsOfProposal = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_DEST+
 				" FROM "+DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_SOURCE+" = ? AND "+DBConst.PROPOSAL_TYPE+
 				" = '"+DBConst.PROPOSAL_TYPE_VERSION+"';");
+		getVersionsOfProposal = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.DESIGN_TABLE+" JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" = "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_DEST+" WHERE "+DBConst.PROPOSAL_TYPE+" = '"+DBConst.PROPOSAL_TYPE_VERSION+"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.PROPOSAL_SOURCE+"=?");
 		getProposalRemoveList = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_TYPE_REMOVABLE_LIST+
 				" FROM "+DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ?;");
 		addCity = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.CITY_TABLE+
@@ -1685,6 +1687,30 @@ public class NewDatabaseManager {
 			return versionTable;
 		}
 		else return null;			
+	}
+	
+	/**
+	 * Finds the versions of a given proposal.  This does not verify whether an
+	 * ID is correctly representing a proposal and as such should only be called
+	 * when we can be sure that the ID given is for a proposal.
+	 * @param proposalDesignID The proposal whose versions we wish to find.
+	 * @return An array of designs that are the children of the specified proposal
+	 */
+	public ArrayList<Design> getVersionsOfProposal(int proposalDesignID){
+		ArrayList<Design> proposalList = new ArrayList<Design>();
+		
+		try {
+			getVersionsOfProposal.setInt(1, proposalDesignID);
+			ResultSet rs = getVersionsOfProposal.executeQuery();
+			while(rs.next()){
+				proposalList.add(designFromResultSet(rs));
+			}
+			rs.close();
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+		}
+		
+		return proposalList;			
 	}
 
 	/**
