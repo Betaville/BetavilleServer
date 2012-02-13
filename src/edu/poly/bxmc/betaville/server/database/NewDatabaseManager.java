@@ -166,6 +166,7 @@ public class NewDatabaseManager {
 	private PreparedStatement isProposal;
 	private PreparedStatement addVersion;
 	private PreparedStatement findAllProposals;
+	private PreparedStatement findAllProposalsInCity;
 	private PreparedStatement findVersionsOfProposal;
 	private PreparedStatement getProposalRemoveList;
 	private PreparedStatement addCity;
@@ -456,6 +457,7 @@ public class NewDatabaseManager {
 				"`, `"+DBConst.PROPOSAL_TYPE_REMOVABLE_LIST+"`) VALUES (?,?,?,?);");
 		findAllProposals = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_DEST+" FROM "+
 				DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_SOURCE+" = ? AND "+DBConst.PROPOSAL_TYPE+" = ?;");
+		findAllProposalsInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.DESIGN_TABLE+" JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" = "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_DEST+" WHERE "+DBConst.PROPOSAL_TYPE+" = '"+DBConst.PROPOSAL_TYPE_PROPOSAL+"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 and cityID=?");
 		findVersionsOfProposal = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_DEST+
 				" FROM "+DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_SOURCE+" = ? AND "+DBConst.PROPOSAL_TYPE+
 				" = '"+DBConst.PROPOSAL_TYPE_VERSION+"';");
@@ -1552,6 +1554,30 @@ public class NewDatabaseManager {
 			logger.error("SQL ERROR", e);
 			return null;
 		}
+	}
+	
+	/**
+	 * Gets all proposals in a city
+	 * @param cityID
+	 * @return
+	 */
+	public ArrayList<Design> getAllProposalsInCity(int cityID){
+		ArrayList<Design> designs = new ArrayList<Design>();
+		
+		try {
+			findAllProposalsInCity.setInt(1, cityID);
+			ResultSet rs = findAllProposalsInCity.executeQuery();
+			while(rs.next()){
+				Design proposalDesign = designFromResultSet(rs);
+				proposalDesign.setDesignsToRemove(ProposalUtils.interpretRemovablesString(rs.getString(DBConst.PROPOSAL_TYPE_REMOVABLE_LIST)));
+				designs.add(proposalDesign);
+			}
+		} catch (SQLException e) {
+			logger.error("SQL ERROR", e);
+			return null;
+		}
+		
+		return designs;
 	}
 
 	/**

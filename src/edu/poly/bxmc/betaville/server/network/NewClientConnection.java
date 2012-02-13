@@ -462,6 +462,10 @@ public class NewClientConnection implements Runnable {
 					logger.info(client.getClientAdress()+DELIMITER+"design:findvideobycity");
 					output.writeObject(dbManager.findTypeDesiginsByCity((Integer)inObject[2], DBConst.DESIGN_TYPE_VIDEO));
 				}
+				else if(request.equals("findproposalsbycity")){
+					logger.info(client.getClientAdress()+DELIMITER+"design:findproposalsbycity");
+					output.writeObject(dbManager.getAllProposalsInCity((Integer)inObject[2]));
+				}
 				else if(request.equals("allproposals")){
 					logger.info(client.getClientAdress()+DELIMITER+"design:allproposals");
 					output.writeObject(dbManager.findAllProposals((Integer)inObject[2]));
