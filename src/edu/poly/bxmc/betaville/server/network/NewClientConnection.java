@@ -600,6 +600,10 @@ public class NewClientConnection implements Runnable {
 					logger.info(client.getClientAdress()+DELIMITER+"version:versionsofproposal");
 					output.writeObject(dbManager.findVersionsOfProposal((Integer)inObject[2]));
 				}
+				if(request.equals("getversionsofproposal")){
+					logger.info(client.getClientAdress()+DELIMITER+"version:versionsofproposal");
+					output.writeObject(dbManager.getVersionsOfProposal((Integer)inObject[2]));
+				}
 			}
 
 			// FAVE FUNCTIONALITY
