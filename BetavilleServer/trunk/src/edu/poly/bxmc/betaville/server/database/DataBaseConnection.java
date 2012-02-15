@@ -123,6 +123,7 @@ public class DataBaseConnection {
 	public void closeConnection() {
 		try {
 			if (con != null) {
+				statement.close();
 				con.close();
 			}
 		} catch (SQLException e) {
