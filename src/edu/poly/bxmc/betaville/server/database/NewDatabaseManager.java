@@ -325,6 +325,7 @@ public class NewDatabaseManager {
 					}
 					else
 						logger.debug("user '"+user+"' not found");
+					rs.close();
 					return false;
 				} catch (SQLException e) {
 					logger.error("SQL ERROR", e);
@@ -563,7 +564,9 @@ public class NewDatabaseManager {
 			isProposal.close();
 			addVersion.close();
 			findAllProposals.close();
+			findAllProposalsInCity.close();
 			findVersionsOfProposal.close();
+			getVersionsOfProposal.close();
 			getProposalRemoveList.close();
 			addCity.close();
 			findAllCities.close();
@@ -1123,6 +1126,12 @@ public class NewDatabaseManager {
 				List<String> users = UserArrayUtils.getArrayUsers(group);
 
 				proposalPermission =  new ProposalPermission(type, users);
+				
+				proposalRS.close();
+			}
+			else{
+				// Close this immediately
+				proposalRS.close();
 			}
 			String type = drs.getString(DBConst.DESIGN_TYPE);
 			UTMCoordinate utm = retrieveCoordinate(drs.getInt(DBConst.DESIGN_COORDINATE));
@@ -1189,8 +1198,6 @@ public class NewDatabaseManager {
 			returnable.setDesignsToRemove(obstructionList);
 			returnable.setFavedBy(favedBy);
 			if(proposalPermission!=null) returnable.setProposalPermission(proposalPermission);
-
-			proposalRS.close();
 
 			return returnable;
 		} catch (SQLException e) {
@@ -1357,6 +1364,9 @@ public class NewDatabaseManager {
 					if(onlyBase){
 						if(d.getSourceID()==0  && !d.getFilepath().endsWith(".")){
 							designs.add(d);
+						}
+						else{
+							d = null;
 						}
 					}
 					else{
@@ -1955,7 +1965,15 @@ public class NewDatabaseManager {
 			retrieveCoordinate.setInt(1, coordinateID);
 			ResultSet rs = retrieveCoordinate.executeQuery();
 			if(rs.first()){
-				return new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getShort(DBConst.COORD_EASTING_CM), rs.getShort(DBConst.COORD_NORTHING_CM), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getFloat(DBConst.COORD_ALTITUDE));
+				int easting = rs.getInt(DBConst.COORD_EASTING);
+				int northing = rs.getInt(DBConst.COORD_NORTHING);
+				short eastingCM = rs.getShort(DBConst.COORD_EASTING_CM);
+				short northingCM = rs.getShort(DBConst.COORD_NORTHING_CM);
+				int lonZone = rs.getInt(DBConst.COORD_LONZONE);
+				char latZone = rs.getString(DBConst.COORD_LATZONE).charAt(0);
+				float altitude = rs.getFloat(DBConst.COORD_ALTITUDE);
+				rs.close();
+				return new UTMCoordinate(easting, northing, eastingCM, northingCM, lonZone, latZone, altitude);
 			}
 			else return null;
 		} catch (SQLException e) {
