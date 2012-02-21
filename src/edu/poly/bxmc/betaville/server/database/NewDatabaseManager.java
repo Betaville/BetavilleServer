@@ -361,8 +361,8 @@ public class NewDatabaseManager {
 	private void prepareStatements() throws SQLException{
 		addUser = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.USER_TABLE+"` (`"+
 				DBConst.USER_NAME+"`, `"+DBConst.USER_STRONG_PASS+"`, `"+DBConst.USER_STRONG_SALT+"`, `"+
-				DBConst.USER_EMAIL+"`) VALUES" +
-				"(?,?,?,?);");
+				DBConst.USER_EMAIL+"`, `"+DBConst.USER_ACTIVATED+"`) VALUES" +
+				"(?,?,?,?,1);");
 		//Added by Ram
 		startSession = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.SESSION_TABLE+"` " +
 				"(`"+DBConst.SESSION_USER+"`, `"+DBConst.SESSION_START+"`) VALUES (?, NOW());", PreparedStatement.RETURN_GENERATED_KEYS);
@@ -421,9 +421,9 @@ public class NewDatabaseManager {
 		findDesignByID = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_ID + " = ?;");
 		findDesignsByName = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
-				" WHERE " + DBConst.DESIGN_NAME + " LIKE ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';;");
+				" WHERE " + DBConst.DESIGN_NAME + " LIKE ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
 		findDesignsByUser = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
-				" WHERE " + DBConst.DESIGN_USER + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';;");
+				" WHERE " + DBConst.DESIGN_USER + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
 		findDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
 		// select * from design
