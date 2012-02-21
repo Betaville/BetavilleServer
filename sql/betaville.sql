@@ -85,7 +85,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`coordinate` (
   `easting` INT NOT NULL ,
   `eastingCM` INT NOT NULL ,
   `altitude` FLOAT NOT NULL ,
-  `latZone` CHAR(1)  NOT NULL ,
+  `latZone` CHAR(1) NOT NULL ,
   `lonZone` TINYINT NOT NULL ,
   PRIMARY KEY (`coordinateID`) )
 ENGINE = InnoDB;
@@ -110,6 +110,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`design` (
   `isAlive` TINYINT(1) NOT NULL DEFAULT '1' ,
   `favelist` MEDIUMTEXT NULL ,
   `lastModified` DATETIME NULL ,
+  `viewability` ENUM('all', 'user_only', 'user_group') NOT NULL ,
   PRIMARY KEY (`designID`) ,
   INDEX `cityID_design` (`cityID` ASC) ,
   INDEX `userfk_design` (`user` ASC) ,
@@ -188,7 +189,7 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`modeldesign` (
   `length` DECIMAL(6,2) NULL ,
   `width` DECIMAL(6,2) NULL ,
   `height` DECIMAL(6,2) NULL ,
-  `textured` TINYINT(1)  NOT NULL ,
+  `textured` TINYINT(1) NOT NULL ,
   `rotX` FLOAT NULL ,
   `rotZ` FLOAT NULL ,
   PRIMARY KEY (`designid`) )
@@ -204,8 +205,8 @@ CREATE  TABLE IF NOT EXISTS `betaville`.`comment` (
   `user` VARCHAR(255) NOT NULL ,
   `comment` TEXT NOT NULL ,
   `date` DATETIME NOT NULL ,
-  `spamFlag` TINYINT(1)  NOT NULL DEFAULT 0 ,
-  `spamVerified` TINYINT(1)  NOT NULL DEFAULT 0 ,
+  `spamFlag` TINYINT(1) NOT NULL DEFAULT 0 ,
+  `spamVerified` TINYINT(1) NOT NULL DEFAULT 0 ,
   `repliesTo` INT NOT NULL DEFAULT 0 ,
   PRIMARY KEY (`commentid`) ,
   INDEX `designidfk_comment` (`designid` ASC) ,
