@@ -1946,7 +1946,6 @@ public class NewDatabaseManager {
 			changeCoordinate.setInt(7, northingCM);
 			changeCoordinate.setInt(8, coordinateID);
 			int updateCount = changeCoordinate.executeUpdate();
-			changeCoordinate.close();
 			if(updateCount>1) logger.warn("More than one coordinates ("+updateCount+") were updated");
 			else if(updateCount==0) logger.error("No coordinates were updated");
 		} catch (SQLException e) {
