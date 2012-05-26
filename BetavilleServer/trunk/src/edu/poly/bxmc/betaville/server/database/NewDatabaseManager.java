@@ -2247,7 +2247,7 @@ public class NewDatabaseManager {
 			ArrayList<Wormhole> wormholes = new ArrayList<Wormhole>();
 
 			while(rs.next()){
-				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), 0), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
+				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getFloat(DBConst.COORD_ALTITUDE)), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
 			}
 			rs.close();
 			return wormholes;
@@ -2282,7 +2282,7 @@ public class NewDatabaseManager {
 			ArrayList<Wormhole> wormholes = new ArrayList<Wormhole>();
 
 			while(rs.next()){
-				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), 0), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
+				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getFloat(DBConst.COORD_ALTITUDE)), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
 			}
 			rs.close();
 			return wormholes;
