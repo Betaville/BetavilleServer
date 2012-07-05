@@ -839,7 +839,7 @@ public class NewDatabaseManager {
 				ResultSet idSet = addDesign.getGeneratedKeys();
 				if(idSet.next()){
 					designID = idSet.getInt(1);
-					dbConnection.sendUpdate("UPDATE " + DBConst.DESIGN_TABLE + " SET " + DBConst.DESIGN_FILE + " = '"+new String(designID+design.getFilepath().substring(design.getFilepath().lastIndexOf("."), design.getFilepath().length()))+"' WHERE "+DBConst.DESIGN_ID+" = "+designID+";");
+					dbConnection.sendUpdate("UPDATE " + DBConst.DESIGN_TABLE + " SET " + DBConst.DESIGN_FILE + " = '"+designID+design.getFilepath().substring(design.getFilepath().lastIndexOf("."), design.getFilepath().length())+"' WHERE "+DBConst.DESIGN_ID+" = "+designID+";");
 					dbConnection.sendUpdate("INSERT INTO "+DBConst.MODEL_TABLE+" (`"+DBConst.MODEL_ID+"`, `"+DBConst.MODEL_ROTATION_X+"`, `"+DBConst.MODEL_ROTATION_Y+"`, `"+DBConst.MODEL_ROTATION_Z+"`, `"+DBConst.MODEL_TEX+"`) VALUES ("+designID+","+((ModeledDesign)design).getRotationX()+", "+((ModeledDesign)design).getRotationY()+", "+((ModeledDesign)design).getRotationZ()+", "+texturedValue+");");
 					return designID;
 				}
@@ -1245,13 +1245,14 @@ public class NewDatabaseManager {
 	}
 
 	public ArrayList<Design> findMultipleDesignsByID(int[] id){
-		String stmt = "SELECT * FROM " + DBConst.DESIGN_TABLE + " WHERE {" + DBConst.DESIGN_ID + " = " + id[0]+"}";
+		StringBuilder stmt = new StringBuilder();
+		stmt.append("SELECT * FROM " + DBConst.DESIGN_TABLE + " WHERE {" + DBConst.DESIGN_ID + " = " + id[0]+"}");
 		for(int i=1; i<id.length; i++){
-			stmt+= " OR {" + DBConst.DESIGN_ID + " = " + id[i] +"}";
+			stmt.append(" OR {" + DBConst.DESIGN_ID + " = " + id[i] +"}");
 		}
-		stmt+=";";
+		stmt.append(";");
 		try {
-			ResultSet rs = dbConnection.sendQuery(stmt);
+			ResultSet rs = dbConnection.sendQuery(stmt.toString());
 			ArrayList<Design> designs = new ArrayList<Design>();
 			while(rs.next()){
 				designs.add(designFromResultSet(rs));
@@ -1764,7 +1765,7 @@ public class NewDatabaseManager {
 				addCity.setString(3, country);
 				addCity.executeUpdate();
 				ResultSet resultSet = addCity.getGeneratedKeys();
-				if((resultSet != null) && (resultSet.next())){
+				if(resultSet.next()){
 					int generatedID = resultSet.getInt(1);
 					resultSet.close();
 					return generatedID;
