@@ -85,73 +85,9 @@ public class NewDatabaseManager {
 
 	private AbstractMailer mailer;
 
-
-	// USER
-	private PreparedStatement addUser;
-	private PreparedStatement checkNameAvailability;
-	private PreparedStatement changePassword;
-	private PreparedStatement changeBio;
-	private PreparedStatement getUserEmail;
-	private PreparedStatement authenticaterUserAgainstUsername;
-	/**
-	 * 1)	hash	-	String<br>
-	 * 2)	salt	-	String<br>
-	 * 3)	user	-	String<br>
-	 */
-	private PreparedStatement updateUserToHardenedEncryption;
-	private PreparedStatement checkUserLevel;
-
-	// DESIGN
-	/**
-	 * 1)	name		-	String<br>
-	 * 2)	design file	-	String<br>
-	 * 3)	cityID		-	int<br>
-	 * 4)	user		-	String<br>
-	 * 5)	coordID		-	int<br>
-	 * 6)	privacy		-	int<br>
-	 * 7)	description	-	String<br>
-	 * 8)	url			-	String<br>
-	 * 9)	type		-	String<br>
-	 * 10)	address		-	String<br>
-	 */
-	private PreparedStatement addDesign;
-	private PreparedStatement getDesignUser;
-	private PreparedStatement verifyDesignOwnership;
-	private PreparedStatement verifyProposalMembership;
-	private PreparedStatement changeDesignName;
-	private PreparedStatement changeDesignFile;
-
-	private PreparedStatement getModeledDesignTypeRow;
-	private PreparedStatement getSketchDesignTypeRow;
-	private PreparedStatement getAudioDesignTypeRow;
-	private PreparedStatement getVideoDesignTypeRow;
-	private PreparedStatement getEmptyDesignTypeRow;
-
-	/**
-	 * 1) newDescription	-	String<br>
-	 * 2) designID			-	int<br>
-	 */
-	private PreparedStatement changeDesignDescription;
-
-	/**
-	 * 1) newAddress	-	String<br>
-	 * 2) designID		-	int<br>
-	 */
-	private PreparedStatement changeDesignAddress;
-
-	/**
-	 * 1) newURL	-	String<br>
-	 * 2) designID	-	int<br>
-	 */
-	private PreparedStatement changeDesignURL;
-	private PreparedStatement getDesignType;
-	private PreparedStatement removeDesign;
-	private PreparedStatement findDesignByID;
-	private PreparedStatement findDesignsByName;
-	private PreparedStatement findDesignsByUser;
+	// Is used by multiple methods
 	private PreparedStatement findDesignsByCity;
-	private PreparedStatement findTypeDesignsByCity;
-	private PreparedStatement findModelDesignsByCity;
+
 	private PreparedStatement findBaseModelDesignByID;
 	private PreparedStatement findTerrainDesignsByCity;
 	private PreparedStatement addProposal;
@@ -307,6 +243,8 @@ public class NewDatabaseManager {
 			 */
 			public boolean authenticateUser(String user, String pass) {
 				try {
+					PreparedStatement authenticaterUserAgainstUsername = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.USER_TABLE+
+							" WHERE "+DBConst.USER_NAME+" = ?;");
 					authenticaterUserAgainstUsername.setString(1, user);
 					rs = authenticaterUserAgainstUsername.executeQuery();
 					if(rs.first()){
@@ -317,15 +255,20 @@ public class NewDatabaseManager {
 							logger.debug("Authenticating with strong hash");
 							String salt = rs.getString(DBConst.USER_STRONG_SALT);
 							rs.close();
+							authenticaterUserAgainstUsername.close();
 							return Crypto.doSaltedEncryption(pass, salt).equals(hash);
 						}
 						else{
+							rs.close();
+							authenticaterUserAgainstUsername.close();
 							return authMD5(user, pass);
 						}
 					}
-					else
+					else{
 						logger.debug("user '"+user+"' not found");
+					}
 					rs.close();
+					authenticaterUserAgainstUsername.close();
 					return false;
 				} catch (SQLException e) {
 					logger.error("SQL ERROR", e);
@@ -339,11 +282,14 @@ public class NewDatabaseManager {
 				String legacy = rs.getString(DBConst.USER_PASS);
 				if(Crypto.doMD5(pass).equals(legacy)){
 					String[] hardened = Crypto.createBetavilleHash(pass);
+					PreparedStatement updateUserToHardenedEncryption = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.USER_TABLE + " SET "+
+							DBConst.USER_STRONG_PASS + " = ?, " + DBConst.USER_STRONG_SALT + " = ? WHERE " + DBConst.USER_NAME + " = ?;");
 					updateUserToHardenedEncryption.setString(1, hardened[0]);
 					updateUserToHardenedEncryption.setString(2, hardened[1]);
 					updateUserToHardenedEncryption.setString(3, user);
 					updateUserToHardenedEncryption.executeUpdate();
 					rs.close();
+					updateUserToHardenedEncryption.close();
 					return true;
 				}
 				else return false;
@@ -359,77 +305,32 @@ public class NewDatabaseManager {
 	}
 
 	private void prepareStatements() throws SQLException{
-		addUser = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.USER_TABLE+"` (`"+
-				DBConst.USER_NAME+"`, `"+DBConst.USER_STRONG_PASS+"`, `"+DBConst.USER_STRONG_SALT+"`, `"+
-				DBConst.USER_EMAIL+"`, `"+DBConst.USER_ACTIVATED+"`) VALUES" +
-				"(?,?,?,?,1);");
+
 		//Added by Ram
 		startSession = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.SESSION_TABLE+"` " +
 				"(`"+DBConst.SESSION_USER+"`, `"+DBConst.SESSION_START+"`) VALUES (?, NOW());", PreparedStatement.RETURN_GENERATED_KEYS);
 		endSession = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.SESSION_TABLE+" SET "+
 				DBConst.SESSION_END+" = NOW() WHERE "+DBConst.SESSION_ID+ "= ?;");
-		checkNameAvailability = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.USER_TABLE+" WHERE "+
-				DBConst.USER_NAME+" = ?;");
-		changePassword = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.USER_TABLE + " SET " + 
-				DBConst.USER_PASS + " = MD5(?) WHERE "+DBConst.USER_NAME+" = ?;");
-		changeBio = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.USER_TABLE + " SET " + 
-				DBConst.USER_BIO + " = ? WHERE "+DBConst.USER_NAME+" = ?;");
-		getUserEmail = dbConnection.getConnection().prepareStatement("SELECT " + DBConst.USER_EMAIL + " FROM " + 
-				DBConst.USER_TABLE + " WHERE " + DBConst.USER_NAME + " = ?;");
-		authenticaterUserAgainstUsername = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.USER_TABLE+
-				" WHERE "+DBConst.USER_NAME+" = ?;");
-		updateUserToHardenedEncryption = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.USER_TABLE + " SET "+
-				DBConst.USER_STRONG_PASS + " = ?, " + DBConst.USER_STRONG_SALT + " = ? WHERE " + DBConst.USER_NAME + " = ?;");
-		checkUserLevel = dbConnection.getConnection().prepareStatement("SELECT " + DBConst.USER_NAME + " FROM " + DBConst.USER_TABLE + 
-				" WHERE " + DBConst.USER_TYPE + " = ? AND " + DBConst.USER_NAME + " = ?");
+
+
+
+
 		getUserLevel = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.USER_TYPE+" FROM "+DBConst.USER_TABLE+
 				" WHERE "+DBConst.USER_NAME+" = ?;");
-		addDesign = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.DESIGN_TABLE+" (`"+DBConst.DESIGN_NAME+
-				"`, `"+DBConst.DESIGN_FILE+"`, `"+DBConst.DESIGN_CITY+"`, `"+DBConst.DESIGN_USER+"`, `"+
-				DBConst.DESIGN_COORDINATE+"`, `"+DBConst.DESIGN_DATE+"`, `"+DBConst.DESIGN_LAST_MODIFIED+"`, `"+DBConst.DESIGN_PRIVACY+"`, `"+
-				DBConst.DESIGN_DESCRIPTION+"`, `"+DBConst.DESIGN_URL+"`, `"+DBConst.DESIGN_TYPE+"`, `"+
-				DBConst.DESIGN_ADDRESS+"`) VALUES (?,?,?,?,?,NOW(),NOW(),?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
-		getDesignUser = dbConnection.getConnection().prepareStatement("SELECT " +DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_USER + ", "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_NAME+", "+DBConst.USER_TABLE+"."+DBConst.USER_EMAIL+" FROM " + DBConst.DESIGN_TABLE + " JOIN "+DBConst.USER_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_USER+"="+DBConst.USER_TABLE+"."+DBConst.USER_NAME+" WHERE " + DBConst.DESIGN_ID  + " = ?;");
-		verifyDesignOwnership = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_ID+" FROM "+DBConst.DESIGN_TABLE+
-				" WHERE "+DBConst.DESIGN_USER+" = ? AND "+DBConst.DESIGN_ID+" = ?;");
-		verifyProposalMembership = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY +" FROM "+DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ? AND "+DBConst.PROPOSAL_PERMISSIONS_LEVEL +" LIKE '"+DBConst.PROPOSAL_PERMISSIONS_LEVEL_GROUP+"'");
-		changeDesignName = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
-				DBConst.DESIGN_NAME + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
-		changeDesignFile = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.DESIGN_TABLE+" SET "+DBConst.DESIGN_FILE+
-				" = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
-		getModeledDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.MODEL_TABLE+" WHERE " + DBConst.MODEL_ID + " = ?;");
-		getSketchDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.SKETCH_TABLE+" WHERE " + DBConst.SKETCH_ID + " = ?;");
-		getAudioDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.AUDIO_TABLE+" WHERE " + DBConst.AUDIO_ID + " = ?;");
-		getVideoDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.VIDEO_TABLE+" WHERE " + DBConst.VIDEO_ID + " = ?;");
-		getEmptyDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.EMPTY_DESIGN_TABLE+" WHERE " + DBConst.EMPTY_DESIGN_ID + " = ?;");
 		changeModelTex = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.MODEL_TABLE+" SET "+DBConst.MODEL_TEX+
 				" = ? WHERE "+DBConst.MODEL_ID+" = ?;");
 		selectModelDesignCoordinates = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_COORDINATE+
 				" FROM "+DBConst.DESIGN_TABLE+" WHERE "+DBConst.DESIGN_ID+" = ?;");
 		changeModeledDesignLocation = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.MODEL_TABLE+
 				" SET "+DBConst.MODEL_ROTATION_Y+" = ? WHERE "+DBConst.MODEL_ID+" = ?;");
-		changeDesignDescription = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
-				DBConst.DESIGN_DESCRIPTION + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
-		changeDesignAddress = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
-				DBConst.DESIGN_ADDRESS + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
-		changeDesignURL = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
-				DBConst.DESIGN_URL + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
-		getDesignType = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_TYPE+" FROM "+DBConst.DESIGN_TABLE+
-				" WHERE "+DBConst.DESIGN_ID+" = ?;");
-		removeDesign = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
-				DBConst.DESIGN_IS_ALIVE +" = false, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE " + DBConst.DESIGN_ID + " = ?;");
-		findDesignByID = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
-				" WHERE " + DBConst.DESIGN_ID + " = ?;");
-		findDesignsByName = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
-				" WHERE " + DBConst.DESIGN_NAME + " LIKE ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
-		findDesignsByUser = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
-				" WHERE " + DBConst.DESIGN_USER + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
 		findDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
 		// select * from design
 		// join modeldesign on design.designid=modeldesign.designid
 		// join coordinate on design.coordinateid=coordinate.coordinateid
 		// left outer join proposal on design.designid=proposal.sourceid where design.isalive=1 and design.designtype='model' and design.cityid=2 and proposal.sourceid is null and design.name not like '%$TERRAIN%';
+		// This query was never tested, but should be a huge performance boost
+		/*
 		findModelDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" JOIN "+DBConst.MODEL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.MODEL_ID+
 				" JOIN "+DBConst.COORD_TABLE+" ON "+DBConst.DESIGN_COORDINATE+"="+DBConst.COORD_ID+
@@ -442,9 +343,8 @@ public class NewDatabaseManager {
 				" LEFT OUTER JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_ID+"="+DBConst.PROPOSAL_SOURCE+
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_TYPE+"='"+DBConst.DESIGN_TYPE_MODEL+
 				"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.PROPOSAL_SOURCE+" IS NULL;");
+		 */
 
-		findTypeDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
-				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN' AND WHERE "+DBConst.DESIGN_TYPE+" = ?;");
 		findTerrainDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
 				" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" LIKE '%$TERRAIN';");
 		addProposal = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.PROPOSAL_TABLE+
@@ -521,36 +421,7 @@ public class NewDatabaseManager {
 		logger.info("Closing Connections");
 		// clean up prepared statement resources
 		try {
-			addUser.close();
-			checkNameAvailability.close();
-			changePassword.close();
-			changeBio.close();
-			getUserEmail.close();
-			authenticaterUserAgainstUsername.close();
-			updateUserToHardenedEncryption.close();
-			checkUserLevel.close();
-			addDesign.close();
-			getDesignUser.close();
-			verifyDesignOwnership.close();
-			verifyProposalMembership.close();
-			changeDesignName.close();
-			changeDesignFile.close();
-			getModeledDesignTypeRow.close();
-			getSketchDesignTypeRow.close();
-			getAudioDesignTypeRow.close();
-			getVideoDesignTypeRow.close();
-			getEmptyDesignTypeRow.close();
-			changeDesignDescription.close();
-			changeDesignAddress.close();
-			changeDesignURL.close();
-			getDesignType.close();
-			removeDesign.close();
-			findDesignByID.close();
-			findDesignsByName.close();
-			findDesignsByUser.close();
 			findDesignsByCity.close();
-			findTypeDesignsByCity.close();
-			findModelDesignsByCity.close();
 			findBaseModelDesignByID.close();
 			findTerrainDesignsByCity.close();
 			addProposal.close();
@@ -669,13 +540,18 @@ public class NewDatabaseManager {
 		try {
 			String salt = Crypto.createSalt(12);
 			String hash = Crypto.doSaltedEncryption(pass, salt);
-
+			PreparedStatement addUser = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.USER_TABLE+"` (`"+
+					DBConst.USER_NAME+"`, `"+DBConst.USER_STRONG_PASS+"`, `"+DBConst.USER_STRONG_SALT+"`, `"+
+					DBConst.USER_EMAIL+"`, `"+DBConst.USER_ACTIVATED+"`) VALUES" +
+					"(?,?,?,?,1);");
 			addUser.setString(1, user);
 			addUser.setString(2, hash);
 			addUser.setString(3, salt);
 			addUser.setString(4, email);
 
 			addUser.executeUpdate();
+
+			addUser.close();
 
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -690,16 +566,20 @@ public class NewDatabaseManager {
 	 * @return if the name is available or not
 	 */
 	public boolean checkNameAvailability(String user){
-		try {			
+		try {
+			PreparedStatement checkNameAvailability = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.USER_TABLE+" WHERE "+
+					DBConst.USER_NAME+" = ?;");
 			checkNameAvailability.setString(1, user);
 			ResultSet rs = checkNameAvailability.executeQuery();
 			if(rs.first()){
 				rs.close();
+				checkNameAvailability.close();
 				logger.debug("name '"+user+"' unavailable");
 				return false;
 			}
 			else{
 				rs.close();
+				checkNameAvailability.close();
 				logger.debug("name '"+user+"' unavailable");
 				return true;
 			}
@@ -713,9 +593,12 @@ public class NewDatabaseManager {
 		if(authenticator.authenticateUser(user, pass)){
 
 			try {
+				PreparedStatement changePassword = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.USER_TABLE + " SET " + 
+						DBConst.USER_PASS + " = MD5(?) WHERE "+DBConst.USER_NAME+" = ?;");
 				changePassword.setString(1, newPass);
 				changePassword.setString(2, user);
 				changePassword.executeUpdate();
+				changePassword.close();
 			} catch (SQLException e) {
 				logger.error("SQL ERROR", e);
 				return false;
@@ -733,9 +616,12 @@ public class NewDatabaseManager {
 	 */
 	public boolean changeBio(String user, String newBio){
 		try {
+			PreparedStatement changeBio = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.USER_TABLE + " SET " + 
+					DBConst.USER_BIO + " = ? WHERE "+DBConst.USER_NAME+" = ?;");
 			changeBio.setString(1, newBio);
 			changeBio.setString(2, user);
 			changeBio.executeUpdate();
+			changeBio.close();
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return false;
@@ -745,14 +631,21 @@ public class NewDatabaseManager {
 
 	public String getUserEmail(String user){
 		try {
+			PreparedStatement getUserEmail = dbConnection.getConnection().prepareStatement("SELECT " + DBConst.USER_EMAIL + " FROM " + 
+					DBConst.USER_TABLE + " WHERE " + DBConst.USER_NAME + " = ?;");
 			getUserEmail.setString(1, user);
 			ResultSet rs = getUserEmail.executeQuery();
 			if(rs.first()){
 				String mail = rs.getString(DBConst.USER_EMAIL);
 				rs.close();
+				getUserEmail.close();
 				return mail;
 			}
-			else return null;
+			else{
+				rs.close();
+				getUserEmail.close();
+				return null;
+			}
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return null;
@@ -760,16 +653,20 @@ public class NewDatabaseManager {
 	}
 
 	public int checkUserLevel(String user, UserType userType){
-		try {			
+		try {
+			PreparedStatement checkUserLevel = dbConnection.getConnection().prepareStatement("SELECT " + DBConst.USER_NAME + " FROM " + DBConst.USER_TABLE + 
+					" WHERE " + DBConst.USER_TYPE + " = ? AND " + DBConst.USER_NAME + " = ?");
 			checkUserLevel.setString(1, userType.toString().toLowerCase());
 			checkUserLevel.setString(2, user);
 			ResultSet rs = checkUserLevel.executeQuery();
 			if(rs.first()){
 				rs.close();
+				checkUserLevel.close();
 				return 1;
 			}
 			else{
 				rs.close();
+				checkUserLevel.close();
 				return 0;
 			}
 		} catch (SQLException e) {
@@ -817,6 +714,11 @@ public class NewDatabaseManager {
 		int coordinateID=addCoordinate(design.getCoordinate());
 		int designID;
 		try {
+			PreparedStatement addDesign = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.DESIGN_TABLE+" (`"+DBConst.DESIGN_NAME+
+					"`, `"+DBConst.DESIGN_FILE+"`, `"+DBConst.DESIGN_CITY+"`, `"+DBConst.DESIGN_USER+"`, `"+
+					DBConst.DESIGN_COORDINATE+"`, `"+DBConst.DESIGN_DATE+"`, `"+DBConst.DESIGN_LAST_MODIFIED+"`, `"+DBConst.DESIGN_PRIVACY+"`, `"+
+					DBConst.DESIGN_DESCRIPTION+"`, `"+DBConst.DESIGN_URL+"`, `"+DBConst.DESIGN_TYPE+"`, `"+
+					DBConst.DESIGN_ADDRESS+"`) VALUES (?,?,?,?,?,NOW(),NOW(),?,?,?,?,?);", PreparedStatement.RETURN_GENERATED_KEYS);
 
 			// these are generic components of a design
 			addDesign.setString(1, design.getName());
@@ -841,6 +743,7 @@ public class NewDatabaseManager {
 					designID = idSet.getInt(1);
 					dbConnection.sendUpdate("UPDATE " + DBConst.DESIGN_TABLE + " SET " + DBConst.DESIGN_FILE + " = '"+designID+design.getFilepath().substring(design.getFilepath().lastIndexOf("."), design.getFilepath().length())+"' WHERE "+DBConst.DESIGN_ID+" = "+designID+";");
 					dbConnection.sendUpdate("INSERT INTO "+DBConst.MODEL_TABLE+" (`"+DBConst.MODEL_ID+"`, `"+DBConst.MODEL_ROTATION_X+"`, `"+DBConst.MODEL_ROTATION_Y+"`, `"+DBConst.MODEL_ROTATION_Z+"`, `"+DBConst.MODEL_TEX+"`) VALUES ("+designID+","+((ModeledDesign)design).getRotationX()+", "+((ModeledDesign)design).getRotationY()+", "+((ModeledDesign)design).getRotationZ()+", "+texturedValue+");");
+					addDesign.close();
 					return designID;
 				}
 			}
@@ -852,6 +755,7 @@ public class NewDatabaseManager {
 				if(idSet.next()){
 					designID = idSet.getInt(1);
 					dbConnection.sendUpdate("INSERT INTO "+DBConst.SKETCH_TABLE+" (`"+DBConst.SKETCH_ID+"`, `"+DBConst.SKETCH_ROTATION+"`, `"+DBConst.SKETCH_UPPLANE+"`) VALUES ("+designID+","+((SketchedDesign)design).getRotation()+",'"+((SketchedDesign)design).getUpPlane()+"');");
+					addDesign.close();
 					return designID;
 				}
 			}
@@ -864,6 +768,7 @@ public class NewDatabaseManager {
 				if(idSet.next()){
 					designID = idSet.getInt(1);
 					dbConnection.sendUpdate("INSERT INTO "+DBConst.AUDIO_TABLE+" (`"+DBConst.AUDIO_ID+"`, `"+DBConst.AUDIO_DIRECTIONX+"`, `"+DBConst.AUDIO_DIRECTIONY+"`, `"+DBConst.AUDIO_DIRECTIONZ+"`) VALUES ("+designID+","+((AudibleDesign)design).getDirectionX()+","+((AudibleDesign)design).getDirectionY()+","+((AudibleDesign)design).getDirectionZ()+");");
+					addDesign.close();
 					return designID;
 				}
 			}
@@ -877,6 +782,7 @@ public class NewDatabaseManager {
 					designID = idSet.getInt(1);
 					dbConnection.sendUpdate("INSERT INTO "+DBConst.VIDEO_TABLE+" (`"+DBConst.VIDEO_ID+"`, `"+DBConst.VIDEO_DIRECTIONX+"`, `"+DBConst.VIDEO_DIRECTIONY+"`, `"+DBConst.VIDEO_DIRECTIONZ+"`) VALUES ("+designID+","+((VideoDesign)design).getDirectionX()+","+((VideoDesign)design).getDirectionY()+","+((VideoDesign)design).getDirectionZ()+");");
 					changeDesignFilename(designID, fileExtension);
+					addDesign.close();
 					return designID;
 				}
 			}
@@ -890,6 +796,7 @@ public class NewDatabaseManager {
 					designID = idSet.getInt(1);
 					dbConnection.sendUpdate("INSERT INTO "+DBConst.EMPTY_DESIGN_TABLE+" (`"+DBConst.EMPTY_DESIGN_ID+"`,  `"+DBConst.EMPTY_DESIGN_LENGTH+"`,  `"+DBConst.EMPTY_DESIGN_WIDTH+"`) VALUES ("+designID+","+((EmptyDesign)design).getLength()+","+((EmptyDesign)design).getWidth()+");");
 					changeDesignFilename(designID, fileExtension);
+					addDesign.close();
 					return designID;
 				}
 			}
@@ -911,14 +818,18 @@ public class NewDatabaseManager {
 	 */
 	public boolean verifyDesignOwnership(int designID, String user){
 		try {
+			PreparedStatement verifyDesignOwnership = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_ID+" FROM "+DBConst.DESIGN_TABLE+
+					" WHERE "+DBConst.DESIGN_USER+" = ? AND "+DBConst.DESIGN_ID+" = ?;");
 			verifyDesignOwnership.setString(1, user);
 			verifyDesignOwnership.setInt(2, designID);
 			ResultSet stepTwo = verifyDesignOwnership.executeQuery();
 			if(stepTwo.first()){
 				stepTwo.close();
+				verifyDesignOwnership.close();
 				return true;
 			} else{
 				stepTwo.close();
+				verifyDesignOwnership.close();
 				return false;
 			}
 		} catch (SQLException e) {
@@ -929,14 +840,17 @@ public class NewDatabaseManager {
 
 	private boolean verifyMemberOfProposalGroup(int proposalDestID, String user){
 		try {
+			PreparedStatement verifyProposalMembership = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY +" FROM "+DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ? AND "+DBConst.PROPOSAL_PERMISSIONS_LEVEL +" LIKE '"+DBConst.PROPOSAL_PERMISSIONS_LEVEL_GROUP+"'");
 			verifyProposalMembership.setInt(1, proposalDestID);
 			ResultSet rs = verifyProposalMembership.executeQuery();
 			if(rs.first()){
 				boolean answer = UserArrayUtils.checkArrayForUser(rs.getString(DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY), user);
 				rs.close();
+				verifyProposalMembership.close();
 				return answer;
 			} else{
 				rs.close();
+				verifyProposalMembership.close();
 				return false;
 			}
 		} catch (SQLException e) {
@@ -957,9 +871,12 @@ public class NewDatabaseManager {
 	public boolean changeDesignName(int designID, String newName, String user){
 		if(verifyDesignOwnership(designID, user) || getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
+				PreparedStatement changeDesignName = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
+						DBConst.DESIGN_NAME + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
 				changeDesignName.setString(1, newName);
 				changeDesignName.setInt(2, designID);
 				changeDesignName.executeUpdate();
+				changeDesignName.close();
 				return true;
 			} catch (SQLException e) {
 				logger.error("SQL ERROR", e);
@@ -972,9 +889,12 @@ public class NewDatabaseManager {
 	public boolean changeDesignFile(int designID, String newFilename, String user, boolean textureOnOff){
 		if(verifyDesignOwnership(designID, user) || getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
+				PreparedStatement changeDesignFile = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.DESIGN_TABLE+" SET "+DBConst.DESIGN_FILE+
+						" = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
 				changeDesignFile.setString(1, newFilename);
 				changeDesignFile.setInt(2, designID);
 				changeDesignFile.executeUpdate();
+				changeDesignFile.close();
 
 				changeModelTex.setInt(1, (textureOnOff?1:0));
 				changeModelTex.setInt(2, designID);
@@ -992,9 +912,12 @@ public class NewDatabaseManager {
 		if(verifyDesignOwnership(designID, user) || verifyMemberOfProposalGroup(designID, user)
 				|| getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
+				PreparedStatement changeDesignDescription = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
+						DBConst.DESIGN_DESCRIPTION + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
 				changeDesignDescription.setString(1, newDescription);
 				changeDesignDescription.setInt(2, designID);
 				changeDesignDescription.executeUpdate();
+				changeDesignDescription.close();
 				return true;
 			} catch (SQLException e) {
 				logger.error("SQL ERROR", e);
@@ -1008,9 +931,12 @@ public class NewDatabaseManager {
 		if(verifyDesignOwnership(designID, user) || verifyMemberOfProposalGroup(designID, user)
 				|| getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
+				PreparedStatement changeDesignAddress = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
+						DBConst.DESIGN_ADDRESS + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
 				changeDesignAddress.setString(1, newAddress);
 				changeDesignAddress.setInt(2, designID);
 				changeDesignAddress.executeUpdate();
+				changeDesignAddress.close();
 				return true;
 			} catch (SQLException e) {
 				logger.error("SQL ERROR", e);
@@ -1023,9 +949,12 @@ public class NewDatabaseManager {
 	public boolean changeDesignURL(int designID, String newURL, String user){
 		if(verifyDesignOwnership(designID, user)|| getUserLevel(user).compareTo(UserType.MODERATOR)>=0){
 			try {
+				PreparedStatement changeDesignURL = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
+						DBConst.DESIGN_URL + " = ?, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE "+DBConst.DESIGN_ID+" = ?;");
 				changeDesignURL.setString(1, newURL);
 				changeDesignURL.setInt(2, designID);
 				changeDesignURL.executeUpdate();
+				changeDesignURL.close();
 				return true;
 			} catch (SQLException e) {
 				logger.error("SQL ERROR", e);
@@ -1063,12 +992,19 @@ public class NewDatabaseManager {
 
 	public String getDesignType(int designID){
 		try {
+			PreparedStatement getDesignType = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_TYPE+" FROM "+DBConst.DESIGN_TABLE+
+					" WHERE "+DBConst.DESIGN_ID+" = ?;");
 			getDesignType.setInt(1, designID);
 			ResultSet rs = getDesignType.executeQuery();
 			if(rs.first()){
 				String type = rs.getString(DBConst.DESIGN_TYPE);
 				rs.close();
+				getDesignType.close();
 				return type;
+			}
+			else{
+				rs.close();
+				getDesignType.close();
 			}
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -1126,7 +1062,7 @@ public class NewDatabaseManager {
 				List<String> users = UserArrayUtils.getArrayUsers(group);
 
 				proposalPermission =  new ProposalPermission(type, users);
-				
+
 				proposalRS.close();
 			}
 			else{
@@ -1146,6 +1082,7 @@ public class NewDatabaseManager {
 			boolean designPrivacy = drs.getBoolean(DBConst.DESIGN_PRIVACY);
 			Design returnable=null;
 			if(type.equals(DBConst.DESIGN_TYPE_MODEL)){
+				PreparedStatement getModeledDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.MODEL_TABLE+" WHERE " + DBConst.MODEL_ID + " = ?;");
 				getModeledDesignTypeRow.setInt(1, id);
 				ResultSet mrs = getModeledDesignTypeRow.executeQuery();
 				mrs.first();
@@ -1156,16 +1093,20 @@ public class NewDatabaseManager {
 				ModeledDesign md =  new ModeledDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, rotX, rotY, rotZ, designIsTextured);
 				returnable = md;
 				mrs.close();
+				getModeledDesignTypeRow.close();
 			}
 			else if(type.equals(DBConst.DESIGN_TYPE_SKETCH)){
+				PreparedStatement getSketchDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.SKETCH_TABLE+" WHERE " + DBConst.SKETCH_ID + " = ?;");
 				getSketchDesignTypeRow.setInt(1, id);
 				ResultSet srs = getSketchDesignTypeRow.executeQuery();
 				srs.first();
 				SketchedDesign sd = new SketchedDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, srs.getInt(DBConst.SKETCH_ROTATION), srs.getString(DBConst.SKETCH_UPPLANE).charAt(0));
 				returnable = sd;
 				srs.close();
+				getSketchDesignTypeRow.close();
 			}
 			else if(type.equals(DBConst.DESIGN_TYPE_AUDIO)){
+				PreparedStatement getAudioDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.AUDIO_TABLE+" WHERE " + DBConst.AUDIO_ID + " = ?;");
 				getAudioDesignTypeRow.setInt(1, id);
 				ResultSet ars = getAudioDesignTypeRow.executeQuery();
 				ars.first();
@@ -1173,22 +1114,27 @@ public class NewDatabaseManager {
 				AudibleDesign ad = new AudibleDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, ars.getFloat(DBConst.AUDIO_DIRECTIONX),ars.getFloat(DBConst.AUDIO_DIRECTIONY),ars.getFloat(DBConst.AUDIO_DIRECTIONZ), ars.getInt(DBConst.AUDIO_VOLUME), new PerformanceStyle());
 				returnable = ad;
 				ars.close();
+				getAudioDesignTypeRow.close();
 			}
 			else if(type.equals(DBConst.VIDEO_TABLE)){
+				PreparedStatement getVideoDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.VIDEO_TABLE+" WHERE " + DBConst.VIDEO_ID + " = ?;");
 				getVideoDesignTypeRow.setInt(1, id);
 				ResultSet vrs = getVideoDesignTypeRow.executeQuery();
 				vrs.first();
 				VideoDesign vd = new VideoDesign(designName, utm, designAddress, designCity, designUser, designDescription, designFile, designURL, designPrivacy, vrs.getFloat(DBConst.VIDEO_DIRECTIONX),vrs.getFloat(DBConst.VIDEO_DIRECTIONY),vrs.getFloat(DBConst.VIDEO_DIRECTIONZ), vrs.getInt(DBConst.AUDIO_VOLUME));
 				returnable = vd;
 				vrs.close();
+				getVideoDesignTypeRow.close();
 			}
 			else if(type.equals(DBConst.DESIGN_TYPE_EMPTY)){
+				PreparedStatement getEmptyDesignTypeRow = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.EMPTY_DESIGN_TABLE+" WHERE " + DBConst.EMPTY_DESIGN_ID + " = ?;");
 				getEmptyDesignTypeRow.setInt(1, id);
 				ResultSet ers = getEmptyDesignTypeRow.executeQuery();
 				ers.first();
 				EmptyDesign vd = new EmptyDesign(utm, designAddress, designUser, designDescription, designURL, designPrivacy, ers.getInt(DBConst.EMPTY_DESIGN_LENGTH), ers.getInt(DBConst.EMPTY_DESIGN_WIDTH));
 				returnable = vd;
 				ers.close();
+				getEmptyDesignTypeRow.close();
 			}
 
 			returnable.setID(id);
@@ -1217,8 +1163,11 @@ public class NewDatabaseManager {
 		if(((getUserLevel(user).equals(UserType.ADMIN) ||  getUserLevel(user).equals(UserType.MODERATOR)) // must be an admin or moderator, OR
 				|| verifyDesignOwnership(designID, user))){ // the original creator of the design
 			try {
+				PreparedStatement removeDesign = dbConnection.getConnection().prepareStatement("UPDATE " + DBConst.DESIGN_TABLE + " SET " + 
+						DBConst.DESIGN_IS_ALIVE +" = false, "+DBConst.DESIGN_LAST_MODIFIED+"=NOW() WHERE " + DBConst.DESIGN_ID + " = ?;");
 				removeDesign.setInt(1, designID);
 				removeDesign.executeUpdate();
+				removeDesign.close();
 				return 0;
 			} catch (SQLException e) {
 				logger.error("SQL ERROR", e);
@@ -1230,14 +1179,21 @@ public class NewDatabaseManager {
 
 	public Design findDesignByID(int id){
 		try {
+			PreparedStatement findDesignByID = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
+					" WHERE " + DBConst.DESIGN_ID + " = ?;");
 			findDesignByID.setInt(1, id);
 			ResultSet drs = findDesignByID.executeQuery();
 			if(drs.first()){
 				Design d = designFromResultSet(drs);
 				drs.close();
+				findDesignByID.close();
 				return d;
 			}
-			else return null;
+			else{
+				drs.close();
+				findDesignByID.close();
+				return null;
+			}
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return null;
@@ -1272,12 +1228,17 @@ public class NewDatabaseManager {
 	 */
 	public Vector<Design> findDesignsByName(String name){
 		try {
+			PreparedStatement findDesignsByName = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
+					" WHERE " + DBConst.DESIGN_NAME + " LIKE ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
 			findDesignsByName.setString(1, name);
 			ResultSet drs = findDesignsByName.executeQuery();
 			Vector<Design> designs = new Vector<Design>();
 			while(drs.next()){
 				designs.add(designFromResultSet(drs));
 			}
+
+			drs.close();
+			findDesignsByName.close();
 			return designs;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -1294,6 +1255,9 @@ public class NewDatabaseManager {
 	public Vector<Design> findDesignsByUser(String user){
 		try {
 			logger.debug("Finding designs from "+user);
+			PreparedStatement findDesignsByUser = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
+					" WHERE " + DBConst.DESIGN_USER + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN';");
+
 			findDesignsByUser.setString(1, user);
 			ResultSet drs = findDesignsByUser.executeQuery();
 			Vector<Design> designs = new Vector<Design>();
@@ -1301,7 +1265,7 @@ public class NewDatabaseManager {
 				designs.add(designFromResultSet(drs));
 			}
 			drs.close();
-
+			findDesignsByUser.close();
 			logger.debug(designs.size() + " designs found for user " + user);
 
 			return designs;
@@ -1330,6 +1294,8 @@ public class NewDatabaseManager {
 	 */
 	public Vector<Design> findTypeDesiginsByCity(int cityID, String type){
 		try{
+			PreparedStatement findTypeDesignsByCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.DESIGN_TABLE + 
+					" WHERE " + DBConst.DESIGN_CITY + " = ? AND "+DBConst.DESIGN_NAME+" NOT LIKE '%$TERRAIN' AND WHERE "+DBConst.DESIGN_TYPE+" = ?;");
 			findTypeDesignsByCity.setInt(1, cityID);
 			findTypeDesignsByCity.setString(2, type);
 			ResultSet drs = findTypeDesignsByCity.executeQuery();
@@ -1338,6 +1304,7 @@ public class NewDatabaseManager {
 				designs.add(designFromResultSet(drs));
 			}
 			drs.close();
+			findTypeDesignsByCity.close();
 			return designs;
 		}catch(SQLException e){
 			logger.error("SQL ERROR", e);
@@ -1568,7 +1535,7 @@ public class NewDatabaseManager {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Gets all proposals in a city
 	 * @param cityID
@@ -1576,7 +1543,7 @@ public class NewDatabaseManager {
 	 */
 	public ArrayList<Design> getAllProposalsInCity(int cityID){
 		ArrayList<Design> designs = new ArrayList<Design>();
-		
+
 		try {
 			findAllProposalsInCity.setInt(1, cityID);
 			ResultSet rs = findAllProposalsInCity.executeQuery();
@@ -1589,7 +1556,7 @@ public class NewDatabaseManager {
 			logger.error("SQL ERROR", e);
 			return null;
 		}
-		
+
 		return designs;
 	}
 
@@ -1699,7 +1666,7 @@ public class NewDatabaseManager {
 		}
 		else return null;			
 	}
-	
+
 	/**
 	 * Finds the versions of a given proposal.  This does not verify whether an
 	 * ID is correctly representing a proposal and as such should only be called
@@ -1709,7 +1676,7 @@ public class NewDatabaseManager {
 	 */
 	public ArrayList<Design> getVersionsOfProposal(int proposalDesignID){
 		ArrayList<Design> proposalList = new ArrayList<Design>();
-		
+
 		try {
 			getVersionsOfProposal.setInt(1, proposalDesignID);
 			ResultSet rs = getVersionsOfProposal.executeQuery();
@@ -1720,7 +1687,7 @@ public class NewDatabaseManager {
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 		}
-		
+
 		return proposalList;			
 	}
 
@@ -1990,6 +1957,7 @@ public class NewDatabaseManager {
 			addComment.setInt(4, comment.repliesTo());
 			addComment.executeUpdate();
 			if(mailer!=null){
+				PreparedStatement getDesignUser = dbConnection.getConnection().prepareStatement("SELECT " +DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_USER + ", "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_NAME+", "+DBConst.USER_TABLE+"."+DBConst.USER_EMAIL+" FROM " + DBConst.DESIGN_TABLE + " JOIN "+DBConst.USER_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_USER+"="+DBConst.USER_TABLE+"."+DBConst.USER_NAME+" WHERE " + DBConst.DESIGN_ID  + " = ?;");
 				getDesignUser.setInt(1, comment.getDesignID());
 				ResultSet rs = getDesignUser.executeQuery();
 				if(rs.first()){
@@ -1997,11 +1965,13 @@ public class NewDatabaseManager {
 						CommentNotificationMessage message = new CommentNotificationMessage(mailer.getSession(), rs.getString(DBConst.DESIGN_USER), comment.getUser(), rs.getString(DBConst.DESIGN_NAME), comment.getComment(), rs.getString(DBConst.USER_EMAIL));
 						mailer.sendMailNow(message);
 					} catch (MessagingException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} finally{
+						// Release the SQL objects
+						rs.close();
+						getDesignUser.close();
 					}
 				}
 			}
