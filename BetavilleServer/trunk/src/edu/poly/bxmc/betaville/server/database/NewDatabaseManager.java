@@ -92,17 +92,14 @@ public class NewDatabaseManager {
 	private PreparedStatement findTerrainDesignsByCity;
 	private PreparedStatement addProposal;
 
-	private PreparedStatement startSession;
 	private PreparedStatement endSession;
 	private PreparedStatement getUserLevel;
 	private PreparedStatement changeModelTex;
 	private PreparedStatement selectModelDesignCoordinates;
 	private PreparedStatement changeModeledDesignLocation;
 	private PreparedStatement getProposalRowForDesign;
-	private PreparedStatement isProposal;
 	private PreparedStatement addVersion;
 	private PreparedStatement findAllProposals;
-	private PreparedStatement findAllProposalsInCity;
 	private PreparedStatement findVersionsOfProposal;
 	private PreparedStatement getVersionsOfProposal;
 	private PreparedStatement getProposalRemoveList;
@@ -305,8 +302,6 @@ public class NewDatabaseManager {
 	private void prepareStatements() throws SQLException{
 
 		//Added by Ram
-		startSession = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.SESSION_TABLE+"` " +
-				"(`"+DBConst.SESSION_USER+"`, `"+DBConst.SESSION_START+"`) VALUES (?, NOW());", PreparedStatement.RETURN_GENERATED_KEYS);
 		endSession = dbConnection.getConnection().prepareStatement("UPDATE "+DBConst.SESSION_TABLE+" SET "+
 				DBConst.SESSION_END+" = NOW() WHERE "+DBConst.SESSION_ID+ "= ?;");
 
@@ -350,14 +345,11 @@ public class NewDatabaseManager {
 				DBConst.PROPOSAL_TYPE_REMOVABLE_LIST+"`,`"+DBConst.PROPOSAL_PERMISSIONS_LEVEL+"`,`"+DBConst.PROPOSAL_PERMISSIONS_GROUP_ARRAY+"`) VALUES (?,?,'"+DBConst.PROPOSAL_TYPE_PROPOSAL+"', ?, ?, ?);");
 		getProposalRowForDesign = dbConnection.getConnection().prepareStatement("SELECT * FROM "+
 				DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ?;");
-		isProposal = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_TYPE+" FROM "+
-				DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ?;");
 		addVersion = dbConnection.getConnection().prepareStatement("INSERT INTO "+DBConst.PROPOSAL_TABLE+
 				" (`"+DBConst.PROPOSAL_SOURCE+"`, `"+DBConst.PROPOSAL_DEST+"`, `"+DBConst.PROPOSAL_TYPE+
 				"`, `"+DBConst.PROPOSAL_TYPE_REMOVABLE_LIST+"`) VALUES (?,?,?,?);");
 		findAllProposals = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_DEST+" FROM "+
 				DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_SOURCE+" = ? AND "+DBConst.PROPOSAL_TYPE+" = ?;");
-		findAllProposalsInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.DESIGN_TABLE+" JOIN "+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" = "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_DEST+" WHERE "+DBConst.PROPOSAL_TYPE+" = '"+DBConst.PROPOSAL_TYPE_PROPOSAL+"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.DESIGN_CITY+"=?");
 		findVersionsOfProposal = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_DEST+
 				" FROM "+DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_SOURCE+" = ? AND "+DBConst.PROPOSAL_TYPE+
 				" = '"+DBConst.PROPOSAL_TYPE_VERSION+"';");
@@ -421,17 +413,14 @@ public class NewDatabaseManager {
 			findBaseModelDesignByID.close();
 			findTerrainDesignsByCity.close();
 			addProposal.close();
-			startSession.close();
 			endSession.close();
 			getUserLevel.close();
 			changeModelTex.close();
 			selectModelDesignCoordinates.close();
 			changeModeledDesignLocation.close();
 			getProposalRowForDesign.close();
-			isProposal.close();
 			addVersion.close();
 			findAllProposals.close();
-			findAllProposalsInCity.close();
 			findVersionsOfProposal.close();
 			getVersionsOfProposal.close();
 			getProposalRemoveList.close();
@@ -493,6 +482,8 @@ public class NewDatabaseManager {
 		}
 		else{
 			try{
+				PreparedStatement startSession = dbConnection.getConnection().prepareStatement("INSERT INTO `"+DBConst.SESSION_TABLE+"` " +
+						"(`"+DBConst.SESSION_USER+"`, `"+DBConst.SESSION_START+"`) VALUES (?, NOW());", PreparedStatement.RETURN_GENERATED_KEYS);
 				startSession.setString(1, user);
 				boolean executeStatus = startSession.execute();
 				int sessionID = 0;
@@ -504,6 +495,7 @@ public class NewDatabaseManager {
 					}
 				}
 				//int sessionID = dbConnection.getLastKey();
+				startSession.close();
 				return sessionID;
 			} catch (SQLException e) {
 				logger.error("SQL ERROR", e);
@@ -1466,11 +1458,14 @@ public class NewDatabaseManager {
 
 	private boolean isProposal(int designID){
 		try {
+			PreparedStatement isProposal = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.PROPOSAL_TYPE+" FROM "+
+					DBConst.PROPOSAL_TABLE+" WHERE "+DBConst.PROPOSAL_DEST+" = ?;");
 			isProposal.setInt(1, designID);
 			ResultSet propRS = isProposal.executeQuery();
 			if(propRS.first()){
 				String type = propRS.getString(DBConst.PROPOSAL_TYPE);
 				propRS.close();
+				isProposal.close();
 				if(type!=null){
 					if(type.toLowerCase().equals(DBConst.PROPOSAL_TYPE_PROPOSAL.toLowerCase())){
 						return true;
@@ -1539,6 +1534,9 @@ public class NewDatabaseManager {
 		ArrayList<Design> designs = new ArrayList<Design>();
 
 		try {
+			PreparedStatement findAllProposalsInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM "+DBConst.DESIGN_TABLE+" JOIN "
+					+DBConst.PROPOSAL_TABLE+" ON "+DBConst.DESIGN_TABLE+"."+DBConst.DESIGN_ID+" = "+DBConst.PROPOSAL_TABLE+"."+DBConst.PROPOSAL_DEST+" WHERE "+DBConst.PROPOSAL_TYPE+
+					" = '"+DBConst.PROPOSAL_TYPE_PROPOSAL+"' AND "+DBConst.DESIGN_IS_ALIVE+"=1 AND "+DBConst.DESIGN_CITY+"=?");
 			findAllProposalsInCity.setInt(1, cityID);
 			ResultSet rs = findAllProposalsInCity.executeQuery();
 			while(rs.next()){
@@ -1546,6 +1544,9 @@ public class NewDatabaseManager {
 				proposalDesign.setDesignsToRemove(ProposalUtils.interpretRemovablesString(rs.getString(DBConst.PROPOSAL_TYPE_REMOVABLE_LIST)));
 				designs.add(proposalDesign);
 			}
+			
+			rs.close();
+			findAllProposalsInCity.close();
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
 			return null;
@@ -2191,6 +2192,7 @@ public class NewDatabaseManager {
 				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getFloat(DBConst.COORD_ALTITUDE)), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
 			}
 			rs.close();
+			getAllWormholes.close();
 			return wormholes;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
@@ -2217,6 +2219,7 @@ public class NewDatabaseManager {
 				wormholes.add(new Wormhole(new UTMCoordinate(rs.getInt(DBConst.COORD_EASTING), rs.getInt(DBConst.COORD_NORTHING), rs.getInt(DBConst.COORD_LONZONE), rs.getString(DBConst.COORD_LATZONE).charAt(0), rs.getFloat(DBConst.COORD_ALTITUDE)), rs.getString(DBConst.WORMHOLE_NAME), rs.getInt(DBConst.WORMHOLE_CITY)));
 			}
 			rs.close();
+			getAllWormholesInCity.close();
 			return wormholes;
 		} catch (SQLException e) {
 			logger.error("SQL ERROR", e);
