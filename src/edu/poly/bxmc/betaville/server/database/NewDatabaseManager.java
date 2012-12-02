@@ -190,8 +190,6 @@ public class NewDatabaseManager {
 	 */
 	private PreparedStatement getWormholesAtLocation;
 
-	private PreparedStatement getAllWormholes;
-	private PreparedStatement getAllWormholesInCity;
 	private PreparedStatement getRecentCommentsFromNow;
 	private PreparedStatement getRecentDesignsFromNow;
 	private PreparedStatement getRecentCommentsOnMyActivity;
@@ -406,8 +404,6 @@ public class NewDatabaseManager {
 				DBConst.COORD_LONZONE + " = ?, " + DBConst.COORD_ALTITUDE + " = ?, WHERE " + DBConst.WORMHOLE_ID + " = ?");
 		getWormholesAtLocation = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.COORD_LATZONE+">=? AND "+DBConst.COORD_LATZONE+"<=? AND "+DBConst.COORD_LONZONE+">=? AND "+
 				DBConst.COORD_LONZONE+"<=? AND "+DBConst.COORD_NORTHING+">=? AND "+DBConst.COORD_NORTHING+"<=? AND "+DBConst.COORD_EASTING+">=? AND "+DBConst.COORD_EASTING+"<=?");
-		getAllWormholes = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE);
-		getAllWormholesInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.WORMHOLE_CITY+"=?");
 		getRecentCommentsFromNow = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.COMMENT_TABLE + " WHERE "+DBConst.COMMENT_SPAMVERIFIED+" = 0 ORDER BY "+DBConst.COMMENT_ID +" DESC LIMIT ?");
 		getRecentDesignsFromNow = dbConnection.getConnection().prepareStatement("SELECT "+DBConst.DESIGN_ID+" FROM " + DBConst.DESIGN_TABLE + " WHERE "+DBConst.DESIGN_IS_ALIVE+" = 1 ORDER BY "+DBConst.DESIGN_ID +" DESC LIMIT ?");
 
@@ -460,8 +456,6 @@ public class NewDatabaseManager {
 			changeWormholeName.close();
 			changeWormholeLocation.close();
 			getWormholesAtLocation.close();
-			getAllWormholes.close();
-			getAllWormholesInCity.close();
 			getRecentCommentsFromNow.close();
 			getRecentDesignsFromNow.close();
 			getRecentCommentsOnMyActivity.close();
@@ -2188,6 +2182,7 @@ public class NewDatabaseManager {
 	 */
 	public ArrayList<Wormhole> getAllWormholes(){
 		try {
+			PreparedStatement getAllWormholes = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE + " WHERE " + DBConst.WORMHOLE_IS_ALIVE + " = 1");
 			ResultSet rs = getAllWormholes.executeQuery();
 
 			ArrayList<Wormhole> wormholes = new ArrayList<Wormhole>();
@@ -2212,6 +2207,7 @@ public class NewDatabaseManager {
 	public ArrayList<Wormhole> getAllWormholesInCity(int cityID){
 		logger.info("Getting all wormholes in city: " + cityID);
 		try {
+			PreparedStatement getAllWormholesInCity = dbConnection.getConnection().prepareStatement("SELECT * FROM " + DBConst.WORMHOLE_TABLE + " JOIN " +DBConst.COORD_TABLE + " ON "+DBConst.COORD_TABLE+"."+DBConst.COORD_ID+"="+DBConst.WORMHOLE_TABLE+"."+DBConst.WORMHOLE_COORDINATE+" WHERE "+DBConst.WORMHOLE_CITY+"=? AND " + DBConst.WORMHOLE_IS_ALIVE + " = 1");
 			getAllWormholesInCity.setInt(1, cityID);
 			ResultSet rs = getAllWormholesInCity.executeQuery();
 
