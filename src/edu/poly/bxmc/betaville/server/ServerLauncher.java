@@ -96,6 +96,9 @@ public class ServerLauncher {
 					"Please ensure that you're home directory has write-permissions " +
 					"enabled.  Betaville will run but your preferences will not be saved.");
 		}
+		
+		// Now that the defaults and config file are loaded, add anything set in the system env vars
+		Preferences.overlayPreferencesFromEnvironment();
 
 		// Set up logging
 		try {
