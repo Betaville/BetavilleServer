@@ -68,7 +68,7 @@ public class DataBaseConnection {
 		try {
 			System.out.println("starting connection to " + host + " on port " + port);
 			con = DriverManager.getConnection(
-					"jdbc:mysql://"+host+":"+port+"/"+dbName+"?useSSL=true",
+					"jdbc:mysql://"+host+":"+port+"/"+dbName+"?verifyServerCertificate=false",
 					user,
 					pass);
 
