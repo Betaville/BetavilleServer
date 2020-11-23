@@ -44,7 +44,7 @@ jobs:
       id: build-image
       run: |
         # Build a docker container and push it to Docker Hub
-        cd cd $GITHUB_WORKSPACE/BetavilleServer
+        cd $GITHUB_WORKSPACE/BetavilleServer
         docker build . -t ${{secrets.DOCKER_HUB_USER}}/betaville-server
         docker push ${{secrets.DOCKER_HUB_USER}}/betaville-server
         
