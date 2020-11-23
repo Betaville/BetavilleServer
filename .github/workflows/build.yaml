@@ -38,13 +38,13 @@ jobs:
         
     - name: Build Java Source
       id: build-java
-      run: cd BetavilleServer/util && ./compile.sh
+      run: cd $GITHUB_WORKSPACE/BetavilleServer/util && ./compile.sh
 
     - name: Build Docker Image
       id: build-image
       run: |
         # Build a docker container and push it to Docker Hub
-        cd BetavilleServer
+        cd cd $GITHUB_WORKSPACE/BetavilleServer
         docker build . -t ${{secrets.DOCKER_HUB_USER}}/betaville-server
         docker push ${{secrets.DOCKER_HUB_USER}}/betaville-server
         
