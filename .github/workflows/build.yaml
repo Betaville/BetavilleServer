@@ -19,9 +19,9 @@ jobs:
 
     - name: Login to DockerHub
       uses: docker/login-action@v1 
-        with:
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_PASS }}
+      with:
+        username: ${{ secrets.DOCKER_HUB_USER }}
+        password: ${{ secrets.DOCKER_HUB_PASS }}
 
     - name: Checkout Server
       uses: actions/checkout@v2
@@ -43,8 +43,7 @@ jobs:
     - name: Build Docker Image
       id: build-image
       run: |
-        # Build a docker container and push it to ECR so that it can
-        # be deployed to ECS.
+        # Build a docker container and push it to Docker Hub
         cd BetavilleServer
         docker build . -t ${{secrets.DOCKER_HUB_USER}}/betaville-server
         docker push ${{secrets.DOCKER_HUB_USER}}/betaville-server
