@@ -34,7 +34,7 @@ jobs:
       with:
         repository: Betaville/BetavilleApp
         token: ${{ secrets.GITHUB_TOKEN }}
-        path: BetavilleServer
+        path: BetavilleApp
         
     - name: Build Java Source
       id: build-java
